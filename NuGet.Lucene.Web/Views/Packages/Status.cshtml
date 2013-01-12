@@ -1,0 +1,15 @@
+﻿@using NuGet.Lucene
+@model IndexingStatus
+
+<p>Indexer status: @Model.State</p>
+@if (Model.SynchronizationStatus.SynchronizationState == SynchronizationState.Building)
+{
+    <p>Synchronizing @Model.SynchronizationStatus.CompletedPackages of @Model.SynchronizationStatus.PackagesToIndex new packages.</p>
+    if (Model.SynchronizationStatus.CurrentPackagePath != null)
+    {
+      <p>Current package: @Model.SynchronizationStatus.CurrentPackagePath</p>   
+    }
+}
+<p>Total Packages: @Model.TotalPackages</p>
+<p>Optimized: @(Model.IsOptimized ? "Yes" : "No") / Pending Deletes: @(Model.PendingDeletes > 0 ? "Yes" : "No")</p>
+<p>Index Last Modified: @Model.LastModification.ToString("r")</p>

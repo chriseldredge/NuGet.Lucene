@@ -15,6 +15,11 @@ namespace NuGet.Lucene.Web.Controllers
         [Inject]
         public ILucenePackageRepository Repository { get; set; }
 
+        public ActionResult Status()
+        {
+            return View(Repository.GetIndexingStatus());
+        }
+
         // TODO: send Last-Modified / Etag, handle If-Modified-Since header, and HEAD request
         public ActionResult Download(PackageSpec packageSpec)
         {

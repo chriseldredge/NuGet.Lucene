@@ -39,6 +39,9 @@ namespace NuGet.Lucene.Web
             routes.MapRoute("Default", "",
                             new { controller = "Home", action = "Redirect" });
 
+            routes.MapRoute("Status", "status",
+                            new {controller = "Packages", action = "Status"});
+
             routes.MapRoute("Upload Package", "api/v2",
                             new { controller = "Packages", action = "Upload" },
                             new { httpMethod = new HttpMethodConstraint("PUT", "POST") });

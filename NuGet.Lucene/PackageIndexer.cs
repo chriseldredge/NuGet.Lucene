@@ -61,8 +61,10 @@ namespace NuGet.Lucene
             }
         }
 
-        private readonly IList<IndexingStatus> indexingStatus = new List<IndexingStatus> { new IndexingStatus { State = IndexingState.Idle } };
+        private volatile IndexingState indexingState = IndexingState.Idle;
+        private volatile SynchronizationStatus synchronizationStatus = new SynchronizationStatus(SynchronizationState.Idle);
         private readonly BlockingCollection<Update> pendingUpdates = new BlockingCollection<Update>();
+
         private Task indexUpdaterTask;
 
         public IFileSystem FileSystem { get; set; }
@@ -89,26 +91,15 @@ namespace NuGet.Lucene
         /// </summary>
         public IndexingStatus GetIndexingStatus()
         {
-            IndexingStatus current;
-
-            lock (indexingStatus)
-            {
-                current = indexingStatus.Last();
-            }
-
             using (var reader = Writer.GetReader())
             {
-                return new IndexingStatus
-                {
-                    State = current.State,
-                    CompletedPackages = current.CompletedPackages,
-                    PackagesToIndex = current.PackagesToIndex,
-                    CurrentPackagePath = current.CurrentPackagePath,
-                    TotalPackages = reader.NumDocs(),
-                    PendingDeletes = reader.NumDeletedDocs,
-                    IsOptimized = reader.IsOptimized(),
-                    LastModification = DateTimeUtils.FromJava(reader.IndexCommit.Timestamp)
-                };
+                return new IndexingStatus(
+                    indexingState,
+                    synchronizationStatus,
+                    reader.NumDocs(),
+                    reader.NumDeletedDocs,
+                    reader.IsOptimized(),
+                    DateTimeUtils.FromJava(reader.IndexCommit.Timestamp));
             }
         }
         
@@ -125,7 +116,7 @@ namespace NuGet.Lucene
             IndexDifferences differences = null;
             Action findDifferences = () =>
                 {
-                    using (UpdateStatus(IndexingState.Scanning))
+                    using (UpdateSynchronizationStatus(SynchronizationState.Scanning))
                     {
                         using (var session = OpenSession())
                         {
@@ -197,7 +188,7 @@ namespace NuGet.Lucene
             Parallel.ForEach(pathsToIndex, new ParallelOptions { MaxDegreeOfParallelism = 5 }, (p, s) =>
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    using(UpdateStatus(IndexingState.Building, completedPackages: Interlocked.Increment(ref i), packagesToIndex: pathsToIndex.Length, currentPackagePath: p))
+                    using(UpdateSynchronizationStatus(SynchronizationState.Building, completedPackages: Interlocked.Increment(ref i), packagesToIndex: pathsToIndex.Length, currentPackagePath: p))
                     {
                         tasks.Enqueue(SynchronizePackage(p));
                     }
@@ -251,9 +242,8 @@ namespace NuGet.Lucene
 
             using (var session = OpenSession())
             {
-                using (UpdateStatus(IndexingState.Building))
+                using (UpdateStatus(IndexingState.Updating))
                 {
-
                     var removals =
                         items.Where(i => i.UpdateType == UpdateType.Remove).ToList();
                     removals.ForEach(pkg => RemovePackageInternal(pkg, session));
@@ -270,7 +260,7 @@ namespace NuGet.Lucene
                     ApplyPendingDownloadIncrements(downloadUpdates, session);
                 }
 
-                using (UpdateStatus(IndexingState.Commit))
+                using (UpdateStatus(IndexingState.Committing))
                 {
                     session.Commit();
                     items.ForEach(i => i.SetComplete());
@@ -384,28 +374,29 @@ namespace NuGet.Lucene
             return Provider.OpenSession(() => new LucenePackage(FileSystem));
         }
 
-        private IDisposable UpdateStatus(IndexingState state, int completedPackages = 0, int packagesToIndex = 0, string currentPackagePath = null)
+        private IDisposable UpdateSynchronizationStatus(SynchronizationState state, int completedPackages = 0, int packagesToIndex = 0, string currentPackagePath = null)
         {
-            var status = new IndexingStatus
-                {
-                    State = state,
-                    CompletedPackages = completedPackages,
-                    PackagesToIndex = packagesToIndex,
-                    CurrentPackagePath = currentPackagePath
-                };
-
-            lock (indexingStatus)
-            {
-                indexingStatus.Add(status);
-            }
+            synchronizationStatus = new SynchronizationStatus(
+                    state,
+                    currentPackagePath,
+                    completedPackages,
+                    packagesToIndex
+                );
 
             return new DisposableAction(() =>
                 {
-                    lock (indexingStatus)
-                    {
-                        indexingStatus.Remove(status);
-                    }
+                    synchronizationStatus = new SynchronizationStatus(SynchronizationState.Idle);
                 });
+        }
+
+        private IDisposable UpdateStatus(IndexingState state)
+        {
+            indexingState = state;
+
+            return new DisposableAction(() =>
+            {
+                indexingState = IndexingState.Idle;
+            });
         }
     }
 }
