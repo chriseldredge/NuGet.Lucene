@@ -1,0 +1,225 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Runtime.Versioning;
+using Lucene.Net.Linq.Mapping;
+using NuGet.Lucene.Mapping;
+using DateTimeOffsetToTicksConverter = Lucene.Net.Linq.Converters.DateTimeOffsetToTicksConverter;
+
+namespace NuGet.Lucene
+{
+    public class LucenePackage : IPackage
+    {
+        private readonly Func<string, Stream> getStream;
+
+        public LucenePackage(IFileSystem fileSystem)
+            : this(fileSystem.OpenFile)
+        {
+        }
+
+        public LucenePackage(Func<string, Stream> getStream)
+        {
+            this.getStream = getStream;
+
+            Listed = true;
+
+            Authors = Enumerable.Empty<string>();
+            Owners = Enumerable.Empty<string>();
+            AssemblyReferences = Enumerable.Empty<IPackageAssemblyReference>();
+            FrameworkAssemblies = Enumerable.Empty<FrameworkAssemblyReference>();
+            Dependencies = Enumerable.Empty<string>();
+            Files = Enumerable.Empty<string>();
+        }
+
+        [QueryScore]
+        public float Score { get; set; }
+
+        #region IPackage
+
+        [Field(Key = true)]
+        public string Id { get; set; }
+
+        [IgnoreField]
+        SemanticVersion IPackageMetadata.Version
+        {
+            get { return Version != null ? Version.SemanticVersion : null; }
+        }
+
+        [Field("Version", Key = true, Converter = typeof(CachingSemanticVersionConverter))]
+        public StrictSemanticVersion Version { get; set; }
+
+        public string Title { get; set; }
+
+        [Field(IndexMode.NotIndexed)]
+        public Uri IconUrl { get; set; }
+
+        [Field(IndexMode.NotIndexed)]
+        public Uri LicenseUrl { get; set; }
+
+        [Field(IndexMode.NotIndexed)]
+        public Uri ProjectUrl { get; set; }
+
+        [Field(IndexMode.NotIndexed)]
+        public Uri ReportAbuseUrl { get; set; }
+
+        [NumericField(Converter = typeof(BoolToIntConverter))]
+        public bool RequireLicenseAcceptance { get; set; }
+
+        public string Description { get; set; }
+
+        public string Summary { get; set; }
+
+        public string ReleaseNotes { get; set; }
+
+        [Field(IndexMode.NotIndexed)]
+        public string Language { get; set; }
+
+        public string Tags { get; set; }
+
+        [Field(IndexMode.NotIndexed)]
+        public string Copyright { get; set; }
+
+        [NumericField]
+        public int DownloadCount { get; set; }
+
+        [NumericField]
+        public int VersionDownloadCount { get; set; }
+
+        [NumericField(Converter = typeof(BoolToIntConverter))]
+        public bool IsAbsoluteLatestVersion { get; set; }
+
+        [NumericField(Converter = typeof(BoolToIntConverter))]
+        public bool IsLatestVersion { get; set; }
+
+        [IgnoreField]
+        public bool Listed { get; set; }
+
+        [NumericField(Converter = typeof(BoolToIntConverter))]
+        public bool IsPrerelease
+        {
+            get { return !this.IsReleaseVersion(); }
+        }
+
+        [NumericField(Converter = typeof(DateTimeOffsetToTicksConverter))]
+        public DateTimeOffset? Published { get; set; }
+
+        public IEnumerable<string> Authors { get; set; }
+
+        public IEnumerable<string> Owners { get; set; }
+
+        public IEnumerable<string> Dependencies { get; set; }
+
+        [IgnoreField]
+        public IEnumerable<PackageDependencySet> DependencySets
+        {
+            get { return PackageDependencySetConverter.Parse(Dependencies); }
+            set { Dependencies = value.SelectMany(PackageDependencySetConverter.Flatten); }
+        }
+
+        [IgnoreField]
+        public IEnumerable<FrameworkAssemblyReference> FrameworkAssemblies { get; set; }
+        
+        [IgnoreField]
+        public IEnumerable<IPackageAssemblyReference> AssemblyReferences { get; set; }
+
+        public IEnumerable<FrameworkName> GetSupportedFrameworks()
+        {
+            return SupportedFrameworks;
+        }
+
+        public IEnumerable<IPackageFile> GetFiles()
+        {
+            return Files.Select(path => new LucenePackageFile(path));
+        }
+
+        public Stream GetStream()
+        {
+            return getStream(Path);
+        }
+
+        #endregion
+
+        #region Package metadata
+
+        [NumericField]
+        public long PackageSize { get; set; }
+
+        [Field(IndexMode.NotIndexed)]
+        public string PackageHash { get; set; }
+
+        [Field(IndexMode.NotIndexed)]
+        public string PackageHashAlgorithm { get; set; }
+
+        [NumericField(Converter = typeof(DateTimeOffsetToTicksConverter))]
+        public DateTimeOffset LastUpdated { get; set; }
+
+        [NumericField(Converter = typeof(DateTimeOffsetToTicksConverter))]
+        public DateTimeOffset Created { get; set; }
+
+        [Field(IndexMode.NotAnalyzed)]
+        public string Path { get; set; }
+
+        [Field(Converter = typeof(FrameworkNameConverter))]
+        public IEnumerable<FrameworkName> SupportedFrameworks { get; set; }
+
+        public IEnumerable<string> Files { get; set; }
+
+        #endregion
+    }
+
+    public class LucenePackageFile : IPackageFile
+    {
+        private readonly FrameworkName targetFramework;
+
+        public LucenePackageFile(string path)
+        {
+            Path = path;
+
+            string effectivePath;
+            targetFramework = VersionUtility.ParseFrameworkNameFromFilePath(path, out effectivePath);
+            EffectivePath = effectivePath;
+        }
+
+        public string Path
+        {
+            get;
+            private set;
+        }
+
+        public string EffectivePath
+        {
+            get;
+            private set;
+        }
+
+        public FrameworkName TargetFramework
+        {
+            get
+            {
+                return targetFramework;
+            }
+        }
+
+        IEnumerable<FrameworkName> IFrameworkTargetable.SupportedFrameworks
+        {
+            get
+            {
+                if (TargetFramework != null)
+                {
+                    yield return TargetFramework;
+                }
+            }
+        }
+
+        public Stream GetStream()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override string ToString()
+        {
+            return Path;
+        }
+    }
+}

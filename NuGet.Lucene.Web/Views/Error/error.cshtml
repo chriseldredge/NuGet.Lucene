@@ -1,0 +1,35 @@
+﻿@using NuGet.Lucene.Web
+@model HttpException
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <title>NuGet Package Server (powered by Lucene.Net)</title>
+    </head>
+    <body>
+        <h1>
+            @Model.GetHttpCode()
+        </h1>
+
+        <div>
+            A bad thing happened, @User.Identity.Name
+        </div>
+        
+        @if (ApplicationConfig.ShowExceptionDetails)
+        {
+            Exception ex = Model;
+            while (ex != null)
+            {
+                <h2>@ex.Message</h2>
+                <pre><code>@ex.StackTrace</code></pre>
+                ex = ex.InnerException;
+            }
+        }
+            
+    </body>
+</html>

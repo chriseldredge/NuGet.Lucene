@@ -1,0 +1,8 @@
+/packages/
+App_Data/
+_NCrunch*
+*.ncrunch*
+*.user
+*.suo
+bin/
+obj/
