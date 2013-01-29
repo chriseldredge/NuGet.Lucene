@@ -29,7 +29,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
         {
             var result = controller.GetMatchingPackages(null, false, 30);
 
-            Assert.That(result.Data, Is.Empty);
+            Assert.That(result, Is.Empty);
         }
 
         [Test]
@@ -41,7 +41,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
 
             var result = controller.GetMatchingPackages("F", false, 30);
 
-            Assert.That(result.Data, Is.EqualTo(packageIds.Take(30)));
+            Assert.That(result, Is.EqualTo(packageIds.Take(30)));
         }
 
         [Test]
@@ -52,7 +52,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
 
             var result = controller.GetMatchingPackages("", false, 30);
 
-            Assert.That(result.Data, Is.EqualTo(new[] { "Bar" }));
+            Assert.That(result, Is.EqualTo(new[] { "Bar" }));
         }
 
         [Test]
@@ -62,7 +62,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
 
             var result = controller.GetMatchingPackages("F", true, 30);
 
-            Assert.That(result.Data, Is.EqualTo(new[] { "Foo" }));
+            Assert.That(result, Is.EqualTo(new[] { "Foo" }));
         }
 
         [Test]
@@ -73,7 +73,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
 
             var result = controller.GetMatchingPackages("", false, 30);
 
-            Assert.That(result.Data, Is.EqualTo(new[] { "Foo", "Zoo" }));
+            Assert.That(result, Is.EqualTo(new[] { "Foo", "Zoo" }));
         }
 
         [Test]
@@ -81,7 +81,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
         {
             var result = controller.GetPackageVersions("Foo", false);
 
-            Assert.That(result.Data, Is.Empty);
+            Assert.That(result, Is.Empty);
         }
 
         [Test]
@@ -92,7 +92,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
 
             var result = controller.GetPackageVersions("Foo", false);
 
-            Assert.That(result.Data, Is.EqualTo(new[] { "1.0", "2.0" }));
+            Assert.That(result, Is.EqualTo(new[] { "1.0", "2.0" }));
         }
 
         [Test]
@@ -103,7 +103,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
 
             var result = controller.GetPackageVersions("Foo", false);
 
-            Assert.That(result.Data, Is.EqualTo(new[] { "2.0" }));
+            Assert.That(result, Is.EqualTo(new[] { "2.0" }));
         }
 
         [Test]
@@ -114,7 +114,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
 
             var result = controller.GetPackageVersions("Foo", false);
 
-            Assert.That(result.Data, Is.EqualTo(new[] { "2.0" }));
+            Assert.That(result, Is.EqualTo(new[] { "2.0" }));
         }
 
         [Test]
@@ -125,7 +125,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
 
             var result = controller.GetPackageVersions("Foo", true);
 
-            Assert.That(result.Data, Is.EqualTo(new[] { "1.0", "2.0-pre" }));
+            Assert.That(result, Is.EqualTo(new[] { "1.0", "2.0-pre" }));
         }
 
         private void AddSamplePackage(string id, string version)

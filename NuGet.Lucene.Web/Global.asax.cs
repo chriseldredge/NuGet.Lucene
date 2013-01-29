@@ -1,6 +1,7 @@
-﻿using System.Data.Services;
+﻿using System.Reflection;
 using System.ServiceModel.Activation;
 using System.Threading.Tasks;
+using System.Web.Http;
 using System.Web.Mvc;
 using System.Web.Routing;
 using Ninject;
@@ -49,16 +50,16 @@ namespace NuGet.Lucene.Web
             routes.MapRoute("Download Package", "api/v2/package/{id}/{version}",
                             new { controller = "Packages", action = "Download", version = UrlParameter.Optional });
 
-            routes.MapRoute("Package Manager Console Tab Completion - Package IDs", "api/v2/package-ids",
-                            new { controller = "TabCompletion", action = "GetMatchingPackages", maxResults = 30 });
+            routes.MapHttpRoute("Package Manager Console Tab Completion - Package IDs",
+                            "api/v2/package-ids",
+                            new { controller = "TabCompletion", action = "GetMatchingPackages", maxResults = 30, includePrerelease = false });
 
-            routes.MapRoute("Package Manager Console Tab Completion - Package Versions",
+            routes.MapHttpRoute("Package Manager Console Tab Completion - Package Versions",
                             "api/v2/package-versions/{packageId}",
-                            new { controller = "TabCompletion", action = "GetPackageVersions" });
+                            new { controller = "TabCompletion", action = "GetPackageVersions", includePrerelease = false });
 
-            routes.MapRoute("Create User", "users",
-                new { controller = "User", action = "Create" },
-                new { httpMethod = new HttpMethodConstraint("PUT", "POST") });
+            routes.MapHttpRoute("UserApi", "users/{username}",
+                            new { controller = "User", username = RouteParameter.Optional });
 
             routes.MapRoute("Error Test",
                             "error/throw/{statusCode}",

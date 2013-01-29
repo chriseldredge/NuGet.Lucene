@@ -1,13 +1,14 @@
+using System.Collections.Generic;
 using System.Linq;
-using System.Web.Mvc;
+using System.Web.Http;
 
 namespace NuGet.Lucene.Web.Controllers
 {
-    public class TabCompletionController : Controller
+    public class TabCompletionController : ApiController
     {
         public ILucenePackageRepository Repository { get; set; }
 
-        public JsonResult GetMatchingPackages(string partialId, bool? includePrerelease, int maxResults)
+        public IEnumerable<string> GetMatchingPackages(string partialId, bool includePrerelease, int maxResults)
         {
             var packages = GetPackages(includePrerelease);
 
@@ -20,33 +21,24 @@ namespace NuGet.Lucene.Web.Controllers
                 .Where(p => p.IsLatestVersion)
                 .OrderBy(p => p.Id);
 
-            var data = packages.Select(p => p.Id).Take(maxResults).ToArray();
-
-            return JsonResult(data);
+            return packages.Select(p => p.Id).Take(maxResults).ToArray();
         }
 
-        public JsonResult GetPackageVersions(string packageId, bool? includePrerelease)
+        public IEnumerable<string> GetPackageVersions(string packageId, bool includePrerelease)
         {
             var packages = GetPackages(includePrerelease).Where(p => p.Id == packageId);
 
-            var data = packages.OrderBy(p => p.Version).Select(p => p.Version.ToString()).ToArray();
-
-            return JsonResult(data);
+            return packages.OrderBy(p => p.Version).Select(p => p.Version.ToString()).ToArray();
         }
 
-        private IQueryable<LucenePackage> GetPackages(bool? includePrerelease)
+        private IQueryable<LucenePackage> GetPackages(bool includePrerelease)
         {
-            if (!includePrerelease.GetValueOrDefault(false))
+            if (!includePrerelease)
             {
                 return Repository.LucenePackages.Where(p => !p.IsPrerelease);
             }
 
             return Repository.LucenePackages;
-        }
-
-        private static JsonResult JsonResult(object data)
-        {
-            return new JsonResult {Data = data, JsonRequestBehavior = JsonRequestBehavior.AllowGet};
         }
     }
 }
