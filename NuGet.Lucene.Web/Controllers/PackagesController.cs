@@ -1,9 +1,8 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using System.Web.Mvc;
-using System.Web.Mvc.Async;
-using Common.Logging;
 using Ninject;
 using NuGet.Lucene.Web.Models;
 using NuGet.Lucene.Web.Mvc;
@@ -20,21 +19,18 @@ namespace NuGet.Lucene.Web.Controllers
             return View(Repository.GetIndexingStatus());
         }
 
-        // TODO: send Last-Modified / Etag, handle If-Modified-Since header, and HEAD request
+        // TODO: send Last-Modified / Etag, handle If-Modified-Since header
         public ActionResult Download(PackageSpec packageSpec)
         {
-            IPackage package;
+            LucenePackage package;
 
             if (packageSpec.Version != null)
             {
-                package = Repository.FindPackage(packageSpec.Id, packageSpec.Version);
+                package = (LucenePackage)Repository.FindPackage(packageSpec.Id, packageSpec.Version);
             }
             else
             {
-                package = (from pkg in Repository.GetPackages()
-                           where pkg.Id == packageSpec.Id
-                           orderby pkg.Version
-                           select pkg).LastOrDefault();
+                package = (LucenePackage)Repository.FindPackagesById(packageSpec.Id).OrderBy(p => p.Version).LastOrDefault();
             }
 
             if (package == null)
@@ -42,11 +38,19 @@ namespace NuGet.Lucene.Web.Controllers
                 return new HttpNotFoundResult();
             }
 
-            // Don't wait for Task to complete so request will process without blocking.
-            Repository.IncrementDownloadCount(package);
+            if (string.Equals(Request.HttpMethod, "GET", StringComparison.CurrentCultureIgnoreCase))
+            {
+                // Don't wait for Task to complete so request will process without blocking.
+                Repository.IncrementDownloadCount(package);
+            }
 
             var filename = string.Format("{0}.{1}{2}", package.Id, package.Version, Constants.PackageExtension);
-            return new FileStreamResult(package.GetStream(), "application/zip") { FileDownloadName = filename };
+            return new HeadSupportingFileStreamResult(package.GetStream(), "application/zip")
+                {
+                    FileDownloadName = filename,
+                    ContentLength = package.PackageSize,
+                    LastModified = package.LastUpdated
+                };
         }
 
         [AcceptVerbs("DELETE")]

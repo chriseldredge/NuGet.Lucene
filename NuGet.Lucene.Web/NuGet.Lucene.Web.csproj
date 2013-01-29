@@ -140,6 +140,7 @@
     <Compile Include="Modules\ApiKeyAuthenticationModule.cs" />
     <Compile Include="Modules\ErrorRoutingModule.cs" />
     <Compile Include="Modules\HttpModule.cs" />
+    <Compile Include="Mvc\HeadSupportingFileStreamResult.cs" />
     <Compile Include="Mvc\HttpStatusCreatedResult.cs" />
     <Compile Include="Mvc\ZipPackageUploadModelBinder.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
