@@ -55,6 +55,12 @@ namespace NuGet.Lucene
         /// </summary>
         public ILucenePackageRepository Repository { get; private set; }
 
+        /// <summary>
+        /// Holds a reference to the LINQ data provider after
+        /// <see cref="Initialize"/> has been invoked.
+        /// </summary>
+        public LuceneDataProvider Provider { get; set; }
+
         protected PackageIndexer PackageIndexer { get; set; }
 
         protected PackageFileSystemWatcher PackageFileSystemWatcher { get; set; }
@@ -63,7 +69,7 @@ namespace NuGet.Lucene
 
         protected LuceneDirectory LuceneDirectory { get; set; }
 
-        protected LuceneDataProvider Provider { get; set; }
+        
 
         public LuceneRepositoryConfigurator()
         {

@@ -56,6 +56,10 @@ namespace NuGet.Lucene.Web
                             "api/v2/package-versions/{packageId}",
                             new { controller = "TabCompletion", action = "GetPackageVersions" });
 
+            routes.MapRoute("Create User", "users",
+                new { controller = "User", action = "Create" },
+                new { httpMethod = new HttpMethodConstraint("PUT", "POST") });
+
             routes.MapRoute("Error Test",
                             "error/throw/{statusCode}",
                             new { controller = "Error", action = "Throw", statusCode = 500 });

@@ -1,23 +1,25 @@
 ﻿using System;
-using System.Security.Principal;
+using Ninject;
+using NuGet.Lucene.Web.Authentication;
 
 namespace NuGet.Lucene.Web.Modules
 {
     public class ApiKeyAuthenticationModule : HttpModule
     {
-        private ApiKeyAuthentication service;
+        [Inject]
+        public IApiKeyAuthentication service { get; set; }
 
         protected override void Init()
         {
             Application.AuthenticateRequest += AuthenticateRequest;
-            service = new ApiKeyAuthentication();
         }
 
         private void AuthenticateRequest(object sender, EventArgs e)
         {
-            if (service.AuthenticateRequest(Request))
+            var apiUser = service.AuthenticateRequest(Request);
+            if (apiUser != null)
             {
-                Context.User = new GenericPrincipal(new GenericIdentity("ApiUser", "NuGet Api Key Authentication"), new[] { "ApiUser" });
+                Context.User = apiUser;
             }
         }
     }

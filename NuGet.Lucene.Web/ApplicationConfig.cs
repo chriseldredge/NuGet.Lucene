@@ -1,8 +1,15 @@
-﻿using System.Configuration;
+﻿using System;
+using System.Configuration;
+using System.Linq;
 using System.Threading;
+using System.Web;
 using System.Web.Hosting;
+using Lucene.Net.Linq;
 using Ninject;
 using Ninject.Modules;
+using Ninject.Web.Common;
+using NuGet.Lucene.Web.Authentication;
+using NuGet.Lucene.Web.Modules;
 
 namespace NuGet.Lucene.Web
 {
@@ -20,8 +27,16 @@ namespace NuGet.Lucene.Web
 
             cfg.Initialize();
 
+            Bind<Func<IKernel>>().ToMethod(ctx => () => Kernel);
+            Bind<IHttpModule>().To<HttpApplicationInitializationHttpModule>();
+            
             Bind<ILucenePackageRepository>().ToConstant(cfg.Repository).OnDeactivation(_ => cfg.Dispose());
+            Bind<LuceneDataProvider>().ToConstant(cfg.Provider);
+            Bind<IQueryable<ApiUser>>().ToConstant(cfg.Provider.AsQueryable<ApiUser>());
+            Bind<IApiKeyAuthentication>().To<LuceneApiKeyAuthentication>();
 
+            Bind<IHttpModule>().To<ApiKeyAuthenticationModule>();
+            
             var repository = base.Kernel.Get<ILucenePackageRepository>();
 
             if (GetFlagFromAppSetting("synchronizeOnStart", true))
