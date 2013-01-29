@@ -5,13 +5,16 @@ using System.Data.Services.Common;
 using System.Data.Services.Providers;
 using System.Linq;
 using System.ServiceModel.Web;
+using Ninject;
 
 namespace NuGet.Lucene.Web.DataServices
 {
     public class PackageDataService : DataService<PackageDataSource>, IServiceProvider
     {
-        public static ILucenePackageRepository PackageRepository { get; set; }
         public static PackageServiceStreamProvider PackageServiceStreamProvider { get; private set; }
+
+        [Inject]
+        public ILucenePackageRepository PackageRepository { get; set; }
 
         public static void InitializeService(DataServiceConfiguration config)
         {
@@ -42,7 +45,7 @@ namespace NuGet.Lucene.Web.DataServices
 
         public object GetService(Type serviceType)
         {
-            if (serviceType == typeof (IDataServiceStreamProvider))
+            if (serviceType == typeof(IDataServiceStreamProvider))
             {
                 return PackageServiceStreamProvider;
             }
@@ -97,7 +100,6 @@ namespace NuGet.Lucene.Web.DataServices
             {
                 packagesToUpdate.Add(new PackageBuilder { Id = idValues[i], Version = new SemanticVersion(versionValues[i]) });
             }
-
 
             return from package in PackageRepository.GetUpdatesCore(packagesToUpdate, includePrerelease, includeAllVersions, targetFrameworkValues).AsQueryable()
                    select AsDataServicePackage(package);

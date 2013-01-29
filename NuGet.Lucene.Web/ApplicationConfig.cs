@@ -1,10 +1,8 @@
-﻿using System;
-using System.Configuration;
+﻿using System.Configuration;
 using System.Threading;
 using System.Web.Hosting;
 using Ninject;
 using Ninject.Modules;
-using NuGet.Lucene.Web.DataServices;
 
 namespace NuGet.Lucene.Web
 {
@@ -24,9 +22,11 @@ namespace NuGet.Lucene.Web
 
             Bind<ILucenePackageRepository>().ToConstant(cfg.Repository).OnDeactivation(_ => cfg.Dispose());
 
+            var repository = base.Kernel.Get<ILucenePackageRepository>();
+
             if (GetFlagFromAppSetting("synchronizeOnStart", true))
             {
-                cfg.Repository.SynchronizeWithFileSystem(CancellationToken.None);    
+                repository.SynchronizeWithFileSystem(CancellationToken.None);    
             }
         }
 

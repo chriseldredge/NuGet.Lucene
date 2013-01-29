@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using System.Web.Mvc;
 using System.Web.Routing;
 using Ninject;
+using Ninject.Extensions.Wcf;
 using Ninject.Web.Common;
 using NuGet.Lucene.Web.DataServices;
 
@@ -14,15 +15,11 @@ namespace NuGet.Lucene.Web
         public const string PackageFeedRouteName = "OData Package Feed";
         public static readonly RouteValueDictionary PackageFeedRouteValues = new RouteValueDictionary { { "serviceType", "odata" } };
 
-        private IKernel kernel;
-
         protected override void OnApplicationStarted()
         {
             TaskScheduler.UnobservedTaskException +=
                 (_, e) => UnhandledExceptionLogger.Log.Fatal(
                     m => m("Unobserved exception in async task: {0}", e.Exception.Message), e.Exception);
-
-            PackageDataService.PackageRepository = kernel.Get<ILucenePackageRepository>();
 
             MapMvcRoutes(RouteTable.Routes);
             MapDataServiceRoutes(RouteTable.Routes);
@@ -30,8 +27,7 @@ namespace NuGet.Lucene.Web
 
         protected override IKernel CreateKernel()
         {
-            kernel = new StandardKernel(new ApplicationConfig());
-            return kernel;
+            return new StandardKernel(new ApplicationConfig());
         }
 
         public static void MapMvcRoutes(RouteCollection routes)
@@ -72,7 +68,7 @@ namespace NuGet.Lucene.Web
 
         public static void MapDataServiceRoutes(RouteCollection routes)
         {
-            var dataServiceHostFactory = new DataServiceHostFactory();
+            var dataServiceHostFactory = new NinjectDataServiceHostFactory();
             
             var serviceRoute = new ServiceRoute("api/v2", dataServiceHostFactory, typeof(PackageDataService))
                 {
