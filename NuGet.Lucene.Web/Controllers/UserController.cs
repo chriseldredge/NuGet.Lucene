@@ -1,14 +1,12 @@
 ﻿using System.Net;
 using System.Web.Mvc;
 using Lucene.Net.Linq;
-using Ninject;
 using NuGet.Lucene.Web.Authentication;
 
 namespace NuGet.Lucene.Web.Controllers
 {
     public class UserController : Controller
     {
-        [Inject]
         public LuceneDataProvider Provider { get; set; }
 
         [HttpPost]

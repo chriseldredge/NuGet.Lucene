@@ -3,7 +3,6 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using System.Web.Mvc;
-using Ninject;
 using NuGet.Lucene.Web.Models;
 using NuGet.Lucene.Web.Mvc;
 
@@ -11,7 +10,6 @@ namespace NuGet.Lucene.Web.Controllers
 {
     public class PackagesController : Controller
     {
-        [Inject]
         public ILucenePackageRepository Repository { get; set; }
 
         public ActionResult Status()

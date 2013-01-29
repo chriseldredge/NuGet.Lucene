@@ -1,12 +1,10 @@
 using System.Linq;
 using System.Web.Mvc;
-using Ninject;
 
 namespace NuGet.Lucene.Web.Controllers
 {
     public class TabCompletionController : Controller
     {
-        [Inject]
         public ILucenePackageRepository Repository { get; set; }
 
         public JsonResult GetMatchingPackages(string partialId, bool? includePrerelease, int maxResults)

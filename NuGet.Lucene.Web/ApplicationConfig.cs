@@ -1,12 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Web;
 using System.Web.Hosting;
 using Lucene.Net.Linq;
 using Ninject;
+using Ninject.Components;
 using Ninject.Modules;
+using Ninject.Selection.Heuristics;
 using Ninject.Web.Common;
 using NuGet.Lucene.Web.Authentication;
 using NuGet.Lucene.Web.Modules;
@@ -27,6 +31,7 @@ namespace NuGet.Lucene.Web
 
             cfg.Initialize();
 
+            Kernel.Components.Add<IInjectionHeuristic, NonDecoratedPropertyInjectionHeuristic>();
             Bind<Func<IKernel>>().ToMethod(ctx => () => Kernel);
             Bind<IHttpModule>().To<HttpApplicationInitializationHttpModule>();
             
@@ -73,6 +78,41 @@ namespace NuGet.Lucene.Web
             }
 
             return path;
+        }
+    }
+
+    public class NonDecoratedPropertyInjectionHeuristic : NinjectComponent, IInjectionHeuristic
+    {
+        private readonly IKernel kernel;
+
+        private static readonly ISet<Assembly> knownAssemblies = new HashSet<Assembly> { typeof(NonDecoratedPropertyInjectionHeuristic).Assembly };
+
+        public NonDecoratedPropertyInjectionHeuristic(IKernel kernel)
+        {
+            this.kernel = kernel;
+        }
+
+        public bool ShouldInject(MemberInfo memberInfo)
+        {
+            var propertyInfo = memberInfo as PropertyInfo;
+            return ShouldInject(propertyInfo);
+        }
+
+        private bool ShouldInject(PropertyInfo propertyInfo)
+        {
+            if (propertyInfo == null)
+                return false;
+
+            if (!propertyInfo.CanWrite)
+                return false;
+
+            var targetType = propertyInfo.ReflectedType;
+            var assembly = targetType.Assembly;
+            if (!knownAssemblies.Contains(assembly))
+                return false;
+
+            var instance = kernel.TryGet(propertyInfo.PropertyType);
+            return instance != null;
         }
     }
 }

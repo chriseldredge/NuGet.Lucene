@@ -13,7 +13,6 @@ namespace NuGet.Lucene.Web.DataServices
     {
         public static PackageServiceStreamProvider PackageServiceStreamProvider { get; private set; }
 
-        [Inject]
         public ILucenePackageRepository PackageRepository { get; set; }
 
         public static void InitializeService(DataServiceConfiguration config)

@@ -1,7 +1,6 @@
 ﻿using System.Linq;
 using System.Security.Principal;
 using System.Web;
-using Ninject;
 
 namespace NuGet.Lucene.Web.Authentication
 {
@@ -9,7 +8,6 @@ namespace NuGet.Lucene.Web.Authentication
     {
         public const string ApiKeyHeader = "X-NuGet-ApiKey";
 
-        [Inject]
         public IQueryable<ApiUser> Users { get; set; }
 
         public IPrincipal AuthenticateRequest(HttpRequestBase request)
