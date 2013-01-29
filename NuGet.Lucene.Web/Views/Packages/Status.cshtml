@@ -2,6 +2,7 @@
 @model IndexingStatus
 
 <p>Indexer status: @Model.State</p>
+<p>Synchronizer status: @Model.SynchronizationStatus.SynchronizationState</p>
 @if (Model.SynchronizationStatus.SynchronizationState == SynchronizationState.Building)
 {
     <p>Synchronizing @Model.SynchronizationStatus.CompletedPackages of @Model.SynchronizationStatus.PackagesToIndex new packages.</p>

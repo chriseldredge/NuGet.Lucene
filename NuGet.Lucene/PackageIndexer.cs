@@ -185,7 +185,7 @@ namespace NuGet.Lucene
 
             var i = 0;
 
-            Parallel.ForEach(pathsToIndex, new ParallelOptions { MaxDegreeOfParallelism = 5 }, (p, s) =>
+            Parallel.ForEach(pathsToIndex, new ParallelOptions { MaxDegreeOfParallelism = 4 }, (p, s) =>
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     using(UpdateSynchronizationStatus(SynchronizationState.Building, completedPackages: Interlocked.Increment(ref i), packagesToIndex: pathsToIndex.Length, currentPackagePath: p))
@@ -238,7 +238,7 @@ namespace NuGet.Lucene
 
         private void ApplyUpdates(List<Update> items)
         {
-            Log.Trace(m => m("Processing {0} updates.", items.Count()));
+            Log.Info(m => m("Processing {0} updates.", items.Count()));
 
             using (var session = OpenSession())
             {

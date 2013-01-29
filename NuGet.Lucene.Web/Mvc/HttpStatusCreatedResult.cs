@@ -8,7 +8,7 @@ namespace NuGet.Lucene.Web.Mvc
     {
         private readonly string location;
 
-        public HttpStatusCreatedResult(string location) : base((HttpStatusCode) HttpStatusCode.Created)
+        public HttpStatusCreatedResult(string location) : base(HttpStatusCode.Created)
         {
             this.location = location;
         }
