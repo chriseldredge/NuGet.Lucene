@@ -5,7 +5,6 @@ using System.Data.Services.Common;
 using System.Data.Services.Providers;
 using System.Linq;
 using System.ServiceModel.Web;
-using Ninject;
 
 namespace NuGet.Lucene.Web.DataServices
 {

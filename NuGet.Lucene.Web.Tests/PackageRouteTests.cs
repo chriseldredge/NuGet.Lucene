@@ -14,18 +14,17 @@ namespace NuGet.Lucene.Web.Tests
         {
             routes = new RouteCollection();
             Global.MapMvcRoutes(routes);
+            Global.MapApiRoutes(routes);
         }
 
         [Test]
-        [TestCase("~/api/v2/Sample/1.0", "1.0")]
+        [TestCase("~/api/v2/package/Sample/1.0", "1.0")]
         public void DeletePackage(string uri, string version)
         {
             Assert.That(routes, HasRouteFor(uri, "delete")
                 .WithController("Packages")
-                .WithAction("Delete")
                 .WithRouteValue("id", "Sample")
                 .WithRouteValue("version", version));
-
         }
 
         [Test]
@@ -37,19 +36,17 @@ namespace NuGet.Lucene.Web.Tests
         {
             Assert.That(routes, HasRouteFor(uri)
                 .WithController("Packages")
-                .WithAction("Download")
                 .WithRouteValue("id", "Sample")
                 .WithRouteValue("version", version ?? UrlParameter.Optional));
         }
 
         [Test]
-        [TestCase("~/api/v2/", "put")]
-        [TestCase("~/api/v2/", "post")]
+        [TestCase("~/api/v2/package", "put")]
+        [TestCase("~/api/v2/package", "post")]
         public void UploadPackage(string uri, string method)
         {
             Assert.That(routes, HasRouteFor(uri, method)
-                .WithController("Packages")
-                .WithAction("Upload"));
+                .WithController("Packages"));
         }
 
     }

@@ -107,6 +107,8 @@
   <ItemGroup>
     <Compile Include="Controllers\PackagesControllerTests.cs" />
     <Compile Include="Controllers\TabCompletionControllerTests.cs" />
+    <Compile Include="Formatters\MultipartFormDataMediaFormatterTests.cs" />
+    <Compile Include="Formatters\PackageFormDataMediaFormatterTests.cs" />
     <Compile Include="PackageRouteTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RouteResolveContstraint.cs" />
@@ -116,6 +118,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\NuGet.Lucene.Tests\NuGet.Lucene.Tests.csproj">
+      <Project>{047EF5BE-181B-45E1-BEE4-08192729FE15}</Project>
+      <Name>NuGet.Lucene.Tests</Name>
+    </ProjectReference>
     <ProjectReference Include="..\NuGet.Lucene.Web\NuGet.Lucene.Web.csproj">
       <Project>{4BB603B3-C3A2-4584-A6AE-5547AB4B8C46}</Project>
       <Name>NuGet.Lucene.Web</Name>

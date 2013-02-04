@@ -161,6 +161,7 @@
     <Compile Include="Authentication\LuceneApiKeyAuthentication.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ErrorController.cs" />
+    <Compile Include="Controllers\IndexingController.cs" />
     <Compile Include="Controllers\PackagesController.cs" />
     <Compile Include="Controllers\TabCompletionController.cs" />
     <Compile Include="Controllers\UserController.cs" />
@@ -170,6 +171,9 @@
       <DependentUpon>PackageDataService.svc</DependentUpon>
     </Compile>
     <Compile Include="DataServices\PackageServiceStreamProvider.cs" />
+    <Compile Include="Filters\ExceptionLoggingFilter.cs" />
+    <Compile Include="Formatters\PackageFormDataMediaFormatter.cs" />
+    <Compile Include="Formatters\MultipartFormDataMediaFormatter.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -178,8 +182,6 @@
     <Compile Include="Modules\ApiKeyAuthenticationModule.cs" />
     <Compile Include="Modules\ErrorRoutingModule.cs" />
     <Compile Include="Modules\HttpModule.cs" />
-    <Compile Include="Mvc\HeadSupportingFileStreamResult.cs" />
-    <Compile Include="Mvc\ZipPackageUploadModelBinder.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UnhandledExceptionLogger.cs" />
   </ItemGroup>

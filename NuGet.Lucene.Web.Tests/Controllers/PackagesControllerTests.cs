@@ -1,10 +1,19 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Web.Mvc;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Threading.Tasks;
+using System.Web.Http;
+using System.Web.Http.Hosting;
+using System.Web.Http.Routing;
 using Moq;
 using NUnit.Framework;
 using NuGet.Lucene.Web.Controllers;
-using NuGet.Lucene.Web.Mvc;
+using NuGet.Lucene.Web.Models;
 
 namespace NuGet.Lucene.Web.Tests.Controllers
 {
@@ -14,35 +23,253 @@ namespace NuGet.Lucene.Web.Tests.Controllers
         private PackagesController controller;
         private Mock<ILucenePackageRepository> repository;
         private List<LucenePackage> packages;
+        private Task completeTask;
+        private HttpConfiguration configuration;
+        private HttpRequestMessage request;
+        private static readonly StrictSemanticVersion SampleVersion = new StrictSemanticVersion("1.0");
+        private LucenePackage package;
 
         [SetUp]
         public void SetUp()
         {
             packages = new List<LucenePackage>();
             repository = new Mock<ILucenePackageRepository>();
-            controller = new PackagesController { Repository = repository.Object };
+            request = new HttpRequestMessage(HttpMethod.Get, "http://localhost/api/package");
+            configuration = new HttpConfiguration();
 
-            repository.Setup(repo => repo.LucenePackages).Returns(packages.AsQueryable());
+            controller = new PackagesController { Repository = repository.Object, Request = request };
+            controller.Request.RequestUri = new Uri("http://localhost/api/v2/package");
+            controller.Request.Properties.Add(HttpPropertyKeys.HttpConfigurationKey, configuration);
+
+            completeTask = new Task(() => { });
+            completeTask.RunSynchronously();
+
+            var route = new Mock<IHttpRoute>();
+            var virtualPath = new Mock<IHttpVirtualPathData>();
+
+            virtualPath.SetupProperty(v => v.VirtualPath, "api/v2");
+            virtualPath.Setup(v => v.Route).Returns(route.Object);
+
+            route.Setup(r => r.GetVirtualPath(
+                    It.Is<HttpRequestMessage>(rq => rq == request),
+                    It.Is<IDictionary<string,object>>(v => v.ContainsKey("serviceType") && Equals(v["serviceType"], "odata"))))
+                .Returns(virtualPath.Object);
+
+            configuration.Routes.Add(Global.PackageFeedRouteName, route.Object);
+
+            package = CreatePackage(SampleVersion);
         }
 
         [Test]
-        [TestCase("Upload", "PUT", "POST")]
-        [TestCase("Delete", "DELETE")]
-        public void ActionsRequireAuthentication(string action, params string[] verbs)
+        public void GetPackageIdAndVersionNotFound()
+        {
+            package = null;
+
+            var result = DownloadPackage(HttpMethod.Head, "SomePackage", SampleVersion.SemanticVersion);
+
+            Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
+        }
+
+        [Test]
+        public void GetPackageIdNotFound()
+        {
+            package = null;
+
+            var result = DownloadPackage(HttpMethod.Head, "SomePackage", null);
+
+            Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
+        }
+
+        [Test]
+        public void GetLatestPackageVersionExcludesPreRelease()
+        {
+            packages.Add(CreatePackage(new StrictSemanticVersion("3.0-pre")));
+            packages.Add(CreatePackage(new StrictSemanticVersion("2.0")));
+            packages.Add(CreatePackage(new StrictSemanticVersion("1.0")));
+
+            var result = DownloadPackage(HttpMethod.Head, "SomePackage", null);
+
+            Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+            Assert.That(result.Content.Headers.ContentDisposition.FileName, Is.EqualTo("Sample.2.0.nupkg"));
+        }
+
+        [Test]
+        public void GetPackageHeaders()
+        {
+            var result = DownloadPackage(HttpMethod.Head, "SomePackage", SampleVersion.SemanticVersion);
+
+            Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+            Assert.That(result.Content.Headers.ContentType.MediaType, Is.EqualTo("application/zip"));
+            Assert.That(result.Headers.ETag, Is.Not.Null, "ETag header");
+            Assert.That(result.Headers.ETag.Tag, Is.EqualTo('"' + package.PackageHash + '"'));
+            Assert.That(result.Headers.ETag.IsWeak, Is.False, "ETag.IsWeak");
+            Assert.That(result.Content.Headers.ContentDisposition.DispositionType, Is.EqualTo("attachment"));
+            Assert.That(result.Content.Headers.ContentDisposition.Size, Is.EqualTo(package.PackageSize));
+            Assert.That(result.Content.Headers.ContentDisposition.ModificationDate, Is.EqualTo(package.LastUpdated));
+            Assert.That(result.Content.Headers.ContentDisposition.CreationDate, Is.EqualTo(package.Created));
+        }
+
+        [Test]
+        public async Task GetPackageHeadersSendsNoContent()
+        {
+            var result = DownloadPackage(HttpMethod.Head, "SomePackage", SampleVersion.SemanticVersion);
+
+            Assert.That(await GetContent(result), Is.Empty);
+        }
+
+        [Test]
+        public async Task GetPackageNotModifiedByEtag()
+        {
+            request.Headers.IfMatch.Add(new EntityTagHeaderValue('"' + package.PackageHash + '"'));
+
+            var result = DownloadPackage(HttpMethod.Get, "SomePackage", SampleVersion.SemanticVersion);
+
+            Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.NotModified));
+            Assert.That(await GetContent(result), Is.Empty);
+        }
+
+        [Test]
+        public async Task GetPackageNotModifiedByDate()
+        {
+            request.Headers.IfModifiedSince = package.LastUpdated;
+
+            var result = DownloadPackage(HttpMethod.Get, "SomePackage", SampleVersion.SemanticVersion);
+
+            Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.NotModified));
+            Assert.That(await GetContent(result), Is.Empty);
+        }
+
+        [Test]
+        public async Task DownloadPackageSendsContent()
+        {
+            var result = DownloadPackage(HttpMethod.Get, "SomePackage", SampleVersion.SemanticVersion);
+
+            Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+            Assert.That(await GetContent(result), Is.EqualTo("<fake package contents>"));
+        }
+        
+        [Test]
+        public async Task PutPackage()
+        {
+            repository.Setup(r => r.AddPackageAsync(package)).Returns(completeTask);
+
+            var result = await controller.PutPackage(package);
+
+            repository.Verify(r => r.AddPackageAsync(package));
+
+            Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.Created));
+            Assert.That(result.Headers.Location, Is.EqualTo(new Uri("http://localhost/api/v2/Packages(Id='Sample',Version='1.0')")));
+        }
+
+        [Test]
+        public async Task PutPackageCannotBeNull()
+        {
+            var result = await controller.PutPackage(null);
+            
+            repository.Verify(r => r.AddPackageAsync(It.IsAny<IPackage>()), Times.Never());
+
+            Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
+        }
+
+        [Test]
+        public async Task DeletePackageSpecCannotBeNull()
+        {
+            var result = await controller.DeletePackage(null);
+
+            repository.Verify(r => r.RemovePackageAsync(It.IsAny<IPackage>()), Times.Never());
+
+            Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
+        }
+
+        [Test]
+        public async Task DeletePackageRequiresId()
+        {
+            var result = await controller.DeletePackage(new PackageSpec { Version = new SemanticVersion("1.0") });
+
+            repository.Verify(r => r.AddPackageAsync(It.IsAny<IPackage>()), Times.Never());
+
+            Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
+        }
+
+        [Test]
+        public async Task DeletePackageNotFound()
+        {
+            repository.Setup(r => r.FindPackage(package.Id, package.Version.SemanticVersion)).Returns((IPackage)null);
+
+            var result = await controller.DeletePackage(new PackageSpec { Id = package.Id, Version = package.Version.SemanticVersion });
+
+            repository.Verify(r => r.AddPackageAsync(It.IsAny<IPackage>()), Times.Never());
+
+            Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
+        }
+
+        [Test]
+        public async Task DeletePackage()
+        {
+            repository.Setup(r => r.FindPackage(package.Id, package.Version.SemanticVersion)).Returns(package);
+            repository.Setup(r => r.RemovePackageAsync(package)).Returns(Task.FromResult(""));
+
+            var result = await controller.DeletePackage(new PackageSpec { Id = package.Id, Version = package.Version.SemanticVersion });
+            
+            repository.VerifyAll();
+
+            Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+        }
+
+        [Test]
+        [TestCase("DownloadPackage", typeof(HttpGetAttribute), typeof(HttpHeadAttribute))]
+        public void NonStandardActionsAllowMethods(string action, params Type[] verbs)
         {
             AssertAuthenticationAttributePresent(action, verbs);
         }
 
-        private void AssertAuthenticationAttributePresent(string action, IEnumerable<string> verbs)
+        private void AssertAuthenticationAttributePresent(string action, IEnumerable<Type> expectedMethods)
         {
             var method = controller.GetType().GetMethod(action);
 
             Assert.That(method, Is.Not.Null, "Action method " + action + " not found on controller type " + controller.GetType());
-            var acceptVerbsAttribute = method.GetCustomAttribute<AcceptVerbsAttribute>();
+            var methods = method.GetCustomAttributes(typeof(Attribute), true);
 
-            Assert.That(acceptVerbsAttribute, Is.Not.Null, "AcceptVerbsAttribute should decorate " + action + " action.");
+            Assert.That(methods.Select(m => m.GetType()).ToArray(), Is.EquivalentTo(expectedMethods));
+        }
+        
+        private static LucenePackage CreatePackage(StrictSemanticVersion version)
+        {
+            return new LucenePackage(_ => new MemoryStream(Encoding.UTF8.GetBytes("<fake package contents>")))
+                {
+                    Id = "Sample",
+                    Version = version,
+                    PackageHash = "fake hash",
+                    PackageSize = 12345678L,
+                    Created = new DateTimeOffset(2000, 1, 1, 0, 0, 0, TimeSpan.Zero),
+                    Published = new DateTimeOffset(3000, 1, 1, 0, 0, 0, TimeSpan.Zero),
+                    LastUpdated = new DateTimeOffset(4000, 1, 1, 0, 0, 0, TimeSpan.Zero),
+                };
+        }
 
-            Assert.That(acceptVerbsAttribute.Verbs, Is.EquivalentTo(verbs));
+        private HttpResponseMessage DownloadPackage(HttpMethod method, string packageId, SemanticVersion version)
+        {
+            request.Method = method;
+
+            if (version != null)
+            {
+                repository.Setup(r => r.FindPackage(packageId, version)).Returns(package);
+            }
+            else
+            {
+                repository.Setup(r => r.FindPackagesById(packageId)).Returns(packages);
+            }
+
+            return controller.DownloadPackage(new PackageSpec { Id = packageId, Version = version });
+        }
+
+        private static async Task<string> GetContent(HttpResponseMessage result)
+        {
+            if (result.Content == null) return string.Empty;
+
+            var stream = new MemoryStream();
+            await result.Content.CopyToAsync(stream);
+            return Encoding.UTF8.GetString(stream.GetBuffer(), 0, (int)stream.Length);
         }
     }
 }

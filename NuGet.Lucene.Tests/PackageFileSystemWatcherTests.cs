@@ -46,7 +46,7 @@ namespace NuGet.Lucene.Tests
         [Test]
         public async Task PackageModified_HandlesException()
         {
-            var exception = new Exception("mock error");
+            var exception = new Exception("LoadFromIndex: mock error");
 
             loader.Setup(ld => ld.LoadFromIndex(@".\Sample.1.0.nupkg")).Throws(exception);
             log.Setup(l => l.Error(exception));
@@ -71,7 +71,7 @@ namespace NuGet.Lucene.Tests
         [Test]
         public async Task PackageDeleted_HandlesException()
         {
-            var exception = new Exception("mock error");
+            var exception = new Exception("RemovePackage: mock error");
             var lucenePackage = new LucenePackage(fileSystem.Object);
 
             loader.Setup(ld => ld.LoadFromIndex(@".\Sample.1.0.nupkg")).Returns(lucenePackage);
