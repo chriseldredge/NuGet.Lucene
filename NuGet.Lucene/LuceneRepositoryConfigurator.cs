@@ -4,6 +4,7 @@ using System.Linq;
 using Common.Logging;
 using Lucene.Net.Index;
 using Lucene.Net.Linq;
+using Lucene.Net.Linq.Abstractions;
 using Lucene.Net.Store;
 using Directory = System.IO.Directory;
 using LuceneDirectory = Lucene.Net.Store.Directory;
@@ -61,15 +62,15 @@ namespace NuGet.Lucene
         /// </summary>
         public LuceneDataProvider Provider { get; set; }
 
+        /// <summary>
+        /// Holds a reference to the Lucene Directory after
+        /// <see cref="Initialize"/> has been invoked.
+        /// </summary>
+        public LuceneDirectory LuceneDirectory { get; set; }
+
         protected PackageIndexer PackageIndexer { get; set; }
 
         protected PackageFileSystemWatcher PackageFileSystemWatcher { get; set; }
-
-        protected IndexWriter IndexWriter { get; set; }
-
-        protected LuceneDirectory LuceneDirectory { get; set; }
-
-        
 
         public LuceneRepositoryConfigurator()
         {
@@ -90,7 +91,7 @@ namespace NuGet.Lucene
                 {
                     FileSystem = fileSystem,
                     Provider = Provider,
-                    Writer = IndexWriter
+                    Writer = Provider.IndexWriter
                 };
 
             var repository = new LucenePackageRepository(packagePathResolver, fileSystem)
@@ -125,7 +126,7 @@ namespace NuGet.Lucene
             }
 
             PackageIndexer.Dispose();
-            IndexWriter.Dispose();
+            Provider.Dispose();
             LuceneDirectory.Dispose();
         }
 
@@ -159,11 +160,7 @@ namespace NuGet.Lucene
         {
             LuceneDirectory = OpenLuceneDirectory(LuceneIndexPath);
 
-            var analyzer = new PackageAnalyzer();
-            var create = ShouldCreateIndex(LuceneDirectory);
-
-            IndexWriter = new IndexWriter(LuceneDirectory, analyzer, create, IndexWriter.MaxFieldLength.UNLIMITED);
-            Provider = new LuceneDataProvider(LuceneDirectory, analyzer, Version.LUCENE_30, IndexWriter);
+            Provider = new LuceneDataProvider(LuceneDirectory, Version.LUCENE_30);
         }
         
         private IPackagePathResolver CreatePackagePathResolver()
@@ -174,22 +171,6 @@ namespace NuGet.Lucene
             }
 
             return new DefaultPackagePathResolver(PackagePath);
-        }
-
-        private static bool ShouldCreateIndex(LuceneDirectory dir)
-        {
-            bool create;
-
-            try
-            {
-                create = !dir.ListAll().Any();
-            }
-            catch (NoSuchDirectoryException)
-            {
-                create = true;
-            }
-
-            return create;
         }
 
         private static LuceneDirectory OpenLuceneDirectory(string luceneIndexPath)

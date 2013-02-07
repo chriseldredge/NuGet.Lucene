@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using Lucene.Net.Index;
 using Lucene.Net.Linq;
+using Lucene.Net.Linq.Abstractions;
 using Lucene.Net.Store;
 using Moq;
 using NUnit.Framework;
@@ -17,7 +18,7 @@ namespace NuGet.Lucene.Tests
         protected Mock<IFileSystem> fileSystem;
         protected LuceneDataProvider provider;
         protected IQueryable<LucenePackage> datasource;
-        protected IndexWriter indexWriter;
+        protected IIndexWriter indexWriter;
 
         [SetUp]
         public void TestBaseSetUp()
@@ -30,10 +31,10 @@ namespace NuGet.Lucene.Tests
             packagePathResolver.Setup(p => p.GetPackageFileName(It.IsAny<IPackage>())).Returns((Func<IPackage, string>)(pkg => pkg.Id));
 
             var dir = new RAMDirectory();
-            var analyzer = new PackageAnalyzer();
-            indexWriter = new IndexWriter(dir, analyzer, true, IndexWriter.MaxFieldLength.UNLIMITED);
 
-            provider = new LuceneDataProvider(dir, analyzer, Version.LUCENE_30, indexWriter);
+            provider = new LuceneDataProvider(dir, Version.LUCENE_30);
+            indexWriter = provider.IndexWriter;
+
             datasource = provider.AsQueryable(() => new LucenePackage(fileSystem.Object));
         }
 

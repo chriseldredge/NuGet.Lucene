@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Common.Logging;
 using Lucene.Net.Index;
 using Lucene.Net.Linq;
+using Lucene.Net.Linq.Abstractions;
 using Lucene.Net.Search;
 using NuGet.Lucene.Util;
 
@@ -69,7 +70,7 @@ namespace NuGet.Lucene
 
         public IFileSystem FileSystem { get; set; }
 
-        public IndexWriter Writer { get; set; }
+        public IIndexWriter Writer { get; set; }
 
         public LuceneDataProvider Provider { get; set; }
 

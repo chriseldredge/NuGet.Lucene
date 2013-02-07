@@ -1,14 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
+using Lucene.Net.Analysis.Standard;
 using Lucene.Net.Linq.Mapping;
 using NuGet.Lucene.Mapping;
 using DateTimeOffsetToTicksConverter = Lucene.Net.Linq.Converters.DateTimeOffsetToTicksConverter;
 
 namespace NuGet.Lucene
 {
+    [DebuggerDisplay("Id = {Id}, Version = {Version}")]
     public class LucenePackage : IPackage
     {
         private readonly Func<string, Stream> getStream;
@@ -66,15 +69,19 @@ namespace NuGet.Lucene
         [NumericField(Converter = typeof(BoolToIntConverter))]
         public bool RequireLicenseAcceptance { get; set; }
 
+        [Field(Analyzer = typeof(PorterStemAnalyzer))]
         public string Description { get; set; }
 
+        [Field(Analyzer = typeof(PorterStemAnalyzer))]
         public string Summary { get; set; }
 
+        [Field(Analyzer = typeof(PorterStemAnalyzer))]
         public string ReleaseNotes { get; set; }
 
         [Field(IndexMode.NotIndexed)]
         public string Language { get; set; }
 
+        [Field(Analyzer = typeof(PorterStemAnalyzer))]
         public string Tags { get; set; }
 
         [Field(IndexMode.NotIndexed)]
@@ -104,10 +111,13 @@ namespace NuGet.Lucene
         [NumericField(Converter = typeof(DateTimeOffsetToTicksConverter))]
         public DateTimeOffset? Published { get; set; }
 
+        [Field(Analyzer = typeof(StandardAnalyzer))]
         public IEnumerable<string> Authors { get; set; }
 
+        [Field(Analyzer = typeof(StandardAnalyzer))]
         public IEnumerable<string> Owners { get; set; }
 
+        [Field(Analyzer = typeof(DependencyAnalyzer))]
         public IEnumerable<string> Dependencies { get; set; }
 
         [IgnoreField]

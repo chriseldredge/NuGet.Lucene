@@ -14,7 +14,7 @@ namespace NuGet.Lucene.Web.Controllers
 
         public IEnumerable<ApiUser> GetAllUsers()
         {
-            return Provider.AsQueryable<ApiUser>().Where(u => u.Username != null).ToList();
+            return Provider.AsQueryable<ApiUser>().ToList();
         }
 
         public ApiUser Get(string username)
