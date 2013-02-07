@@ -193,7 +193,7 @@ namespace NuGet.Lucene
             var path = GetPackageFilePath(lucenePackage);
             lucenePackage.Path = path;
 
-            CalculateDerivedData(lucenePackage, path, lucenePackage.GetStream());
+            CalculateDerivedData(package, lucenePackage, path, lucenePackage.GetStream());
 
             return lucenePackage;
         }
@@ -226,7 +226,7 @@ namespace NuGet.Lucene
             lucenePackage.AssemblyReferences = package.AssemblyReferences;
         }
 
-        protected virtual void CalculateDerivedData(LucenePackage package, string path, Stream stream)
+        protected virtual void CalculateDerivedData(IPackage sourcePackage, LucenePackage package, string path, Stream stream)
         {
             byte[] fileBytes;
             using (stream)
@@ -241,8 +241,14 @@ namespace NuGet.Lucene
             package.Published = package.LastUpdated;
             package.Created = GetZipArchiveCreateDate(new MemoryStream(fileBytes));
             package.Path = path;
-            package.SupportedFrameworks = package.GetSupportedFrameworks();
-            package.Files = package.GetFiles().Select(p => p.Path);
+
+            package.SupportedFrameworks = sourcePackage.GetSupportedFrameworks().Select(VersionUtility.GetShortFrameworkName);
+
+            var localPackage = sourcePackage as LocalPackage;
+            if (localPackage != null)
+            {
+                package.Files = localPackage.GetFiles().Select(f => f.Path);
+            }
         }
 
         private DateTimeOffset GetZipArchiveCreateDate(Stream stream)

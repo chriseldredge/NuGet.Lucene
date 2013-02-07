@@ -90,7 +90,6 @@
     <Compile Include="Mapping\BoolToIntConverter.cs" />
     <Compile Include="Mapping\CachingSemanticVersionConverter.cs" />
     <Compile Include="Mapping\DateTimeOffsetToTicksConverter.cs" />
-    <Compile Include="Mapping\FrameworkNameConverter.cs" />
     <Compile Include="Mapping\PackageDependencySetConverter.cs" />
     <Compile Include="DependencyAnalyzer.cs" />
     <Compile Include="PackageFileSystemWatcher.cs" />

@@ -135,7 +135,7 @@ namespace NuGet.Lucene
 
         public IEnumerable<FrameworkName> GetSupportedFrameworks()
         {
-            return SupportedFrameworks;
+            return SupportedFrameworks.Select(VersionUtility.ParseFrameworkName);
         }
 
         public IEnumerable<IPackageFile> GetFiles()
@@ -170,8 +170,7 @@ namespace NuGet.Lucene
         [Field(IndexMode.NotAnalyzed)]
         public string Path { get; set; }
 
-        [Field(Converter = typeof(FrameworkNameConverter))]
-        public IEnumerable<FrameworkName> SupportedFrameworks { get; set; }
+        public IEnumerable<string> SupportedFrameworks { get; set; }
 
         public IEnumerable<string> Files { get; set; }
 

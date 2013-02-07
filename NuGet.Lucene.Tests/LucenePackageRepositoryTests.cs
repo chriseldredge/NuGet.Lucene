@@ -1,4 +1,7 @@
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Runtime.Versioning;
 using Moq;
 using NUnit.Framework;
 
@@ -18,7 +21,8 @@ namespace NuGet.Lucene.Tests
                              {
                                  Indexer = indexer.Object,
                                  LucenePackages = datasource,
-                                 LuceneDataProvider = provider
+                                 LuceneDataProvider = provider,
+                                 HashProvider = new CryptoHashProvider()
                              };
         }
 
@@ -68,6 +72,54 @@ namespace NuGet.Lucene.Tests
 
             Assert.That(result.Id, Is.EqualTo("a"));
             Assert.That(result.Version.ToString(), Is.EqualTo("1.0.0.0"));
+        }
+
+        [Test]
+        public void ConvertPackage_SupporteedFrameworks()
+        {
+            var package = SetUpConvertPackage();
+
+            var result = repository.Convert(package.Object);
+
+            Assert.That(result.SupportedFrameworks, Is.Not.Null, "SupportedFrameworks");
+            Assert.That(result.SupportedFrameworks.ToArray(), Is.EquivalentTo(new[] {"net40"}));
+        }
+
+        [Test]
+        public void ConvertPackage_Files()
+        {
+            var package = SetUpConvertPackage();
+            var file1 = new Mock<IPackageFile>();
+            file1.Setup(f => f.Path).Returns("path1");
+            package.Object.Files = new[] {file1.Object};
+
+            var result = repository.Convert(package.Object);
+
+            Assert.That(result.Files, Is.Not.Null, "Files");
+            Assert.That(result.Files.ToArray(), Is.EquivalentTo(new[] { "path1" }));
+        }
+
+        private Mock<PackageWithFiles> SetUpConvertPackage()
+        {
+            var package = new Mock<PackageWithFiles>();
+
+            package.Object.Id = "Sample";
+            package.Object.Version = new SemanticVersion("1.0");
+            package.Object.DependencySets = new List<PackageDependencySet>();
+
+            package.Setup(p => p.GetSupportedFrameworks()).Returns(new[] {VersionUtility.ParseFrameworkName("net40")});
+            fileSystem.Setup(fs => fs.OpenFile(It.IsAny<string>())).Returns(new MemoryStream());
+            package.Setup(p => p.GetStream()).Returns(new MemoryStream());
+            return package;
+        }
+
+        public abstract class PackageWithFiles : LocalPackage
+        {
+            public IEnumerable<IPackageFile> Files { get;  set; }
+            protected sealed override IEnumerable<IPackageFile> GetFilesBase()
+            {
+                return Files ?? new IPackageFile[0];
+            }
         }
     }
 }
