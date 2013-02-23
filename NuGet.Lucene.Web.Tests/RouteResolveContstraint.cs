@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Net.Http;
 using System.Web;
+using System.Web.Http;
 using System.Web.Routing;
 using Moq;
 using NUnit.Framework;
@@ -9,19 +11,19 @@ namespace NuGet.Lucene.Web.Tests
 {
     public class RouteResolveContstraint : Constraint, IResolveConstraint
     {
-        private readonly string url;
-        private readonly string method;
+        private readonly string relativeUrl;
+        private readonly HttpMethod method;
         private readonly IDictionary<string, object> expectedRouteValues = new Dictionary<string, object>(); 
 
-        public RouteResolveContstraint(string url)
-            : this(url, "get")
+        public RouteResolveContstraint(string relativeUrl)
+            : this(relativeUrl, HttpMethod.Get)
         {
-            this.url = url;
+            this.relativeUrl = relativeUrl;
         }
 
-        public RouteResolveContstraint(string url, string method)
+        public RouteResolveContstraint(string relativeUrl, HttpMethod method)
         {
-            this.url = url;
+            this.relativeUrl = relativeUrl;
             this.method = method;
         }
 
@@ -32,19 +34,21 @@ namespace NuGet.Lucene.Web.Tests
 
         public override bool Matches(object actual)
         {
-            var routes = (RouteCollection)actual;
+            var routes = (HttpRouteCollection)actual;
 
-            var context = new Mock<HttpContextBase>();
-            context.Setup(c => c.Request.HttpMethod).Returns(method);
-            context.Setup(c => c.Request.AppRelativeCurrentExecutionFilePath).Returns(url);
+            var message = new HttpRequestMessage(method, "http://localhost/" + relativeUrl);
 
-            var routeData = routes.GetRouteData(context.Object);
+            var routeData = routes.GetRouteData(message);
 
-            Assert.That(routeData, Is.Not.Null, "RouteData not found for " + url);
-
+            Assert.That(routeData, Is.Not.Null, "RouteData not found for " + relativeUrl);
+            
             foreach (var kv in expectedRouteValues)
             {
-                Assert.That(routeData.Values[kv.Key], Is.EqualTo(kv.Value), "RouteData.Values[" + kv.Key + "]");
+                object actualValue;
+
+                routeData.Values.TryGetValue(kv.Key, out actualValue);
+
+                Assert.That(actualValue, Is.EqualTo(kv.Value), "RouteData.Values[" + kv.Key + "]");
             }
             return true;
         }

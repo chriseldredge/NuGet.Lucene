@@ -107,12 +107,14 @@
   <ItemGroup>
     <Compile Include="Controllers\PackagesControllerTests.cs" />
     <Compile Include="Controllers\TabCompletionControllerTests.cs" />
+    <Compile Include="Controllers\ApiControllerTests.cs" />
     <Compile Include="Formatters\MultipartFormDataMediaFormatterTests.cs" />
     <Compile Include="Formatters\PackageFormDataMediaFormatterTests.cs" />
     <Compile Include="PackageRouteTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RouteResolveContstraint.cs" />
     <Compile Include="RouteTests.cs" />
+    <Compile Include="TabCompletionRouteTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

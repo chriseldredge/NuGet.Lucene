@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -13,6 +15,38 @@ namespace NuGet.Lucene.Web.Controllers
     public class PackagesController : ApiController
     {
         public ILucenePackageRepository Repository { get; set; }
+
+        public dynamic GetPackageInfo([FromUri]PackageSpec packageSpec)
+        {
+            var packages = Repository
+                            .LucenePackages
+                            .Where(p => p.Id == packageSpec.Id)
+                            .OrderBy(p => p.Version)
+                            .ToList();
+
+            var package = packageSpec.Version != null
+                              ? packages.Find(p => p.Version.SemanticVersion == packageSpec.Version)
+                              : packages.LastOrDefault();
+            
+            if (package == null)
+            {
+                return Request.CreateErrorResponse(HttpStatusCode.NotFound, "Package not found.");
+            }
+
+            var versionHistory = packages.Select(
+                pkg => new
+                    {
+                        pkg.Version,
+                        pkg.LastUpdated,
+                        pkg.VersionDownloadCount,
+                        Link = Url.Link(RouteNames.PackageInfo, new { id = pkg.Id, version = pkg.Version })
+                    });
+
+            dynamic result = new ExpandoObject();
+            result.Package = package;
+            result.VersionHistory = versionHistory.ToArray();
+            return result;
+        }
 
         [HttpGet]
         [HttpHead]
@@ -77,24 +111,6 @@ namespace NuGet.Lucene.Web.Controllers
             return null;
         }
 
-        private LucenePackage FindPackage(PackageSpec packageSpec)
-        {
-            LucenePackage package;
-
-            if (packageSpec.Version != null)
-            {
-                package = (LucenePackage) Repository.FindPackage(packageSpec.Id, packageSpec.Version);
-            }
-            else
-            {
-                package = Repository.FindPackagesById(packageSpec.Id)
-                                    .Cast<LucenePackage>()
-                                    .Where(p => p.IsPrerelease == false)
-                                    .OrderBy(p => p.Version).LastOrDefault();
-            }
-            return package;
-        }
-
         public async Task<HttpResponseMessage> DeletePackage([FromUri]PackageSpec packageSpec)
         {
             if (packageSpec == null || string.IsNullOrWhiteSpace(packageSpec.Id) || packageSpec.Version == null)
@@ -126,12 +142,29 @@ namespace NuGet.Lucene.Web.Controllers
 
             await Repository.AddPackageAsync(package);
 
-            var feedBase = Url.Link(Global.PackageFeedRouteName, Global.PackageFeedRouteValues);
-            var location = string.Format("{0}/Packages(Id='{1}',Version='{2}')", feedBase, package.Id, package.Version);
+            var location = Url.Link(RouteNames.PackageInfo, new { id = package.Id, version = package.Version });
 
             var result = Request.CreateResponse(HttpStatusCode.Created);
             result.Headers.Location = new Uri(location);
             return result;
+        }
+
+        private LucenePackage FindPackage(PackageSpec packageSpec)
+        {
+            LucenePackage package;
+
+            if (packageSpec.Version != null)
+            {
+                package = (LucenePackage)Repository.FindPackage(packageSpec.Id, packageSpec.Version);
+            }
+            else
+            {
+                package = Repository.FindPackagesById(packageSpec.Id)
+                                    .Cast<LucenePackage>()
+                                    .Where(p => p.IsPrerelease == false)
+                                    .OrderBy(p => p.Version).LastOrDefault();
+            }
+            return package;
         }
     }
 }

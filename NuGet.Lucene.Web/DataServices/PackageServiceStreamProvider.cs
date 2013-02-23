@@ -1,5 +1,7 @@
 using System;
 using System.Data.Services;
+using System.Web;
+using System.Web.Routing;
 
 namespace NuGet.Lucene.Web.DataServices
 {
@@ -13,7 +15,24 @@ namespace NuGet.Lucene.Web.DataServices
         public override Uri GetReadStreamUri(object entity, DataServiceOperationContext operationContext)
         {
             var package = (DataServicePackage)entity;
-            return new Uri(operationContext.AbsoluteServiceUri, string.Format("package/{0}/{1}", package.Id, package.Version));
+            
+            var vpath = GetPackageDownloadPath(package);
+
+            return new Uri(operationContext.AbsoluteRequestUri, vpath);
+        }
+
+        public string GetPackageDownloadPath(DataServicePackage package)
+        {
+            var route = RouteTable.Routes[RouteNames.PackageDownload];
+
+            var routeValues = new {id = package.Id, version = package.Version, httproute = true};
+            
+            return route.GetVirtualPath(RequestContext, new RouteValueDictionary(routeValues)).VirtualPath;
+        }
+
+        private static RequestContext RequestContext
+        {
+            get { return new RequestContext(new HttpContextWrapper(HttpContext.Current), new RouteData()); }
         }
     }
 }

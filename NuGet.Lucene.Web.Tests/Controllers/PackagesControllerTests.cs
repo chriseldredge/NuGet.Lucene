@@ -8,8 +8,6 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web.Http;
-using System.Web.Http.Hosting;
-using System.Web.Http.Routing;
 using Moq;
 using NUnit.Framework;
 using NuGet.Lucene.Web.Controllers;
@@ -18,14 +16,11 @@ using NuGet.Lucene.Web.Models;
 namespace NuGet.Lucene.Web.Tests.Controllers
 {
     [TestFixture]
-    public class PackagesControllerTests
+    public class PackagesControllerTests : ApiControllerTests<PackagesController>
     {
-        private PackagesController controller;
         private Mock<ILucenePackageRepository> repository;
         private List<LucenePackage> packages;
         private Task completeTask;
-        private HttpConfiguration configuration;
-        private HttpRequestMessage request;
         private static readonly StrictSemanticVersion SampleVersion = new StrictSemanticVersion("1.0");
         private LucenePackage package;
 
@@ -33,31 +28,20 @@ namespace NuGet.Lucene.Web.Tests.Controllers
         public void SetUp()
         {
             packages = new List<LucenePackage>();
-            repository = new Mock<ILucenePackageRepository>();
-            request = new HttpRequestMessage(HttpMethod.Get, "http://localhost/api/package");
-            configuration = new HttpConfiguration();
-
-            controller = new PackagesController { Repository = repository.Object, Request = request };
-            controller.Request.RequestUri = new Uri("http://localhost/api/v2/package");
-            controller.Request.Properties.Add(HttpPropertyKeys.HttpConfigurationKey, configuration);
 
             completeTask = new Task(() => { });
             completeTask.RunSynchronously();
 
-            var route = new Mock<IHttpRoute>();
-            var virtualPath = new Mock<IHttpVirtualPathData>();
-
-            virtualPath.SetupProperty(v => v.VirtualPath, "api/v2");
-            virtualPath.Setup(v => v.Route).Returns(route.Object);
-
-            route.Setup(r => r.GetVirtualPath(
-                    It.Is<HttpRequestMessage>(rq => rq == request),
-                    It.Is<IDictionary<string,object>>(v => v.ContainsKey("serviceType") && Equals(v["serviceType"], "odata"))))
-                .Returns(virtualPath.Object);
-
-            configuration.Routes.Add(Global.PackageFeedRouteName, route.Object);
-
             package = CreatePackage(SampleVersion);
+
+            SetUpRequest(RouteNames.PackageApi, HttpMethod.Put, "api/v2/package");
+        }
+
+        protected override PackagesController CreateController()
+        {
+            repository = new Mock<ILucenePackageRepository>();
+
+            return new PackagesController {Repository = repository.Object};
         }
 
         [Test]
@@ -158,7 +142,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
             repository.Verify(r => r.AddPackageAsync(package));
 
             Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.Created));
-            Assert.That(result.Headers.Location, Is.EqualTo(new Uri("http://localhost/api/v2/Packages(Id='Sample',Version='1.0')")));
+            Assert.That(result.Headers.Location, Is.EqualTo(new Uri("http://localhost/api/v2/package/Sample/1.0")));
         }
 
         [Test]
@@ -223,16 +207,50 @@ namespace NuGet.Lucene.Web.Tests.Controllers
             AssertAuthenticationAttributePresent(action, verbs);
         }
 
-        private void AssertAuthenticationAttributePresent(string action, IEnumerable<Type> expectedMethods)
+        [Test]
+        public void GetPackageInfo()
         {
-            var method = controller.GetType().GetMethod(action);
+            var v1 = CreatePackage(new StrictSemanticVersion("1.0"));
 
-            Assert.That(method, Is.Not.Null, "Action method " + action + " not found on controller type " + controller.GetType());
-            var methods = method.GetCustomAttributes(typeof(Attribute), true);
+            packages.Add(v1);
+            packages.Add(CreatePackage(new StrictSemanticVersion("2.0")));
 
-            Assert.That(methods.Select(m => m.GetType()).ToArray(), Is.EquivalentTo(expectedMethods));
+            repository.Setup(r => r.LucenePackages).Returns(packages.AsQueryable());
+
+            dynamic result = controller.GetPackageInfo(new PackageSpec {Id = v1.Id, Version = new SemanticVersion("1.0")});
+
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result.Package, Is.SameAs(v1));
+            Assert.That(Enumerable.Count(result.VersionHistory), Is.EqualTo(2));
         }
-        
+
+        [Test]
+        public void GetPackageInfoPicksLatestVersion()
+        {
+            var v2 = CreatePackage(new StrictSemanticVersion("2.0"));
+
+            packages.Add(v2);
+            packages.Add(CreatePackage(new StrictSemanticVersion("1.0")));
+
+            repository.Setup(r => r.LucenePackages).Returns(packages.AsQueryable());
+
+            var result = controller.GetPackageInfo(new PackageSpec { Id = v2.Id, Version = null });
+
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result.Package, Is.SameAs(v2));
+        }
+
+        [Test]
+        public void GetPackageInfoNotFound()
+        {
+            repository.Setup(r => r.LucenePackages).Returns(packages.AsQueryable());
+
+            var result = controller.GetPackageInfo(new PackageSpec { Id = "NoneSuch", Version = null });
+
+            Assert.That(result, Is.InstanceOf<HttpResponseMessage>());
+            Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
+        }
+
         private static LucenePackage CreatePackage(StrictSemanticVersion version)
         {
             return new LucenePackage(_ => new MemoryStream(Encoding.UTF8.GetBytes("<fake package contents>")))
