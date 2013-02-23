@@ -5,6 +5,8 @@ using System.Data.Services.Common;
 using System.Data.Services.Providers;
 using System.Linq;
 using System.ServiceModel.Web;
+using Lucene.Net.Linq;
+using NuGet.Lucene.Web.Models;
 
 namespace NuGet.Lucene.Web.DataServices
 {
@@ -51,6 +53,13 @@ namespace NuGet.Lucene.Web.DataServices
             return null;
         }
 
+        protected override void OnStartProcessingRequest(ProcessRequestArgs args)
+        {
+            this.OperationContext = args.OperationContext;
+        }
+
+        protected DataServiceOperationContext OperationContext { get; set; }
+
         [WebGet]
         public IQueryable<DataServicePackage> Search(string searchTerm, string targetFramework, bool includePrerelease)
         {
@@ -62,6 +71,11 @@ namespace NuGet.Lucene.Web.DataServices
             }
 
             var searchQuery = PackageRepository.Search(searchTerm, targetFrameworks, includePrerelease);
+
+            if (!OperationContext.AbsoluteRequestUri.Query.Contains("$orderby"))
+            {
+                searchQuery = searchQuery.OrderBy(result => result.Score());
+            }
 
             return from package in searchQuery select AsDataServicePackage(package);
         }

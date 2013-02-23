@@ -115,7 +115,7 @@ namespace NuGet.Lucene
             return LucenePackages.Where(p => p.Id == packageId);
         }
 
-        public IQueryable<IPackage> Search(string searchTerm, IEnumerable<string> ignored, bool allowPrereleaseVersions)
+        public IQueryable<IPackage> Search(string searchTerm, IEnumerable<string> targetFrameworks, bool allowPrereleaseVersions)
         {
             var packages = LucenePackages;
 
@@ -136,9 +136,7 @@ namespace NuGet.Lucene
             {
                 packages = packages.Where(p => !p.IsPrerelease);
             }
-
-            packages = packages.OrderBy(p => p.Score()).Boost(BoostByDownloadCount);
-
+            
             return packages;
         }
 
