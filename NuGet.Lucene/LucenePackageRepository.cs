@@ -161,6 +161,11 @@ namespace NuGet.Lucene
             return Indexer.GetIndexingStatus();
         }
 
+        public IObservable<IndexingStatus> StatusChanged
+        {
+            get { return Indexer.StatusChanged;  }
+        }
+
         public LucenePackage LoadFromIndex(string path)
         {
             var relativePath = FileSystem.MakeRelative(path);

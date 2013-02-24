@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Common.Logging;
@@ -76,6 +77,8 @@ namespace NuGet.Lucene
 
         public ILucenePackageRepository PackageRepository { get; set; }
 
+        private event EventHandler statusChanged;
+
         public void Initialize()
         {
             indexUpdaterTask = Task.Factory.StartNew(IndexUpdateLoop, TaskCreationOptions.LongRunning);
@@ -103,7 +106,19 @@ namespace NuGet.Lucene
                     DateTimeUtils.FromJava(reader.IndexCommit.Timestamp));
             }
         }
-        
+
+        public IObservable<IndexingStatus> StatusChanged
+        {
+            get
+            {
+                return Observable.FromEventPattern<EventHandler, EventArgs>(
+                        eh => eh.Invoke,
+                        eh => statusChanged += eh,
+                        eh => statusChanged -= eh)
+                .Select(_ => GetIndexingStatus());
+            }
+        }
+
         public void Optimize()
         {
             using (UpdateStatus(IndexingState.Optimizing))
@@ -384,20 +399,35 @@ namespace NuGet.Lucene
                     packagesToIndex
                 );
 
+            RaiseStatusChanged();
+
             return new DisposableAction(() =>
                 {
                     synchronizationStatus = new SynchronizationStatus(SynchronizationState.Idle);
+                    RaiseStatusChanged();
                 });
         }
 
         private IDisposable UpdateStatus(IndexingState state)
         {
             indexingState = state;
+            RaiseStatusChanged();
 
             return new DisposableAction(() =>
             {
                 indexingState = IndexingState.Idle;
+                RaiseStatusChanged();
             });
+        }
+
+        private void RaiseStatusChanged()
+        {
+            var tmp = statusChanged;
+
+            if (tmp != null)
+            {
+                tmp(this, new EventArgs());
+            }
         }
     }
 }

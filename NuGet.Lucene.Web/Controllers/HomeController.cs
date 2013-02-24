@@ -15,7 +15,7 @@ namespace NuGet.Lucene.Web.Controllers
 
             if (IsNuGetClient)
             {
-                location = Url.Link(Global.PackageFeedRouteName, Global.PackageFeedRouteValues);
+                location = Url.Link(RouteNames.PackageFeed, RouteNames.PackageFeedRouteValues);
             }
 
             var result = Request.CreateResponse(HttpStatusCode.TemporaryRedirect);

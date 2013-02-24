@@ -22,15 +22,16 @@ namespace NuGet.Lucene.Web
                 (_, e) => UnhandledExceptionLogger.Log.Fatal(
                     m => m("Unobserved exception in async task: {0}", e.Exception.Message), e.Exception);
 
+            ConfigureWebApi(GlobalConfiguration.Configuration);
+
+            RouteTable.Routes.MapHubs();
             MapApiRoutes(GlobalConfiguration.Configuration.Routes);
             MapDataServiceRoutes(RouteTable.Routes);
-
-            ConfigureWebApi(GlobalConfiguration.Configuration);
         }
 
         protected override IKernel CreateKernel()
         {
-            return new StandardKernel(new ApplicationConfig());
+            return new StandardKernel(new ApplicationConfig(), new SignalRModule());
         }
 
         public static void ConfigureWebApi(HttpConfiguration config)
@@ -95,4 +96,5 @@ namespace NuGet.Lucene.Web
             routes.Add(RouteNames.PackageFeed, serviceRoute);
         }
     }
+
 }

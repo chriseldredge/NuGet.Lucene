@@ -1,20 +1,23 @@
 ﻿App = Ember.Application.create({
     name: "NuGet",
-    LOG_TRANSITIONS: true,
-});
-
-App.packagesController = Ember.Object.create({
-    status: undefined,
-    getStatus: function () {
-        $.getJSON('/api/status', function (data) {
-            App.packagesController.set('status', data);
-        });
-    }
+    indexingStatus: undefined,
 });
 
 App.StatusView = Em.View.extend({
     templateName: 'indexing-status',
-    statusBinding: 'App.packagesController.status',
+    statusBinding: 'App.indexingStatus',
 });
 
-App.packagesController.getStatus();
+$(function () {
+    var hub = $.connection.status;
+
+    hub.client.updateStatus = function (status) {
+        App.set('indexingStatus', status);
+    };
+
+    $.connection.hub.start()
+        .done(function() {
+            hub.server.getStatus()
+                .done(function(status) { App.set('indexingStatus', status); });
+        });
+});

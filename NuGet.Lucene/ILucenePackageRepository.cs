@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -29,6 +30,8 @@ namespace NuGet.Lucene
         /// </summary>
         IndexingStatus GetIndexingStatus();
 
+        IObservable<IndexingStatus> StatusChanged { get; }
+        
         /// <summary>
         /// Loads pacakge data from the Lucene index with a given path.
         /// </summary>
