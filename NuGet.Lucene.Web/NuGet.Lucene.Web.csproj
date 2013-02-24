@@ -148,13 +148,23 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="app.html" />
     <Content Include="DataServices\PackageDataService.svc" />
     <Content Include="error.html" />
     <Content Include="Global.asax" />
     <Content Include="packages.config" />
+    <None Include="Scripts\jquery-1.9.1.intellisense.js" />
+    <Content Include="Scripts\app.js" />
+    <Content Include="Scripts\ember-1.0.0-rc.1.js" />
+    <Content Include="Scripts\ember-1.0.0-rc.1.min.js" />
+    <Content Include="Scripts\handlebars-1.0.9.js" />
+    <Content Include="Scripts\handlebars.runtime-1.0.9.js" />
+    <Content Include="Scripts\jquery-1.9.1.js" />
+    <Content Include="Scripts\jquery-1.9.1.min.js" />
     <Content Include="Web.config">
       <SubType>Designer</SubType>
     </Content>
+    <Content Include="Scripts\jquery-1.9.1.min.map" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Authentication\ApiUser.cs" />
@@ -199,9 +209,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Views\Web.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Views\Packages\Status.cshtml" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

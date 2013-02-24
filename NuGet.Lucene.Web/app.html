@@ -1,0 +1,31 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>NuGet Server</title>
+</head>
+    <body>
+        <script type="text/x-handlebars">
+            {{view App.StatusView}}
+        </script>
+        
+        <script type="text/x-handlebars" data-template-name="indexing-status">
+            <h1>Status</h1>
+            <dl>
+                <dt>Indexer State</dt>
+                <dd>{{view.status.State}}</dd>
+                <dt>Total Packages</dt>
+                <dd>{{view.status.TotalPackages}}</dd>
+                <dt>Last Updated</dt>
+                <dd>{{view.status.LastModification}}</dd>
+                <dt>Synchronizer State</dt>
+                <dd>{{view.status.SynchronizationStatus.SynchronizationState}}</dd>
+            </dl>
+        </script>
+
+        <script src="Scripts/jquery-1.9.1.js" type="text/javascript">
+        </script>
+        <script src="Scripts/handlebars-1.0.9.js" type="text/javascript"></script>
+        <script src="Scripts/ember-1.0.0-rc.1.js" type="text/javascript"></script>
+        <script src="Scripts/app.js" type="text/javascript"></script>
+    </body>
+</html>
