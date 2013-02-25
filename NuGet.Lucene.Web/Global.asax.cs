@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Routing;
 using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
 using Ninject;
 using Ninject.Extensions.Wcf;
 using Ninject.Web.Common;
@@ -43,6 +44,7 @@ namespace NuGet.Lucene.Web
             config.Filters.Add(new ExceptionLoggingFilter());
             config.Formatters.Remove(config.Formatters.XmlFormatter);
             config.Formatters.Add(new PackageFormDataMediaFormatter());
+            config.Formatters.JsonFormatter.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
             config.Formatters.JsonFormatter.SerializerSettings.Converters.Add(new StringEnumConverter());
         }
 
