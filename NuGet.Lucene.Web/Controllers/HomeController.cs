@@ -1,7 +1,11 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Web.Hosting;
 using System.Web.Http;
 
 namespace NuGet.Lucene.Web.Controllers
@@ -9,23 +13,29 @@ namespace NuGet.Lucene.Web.Controllers
     public class HomeController : ApiController
     {
         [HttpGet]
-        public HttpResponseMessage Redirect()
+        public HttpResponseMessage DefaultDocument()
         {
-            var location = Url.Link("Status", null);
-
-            if (IsNuGetClient)
-            {
-                location = Url.Link(RouteNames.PackageFeed, RouteNames.PackageFeedRouteValues);
-            }
-
-            var result = Request.CreateResponse(HttpStatusCode.TemporaryRedirect);
-            result.Headers.Location = new Uri(location);
-            return result;
+            var message = Request.CreateResponse(HttpStatusCode.OK);
+            message.Content = new StringContent(GetContents(), Encoding.UTF8);
+            message.Content.Headers.ContentType = new MediaTypeWithQualityHeaderValue("text/html");
+            return message;
         }
 
-        private bool IsNuGetClient
+        private static string contents;
+        private static DateTime? lastWriteTime;
+
+        private string GetContents()
         {
-            get { return Request.Headers.UserAgent.Any(pi => pi.Product != null && pi.Product.Name == "NuGet"); }
+            var path = HostingEnvironment.MapPath("~/Views/EmberApp.html");
+            var writeTime = File.GetLastWriteTime(path);
+
+            if (lastWriteTime == null || lastWriteTime != writeTime)
+            {
+                contents = File.ReadAllText(path);
+                lastWriteTime = writeTime;
+            }
+
+            return contents;
         }
     }
 }

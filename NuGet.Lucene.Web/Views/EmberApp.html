@@ -10,16 +10,20 @@
         
         <script type="text/x-handlebars" data-template-name="indexing-status">
             <h1>Status</h1>
-            <dl>
-                <dt>Indexer State</dt>
-                <dd>{{view.status.state}}</dd>
-                <dt>Total Packages</dt>
-                <dd>{{view.status.totalPackages}}</dd>
-                <dt>Last Updated</dt>
-                <dd>{{view.status.lastModification}}</dd>
-                <dt>Synchronizer State</dt>
-                <dd>{{view.status.synchronizationStatus.synchronizationState}}</dd>
-            </dl>
+            {{#if view.status}}
+                {{#with view.status}}
+                    <dl>
+                        <dt>Indexer State</dt>
+                        <dd>{{state}}</dd>
+                        <dt>Total Packages</dt>
+                        <dd>{{totalPackages}}</dd>
+                        <dt>Last Updated</dt>
+                        <dd>{{lastModification}}</dd>
+                        <dt>Synchronizer State</dt>
+                        <dd>{{synchronizationStatus.synchronizationState}}</dd>
+                    </dl>
+                {{/with}}
+            {{/if}}
         </script>
 
         <script src="Scripts/jquery-1.9.1.js" type="text/javascript"></script>

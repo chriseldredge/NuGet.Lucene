@@ -48,6 +48,11 @@ namespace NuGet.Lucene.Web
 
         public static void MapApiRoutes(HttpRouteCollection routes)
         {
+            routes.MapHttpRoute(RouteNames.Home,
+                                "",
+                                new { controller = "Home" },
+                                new AcceptHtmlConstraint());
+
             routes.MapHttpRoute(RouteNames.IndexingStatus,
                                 "api/status",
                                 new {controller = "Indexing", action = "Status"});

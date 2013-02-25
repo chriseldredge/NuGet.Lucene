@@ -175,7 +175,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="app.html" />
+    <Content Include="Views\EmberApp.html" />
     <Content Include="DataServices\PackageDataService.svc" />
     <Content Include="error.html" />
     <Content Include="Global.asax" />
@@ -196,6 +196,7 @@
     <Content Include="Scripts\jquery-1.9.1.min.map" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AcceptHtmlConstraint.cs" />
     <Compile Include="Authentication\ApiUser.cs" />
     <Compile Include="ApplicationConfig.cs" />
     <Compile Include="Authentication\IApiKeyAuthentication.cs" />

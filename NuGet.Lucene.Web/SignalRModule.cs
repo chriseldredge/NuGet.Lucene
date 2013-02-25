@@ -18,7 +18,7 @@ namespace NuGet.Lucene.Web
         {
             var settings = new JsonSerializerSettings
                 {
-                    ContractResolver = new CamelCaseContractResolver(),
+                    ContractResolver = new SelectiveCamelCaseContractResolver(),
                     Converters = { new StringEnumConverter() }
                 };
 
@@ -34,13 +34,17 @@ namespace NuGet.Lucene.Web
                   .Subscribe(status => hub.Clients.All.updateStatus(status));
         }
 
-        public class CamelCaseContractResolver : IContractResolver
+        /// <summary>
+        /// Uses default contract resolver for types in the SignalR assembly
+        /// and camel case for all other types.
+        /// </summary>
+        public class SelectiveCamelCaseContractResolver : IContractResolver
         {
             private readonly Assembly signalrAssembly;
             private readonly IContractResolver camelCaseContractResolver;
             private readonly IContractResolver defaultContractSerializer;
 
-            public CamelCaseContractResolver()
+            public SelectiveCamelCaseContractResolver()
             {
                 defaultContractSerializer = new DefaultContractResolver();
                 camelCaseContractResolver = new CamelCasePropertyNamesContractResolver();

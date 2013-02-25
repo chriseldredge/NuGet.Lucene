@@ -7,6 +7,7 @@ namespace NuGet.Lucene.Web
         public const string PackageFeed = "OData Package Feed";
         public static readonly RouteValueDictionary PackageFeedRouteValues = new RouteValueDictionary { { "serviceType", "odata" } };
 
+        public const string Home = "Home";
         public const string IndexingStatus = "Status";
 
         public const string UserApi = "UserApi";
