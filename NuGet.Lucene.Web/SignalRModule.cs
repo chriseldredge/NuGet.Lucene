@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Reactive.Concurrency;
+using System.Reactive.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Microsoft.AspNet.SignalR;
 using Microsoft.AspNet.SignalR.Infrastructure;
 using Microsoft.AspNet.SignalR.Json;
@@ -29,11 +32,13 @@ namespace NuGet.Lucene.Web
 
             var hub = GlobalHost.ConnectionManager.GetHubContext<StatusHub>();
 
-            Kernel.Get<ILucenePackageRepository>().StatusChanged
-                //.Throttle(TimeSpan.FromMilliseconds(500))
-                  .Subscribe(status => hub.Clients.All.updateStatus(status));
-        }
+            var repository = Kernel.Get<ILucenePackageRepository>();
 
+            repository.StatusChanged
+                .Sample(TimeSpan.FromMilliseconds(250))
+                .Subscribe(status => hub.Clients.All.updateStatus(status));
+        }
+        
         /// <summary>
         /// Uses default contract resolver for types in the SignalR assembly
         /// and camel case for all other types.
