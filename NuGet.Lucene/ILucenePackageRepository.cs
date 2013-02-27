@@ -28,9 +28,9 @@ namespace NuGet.Lucene
         /// Gets an object that contains information about
         /// current indexing activity.
         /// </summary>
-        IndexingStatus GetIndexingStatus();
+        RepositoryInfo GetStatus();
 
-        IObservable<IndexingStatus> StatusChanged { get; }
+        IObservable<RepositoryInfo> StatusChanged { get; }
         
         /// <summary>
         /// Loads pacakge data from the Lucene index with a given path.

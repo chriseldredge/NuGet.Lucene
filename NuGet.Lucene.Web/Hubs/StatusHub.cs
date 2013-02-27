@@ -8,9 +8,9 @@ namespace NuGet.Lucene.Web.Hubs
     {
         public ILucenePackageRepository Repository { get; set; }
 
-        public IndexingStatus GetStatus()
+        public RepositoryInfo GetStatus()
         {
-            return Repository.GetIndexingStatus();
+            return Repository.GetStatus();
         }
     }
 }

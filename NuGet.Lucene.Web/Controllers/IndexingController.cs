@@ -7,9 +7,10 @@ namespace NuGet.Lucene.Web.Controllers
         public ILucenePackageRepository Repository { get; set; }
 
         [HttpGet]
-        public IndexingStatus Status()
+        public RepositoryInfo Status()
         {
-            return Repository.GetIndexingStatus();
+            return Repository.GetStatus();
+        }
         }
     }
 }

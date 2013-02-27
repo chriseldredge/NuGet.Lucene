@@ -98,16 +98,7 @@ namespace NuGet.Lucene
         /// </summary>
         public IndexingStatus GetIndexingStatus()
         {
-            using (var reader = Writer.GetReader())
-            {
-                return new IndexingStatus(
-                    indexingState,
-                    synchronizationStatus,
-                    reader.NumDocs(),
-                    reader.NumDeletedDocs,
-                    reader.IsOptimized(),
-                    DateTimeUtils.FromJava(reader.IndexCommit.Timestamp));
-            }
+            return new IndexingStatus(indexingState, synchronizationStatus);
         }
 
         public IObservable<IndexingStatus> StatusChanged
@@ -408,7 +399,6 @@ namespace NuGet.Lucene
         {
             synchronizationStatus = new SynchronizationStatus(
                     state,
-                    currentPackagePath,
                     completedPackages,
                     packagesToIndex
                 );

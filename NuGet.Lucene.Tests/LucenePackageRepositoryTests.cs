@@ -38,15 +38,14 @@ namespace NuGet.Lucene.Tests
         }
 
         [Test]
-        public void Initialize_UpdatesMaxDownload()
+        public void Initialize_UpdatesTotalPackages()
         {
             var p = MakeSamplePackage("a", "1.0");
-            p.DownloadCount = 1234;
-            repository.LucenePackages = new EnumerableQuery<LucenePackage>(new[] { p });
+            repository.LucenePackages = new EnumerableQuery<LucenePackage>(Enumerable.Repeat(p, 1234));
 
             repository.Initialize();
 
-            Assert.That(repository.MaxDownloadCount, Is.EqualTo(p.DownloadCount));
+            Assert.That(repository.PackageCount, Is.EqualTo(repository.LucenePackages.Count()));
         }
 
         [Test]

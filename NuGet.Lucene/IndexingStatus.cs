@@ -1,7 +1,22 @@
-using System;
-
 namespace NuGet.Lucene
 {
+    public class RepositoryInfo
+    {
+        private readonly IndexingStatus indexingStatus;
+        public readonly int TotalPackages;
+        
+        public RepositoryInfo(int totalPackages, IndexingStatus indexingStatus)
+        {
+            TotalPackages = totalPackages;
+            this.indexingStatus = indexingStatus;
+        }
+
+        public IndexingState IndexingState { get { return indexingStatus.State; } }
+        public SynchronizationState SynchronizationState { get { return indexingStatus.SynchronizationStatus.SynchronizationState; } }
+        public int PackagesToIndex { get { return indexingStatus.SynchronizationStatus.PackagesToIndex; } }
+        public int CompletedPackages { get { return indexingStatus.SynchronizationStatus.CompletedPackages; } }
+    }
+
     public enum IndexingState
     {
         Idle,
@@ -18,20 +33,18 @@ namespace NuGet.Lucene
     public class SynchronizationStatus
     {
         public readonly SynchronizationState SynchronizationState;
-        public readonly string CurrentPackagePath;
         public readonly int CompletedPackages;
         public readonly int PackagesToIndex;
 
-        public SynchronizationStatus(SynchronizationState synchronizationState, string currentPackagePath, int completedPackages, int packagesToIndex)
+        public SynchronizationStatus(SynchronizationState synchronizationState, int completedPackages, int packagesToIndex)
         {
             SynchronizationState = synchronizationState;
-            CurrentPackagePath = currentPackagePath;
             CompletedPackages = completedPackages;
             PackagesToIndex = packagesToIndex;
         }
 
         public SynchronizationStatus(SynchronizationState synchronizationState)
-            : this(synchronizationState, string.Empty, 0, 0)
+            : this(synchronizationState, 0, 0)
         {
         }
     }
@@ -40,19 +53,11 @@ namespace NuGet.Lucene
     {
         public readonly IndexingState State;
         public readonly SynchronizationStatus SynchronizationStatus;
-        public readonly int TotalPackages;
-        public readonly int PendingDeletes;
-        public readonly bool IsOptimized;
-        public readonly DateTime LastModification;
 
-        public IndexingStatus(IndexingState state, SynchronizationStatus synchronizationStatus, int totalPackages, int pendingDeletes, bool isOptimized, DateTime lastModification)
+        public IndexingStatus(IndexingState state, SynchronizationStatus synchronizationStatus)
         {
             State = state;
             SynchronizationStatus = synchronizationStatus;
-            TotalPackages = totalPackages;
-            PendingDeletes = pendingDeletes;
-            IsOptimized = isOptimized;
-            LastModification = lastModification;
         }
     }
 }

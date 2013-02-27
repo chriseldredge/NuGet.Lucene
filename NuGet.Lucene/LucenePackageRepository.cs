@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
@@ -29,8 +30,8 @@ namespace NuGet.Lucene
 
         public string LucenePackageSource { get; set; }
 
-        private volatile int maxDownloadCount;
-        public int MaxDownloadCount { get { return maxDownloadCount; } }
+        private volatile int packageCount;
+        public int PackageCount { get { return packageCount; } }
 
         public LucenePackageRepository(IPackagePathResolver packageResolver, IFileSystem fileSystem)
             : base(packageResolver, fileSystem)
@@ -39,9 +40,9 @@ namespace NuGet.Lucene
 
         public void Initialize()
         {
-            LuceneDataProvider.RegisterCacheWarmingCallback(UpdateMaxDownloadCount, () => new LucenePackage(FileSystem));
+            LuceneDataProvider.RegisterCacheWarmingCallback(UpdatePackageCount, () => new LucenePackage(FileSystem));
 
-            UpdateMaxDownloadCount(LucenePackages);
+            UpdatePackageCount(LucenePackages);
         }
 
         public override string Source
@@ -70,18 +71,11 @@ namespace NuGet.Lucene
             await Indexer.IncrementDownloadCount(package);
         }
 
-        private void UpdateMaxDownloadCount(IQueryable<LucenePackage> packages)
+        private void UpdatePackageCount(IQueryable<LucenePackage> packages)
         {
-            if (packages.Any())
-            {
-                maxDownloadCount = packages.Max(p => p.DownloadCount);
-            }
-            else
-            {
-                maxDownloadCount = 0;
-            }
+            packageCount = packages.Count();
 
-            Log.Info(m => m("Refreshing index. Max download count: " + maxDownloadCount));
+            Log.Info(m => m("Refreshing index. Package count: " + packageCount));
         }
 
         public async Task RemovePackageAsync(IPackage package)
@@ -140,11 +134,6 @@ namespace NuGet.Lucene
             return packages;
         }
 
-        public float BoostByDownloadCount(LucenePackage p)
-        {
-            return ((float)(p.DownloadCount + 1) / (MaxDownloadCount + 1)) * 2;
-        }
-
         public IEnumerable<IPackage> GetUpdates(IEnumerable<IPackage> packages, bool includePrerelease, bool includeAllVersions, IEnumerable<FrameworkName> targetFramework)
         {
             //TODO: could this be optimized?
@@ -156,14 +145,17 @@ namespace NuGet.Lucene
             return Indexer.SynchronizeIndexWithFileSystem(cancellationToken);
         }
 
-        public IndexingStatus GetIndexingStatus()
+        public RepositoryInfo GetStatus()
         {
-            return Indexer.GetIndexingStatus();
+            return new RepositoryInfo(packageCount, Indexer.GetIndexingStatus());
         }
 
-        public IObservable<IndexingStatus> StatusChanged
+        public IObservable<RepositoryInfo> StatusChanged
         {
-            get { return Indexer.StatusChanged;  }
+            get
+            {
+                return Indexer.StatusChanged.Select(s => new RepositoryInfo(packageCount, s));
+            }
         }
 
         public LucenePackage LoadFromIndex(string path)
