@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
 using System.Web;
 using System.Web.Hosting;
 using Lucene.Net.Linq;
@@ -41,12 +40,15 @@ namespace NuGet.Lucene.Web
             Bind<IApiKeyAuthentication>().To<LuceneApiKeyAuthentication>();
 
             Bind<IHttpModule>().To<ApiKeyAuthenticationModule>();
-            
+
+            var tokenSource = new ReusableCancellationTokenSource();
+            Bind<ReusableCancellationTokenSource>().ToConstant(tokenSource);
+
             var repository = base.Kernel.Get<ILucenePackageRepository>();
 
             if (GetFlagFromAppSetting("synchronizeOnStart", true))
             {
-                repository.SynchronizeWithFileSystem(CancellationToken.None);    
+                repository.SynchronizeWithFileSystem(tokenSource.Token);    
             }
         }
 
