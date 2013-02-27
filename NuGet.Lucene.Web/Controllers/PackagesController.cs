@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
 using System.Net;
@@ -9,6 +8,7 @@ using System.Net.Mime;
 using System.Threading.Tasks;
 using System.Web.Http;
 using NuGet.Lucene.Web.Models;
+using NuGet.Lucene.Web.Util;
 
 namespace NuGet.Lucene.Web.Controllers
 {
@@ -66,10 +66,8 @@ namespace NuGet.Lucene.Web.Controllers
             if (Request.Method == HttpMethod.Get)
             {
                 result.Content = new StreamContent(package.GetStream());
-
-                // Don't wait for Task to complete so request will process without blocking.
-                // TODO: this causes unhandled exceptions to be thrown by TPL.
-                Repository.IncrementDownloadCount(package);
+                
+                TaskUtils.FireAndForget(() => Repository.IncrementDownloadCount(package), UnhandledExceptionLogger.LogException);
             }
             else
             {

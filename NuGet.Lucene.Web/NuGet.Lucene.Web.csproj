@@ -230,6 +230,7 @@
     <Compile Include="SignalRModule.cs" />
     <Compile Include="ReusableCancellationTokenSource.cs" />
     <Compile Include="UnhandledExceptionLogger.cs" />
+    <Compile Include="Util\TaskUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\NuGet.Lucene\NuGet.Lucene.csproj">
