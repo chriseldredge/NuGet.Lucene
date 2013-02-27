@@ -20,8 +20,8 @@ namespace NuGet.Lucene.Web
         protected override void OnApplicationStarted()
         {
             TaskScheduler.UnobservedTaskException +=
-                (_, e) => UnhandledExceptionLogger.Log.Fatal(
-                    m => m("Unobserved exception in async task: {0}", e.Exception.Message), e.Exception);
+                (_, e) => UnhandledExceptionLogger.LogException(e.Exception, 
+                    string.Format("Unobserved exception in async task: {0}", e.Exception.Message));
 
             ConfigureWebApi(GlobalConfiguration.Configuration);
 

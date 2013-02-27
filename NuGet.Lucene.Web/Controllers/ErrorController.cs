@@ -3,8 +3,6 @@ using System.Linq;
 using System.Net;
 using System.Web;
 using System.Web.Mvc;
-using System.Web.UI;
-using Common.Logging;
 
 namespace NuGet.Lucene.Web.Controllers
 {
@@ -33,16 +31,14 @@ namespace NuGet.Lucene.Web.Controllers
             string message;
             if (httpError != null)
             {
-                message = String.Format("HTTP {0} {1}: on URI {2}: {3}", httpError.GetHttpCode(), (HttpStatusCode)httpError.GetHttpCode(), OriginatingUri, ex.Message);
+                message = string.Format("HTTP {0} {1}: on URI {2}: {3}", httpError.GetHttpCode(), (HttpStatusCode)httpError.GetHttpCode(), OriginatingUri, ex.Message);
             }
             else
             {
-                message = String.Format("Unhandled Exception: on URI: {0}: {1}", OriginatingUri, ex.Message);
+                message = string.Format("Unhandled Exception: on URI: {0}: {1}", OriginatingUri, ex.Message);
             }
 
-            var log = GetLogSeverityDelegate(httpError);
-
-            log(m => m(message), ex.StackTrace != null ? ex : null);
+            UnhandledExceptionLogger.LogException(httpError, message);
         }
 
         /// <summary>
@@ -66,28 +62,6 @@ namespace NuGet.Lucene.Web.Controllers
                 }
                 
             }
-        }
-
-        private Action<Action<FormatMessageHandler>, Exception> GetLogSeverityDelegate(Exception exception)
-        {
-            if (exception is HttpRequestValidationException || exception is ViewStateException)
-            {
-                return UnhandledExceptionLogger.Log.Warn;
-            }
-
-            var httpError = exception as HttpException;
-            if (httpError != null && (httpError.ErrorCode == unchecked((int)0x80070057) || httpError.ErrorCode == unchecked((int)0x800704CD)))
-            {
-                // "The remote host closed the connection."
-                return UnhandledExceptionLogger.Log.Debug;
-            }
-
-            if (httpError != null && (httpError.GetHttpCode() < 500))
-            {
-                return UnhandledExceptionLogger.Log.Info;
-            }
-
-            return UnhandledExceptionLogger.Log.Error;
         }
     }
 }
