@@ -12,7 +12,7 @@ namespace NuGet.Lucene
 
     public enum SynchronizationState
     {
-        Idle, Scanning, Building
+        Idle, ScanningFiles, ScanningIndex, Comparing, Indexing
     }
 
     public class SynchronizationStatus

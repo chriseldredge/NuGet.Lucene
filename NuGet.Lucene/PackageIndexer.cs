@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -64,10 +65,12 @@ namespace NuGet.Lucene
         }
 
         private volatile IndexingState indexingState = IndexingState.Idle;
+        private readonly object synchronizationStatusLock = new object();
         private volatile SynchronizationStatus synchronizationStatus = new SynchronizationStatus(SynchronizationState.Idle);
         private readonly BlockingCollection<Update> pendingUpdates = new BlockingCollection<Update>();
 
         private Task indexUpdaterTask;
+        private readonly TaskPoolScheduler eventScheduler = TaskPoolScheduler.Default;
 
         public IFileSystem FileSystem { get; set; }
 
@@ -127,22 +130,30 @@ namespace NuGet.Lucene
             }
         }
 
-        public Task SynchronizeIndexWithFileSystem(CancellationToken cancellationToken)
+        public async Task SynchronizeIndexWithFileSystem(CancellationToken cancellationToken)
         {
-            IndexDifferences differences = null;
-            Action findDifferences = () =>
+            lock (synchronizationStatusLock)
+            {
+                if (synchronizationStatus.SynchronizationState != SynchronizationState.Idle)
                 {
-                    using (UpdateSynchronizationStatus(SynchronizationState.Scanning))
-                    {
-                        using (var session = OpenSession())
-                        {
-                            differences = IndexDifferenceCalculator.FindDifferences(FileSystem, session.Query(), cancellationToken);
-                        }
-                    }
-                };
+                    throw new InvalidOperationException("Already running");
+                }
+                UpdateSynchronizationStatus(SynchronizationState.ScanningFiles);
+            }
+            
+            try
+            {
+                IndexDifferences differences = null;
 
-            return Task.Run(findDifferences, cancellationToken)
-                .ContinueWith(task => SynchronizeIndexWithFileSystem(differences, cancellationToken), cancellationToken, TaskContinuationOptions.NotOnFaulted, TaskScheduler.Default);
+                await Task.Run(() => differences = IndexDifferenceCalculator.FindDifferences(
+                    FileSystem, PackageRepository.LucenePackages, cancellationToken, UpdateSynchronizationStatus), cancellationToken);
+
+                await Task.Run(() => SynchronizeIndexWithFileSystem(differences, cancellationToken));
+            }
+            finally
+            {
+                UpdateSynchronizationStatus(SynchronizationState.Idle);
+            }
         }
 
         public Task AddPackage(LucenePackage package)
@@ -198,16 +209,14 @@ namespace NuGet.Lucene
             }
             
             var pathsToIndex = diff.NewPackages.Union(diff.ModifiedPackages).OrderBy(p => p).ToArray();
-
+            var packagesToIndex = pathsToIndex.Length;
             var i = 0;
 
-            Parallel.ForEach(pathsToIndex, new ParallelOptions { MaxDegreeOfParallelism = 4 }, (p, s) =>
+            Parallel.ForEach(pathsToIndex, new ParallelOptions {MaxDegreeOfParallelism = 4, CancellationToken = cancellationToken}, (p, s) =>
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    using(UpdateSynchronizationStatus(SynchronizationState.Building, completedPackages: Interlocked.Increment(ref i), packagesToIndex: pathsToIndex.Length, currentPackagePath: p))
-                    {
-                        tasks.Enqueue(SynchronizePackage(p));
-                    }
+                    UpdateSynchronizationStatus(SynchronizationState.Indexing, Interlocked.Increment(ref i),
+                                                packagesToIndex);
+                    tasks.Enqueue(SynchronizePackage(p));
                 });
 
             Task.WaitAll(tasks.ToArray(), cancellationToken);
@@ -390,7 +399,12 @@ namespace NuGet.Lucene
             return Provider.OpenSession(() => new LucenePackage(FileSystem));
         }
 
-        private IDisposable UpdateSynchronizationStatus(SynchronizationState state, int completedPackages = 0, int packagesToIndex = 0, string currentPackagePath = null)
+        private void UpdateSynchronizationStatus(SynchronizationState state)
+        {
+            UpdateSynchronizationStatus(state, 0, 0);
+        }
+
+        private void UpdateSynchronizationStatus(SynchronizationState state, int completedPackages, int packagesToIndex)
         {
             synchronizationStatus = new SynchronizationStatus(
                     state,
@@ -400,22 +414,17 @@ namespace NuGet.Lucene
                 );
 
             RaiseStatusChanged();
-
-            return new DisposableAction(() =>
-                {
-                    synchronizationStatus = new SynchronizationStatus(SynchronizationState.Idle);
-                    RaiseStatusChanged();
-                });
         }
 
         private IDisposable UpdateStatus(IndexingState state)
         {
+            var prev = indexingState;
             indexingState = state;
             RaiseStatusChanged();
 
             return new DisposableAction(() =>
             {
-                indexingState = IndexingState.Idle;
+                indexingState = prev;
                 RaiseStatusChanged();
             });
         }
@@ -426,7 +435,7 @@ namespace NuGet.Lucene
 
             if (tmp != null)
             {
-                tmp(this, new EventArgs());
+                eventScheduler.Schedule(() => tmp(this, new EventArgs()));
             }
         }
     }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using NuGet.Lucene.Util;
 
 namespace NuGet.Lucene
 {
@@ -18,18 +19,34 @@ namespace NuGet.Lucene
             this.indexedPackagesByPath = indexedPackagesByPath;
         }
 
-        public static IndexDifferences FindDifferences(IFileSystem fileSystem, IEnumerable<LucenePackage> indexedPackages, CancellationToken cancellationToken)
+        public static IndexDifferences FindDifferences(
+            IFileSystem fileSystem,
+            IEnumerable<LucenePackage> indexedPackages,
+            CancellationToken cancellationToken)
         {
+            return FindDifferences(fileSystem, indexedPackages, cancellationToken, _ => { });
+        }
+
+        public static IndexDifferences FindDifferences(
+            IFileSystem fileSystem,
+            IEnumerable<LucenePackage> indexedPackages,
+            CancellationToken cancellationToken,
+            Action<SynchronizationState> setState)
+        {
+            setState(SynchronizationState.ScanningFiles);
+
             var fileSystemPackages = fileSystem.GetFiles(string.Empty, "*" + Constants.PackageExtension, true)
-                                               .AsParallel()
-                                               .WithDegreeOfParallelism(2)
                                                .WithCancellation(cancellationToken)
                                                .ToArray();
 
-            var indexedPackagesByPath = indexedPackages.AsParallel()
-                                                       .WithCancellation(cancellationToken)
-                                                       .ToDictionary(pkg => pkg.Path, StringComparer.InvariantCultureIgnoreCase);
-            
+            setState(SynchronizationState.ScanningIndex);
+
+            var indexedPackagesByPath = indexedPackages
+                                            .WithCancellation(cancellationToken)
+                                            .ToDictionary(pkg => pkg.Path, StringComparer.InvariantCultureIgnoreCase);
+
+            setState(SynchronizationState.Comparing);
+
             var calc = new IndexDifferenceCalculator(fileSystem, fileSystemPackages, indexedPackagesByPath);
 
             return calc.Calculate();

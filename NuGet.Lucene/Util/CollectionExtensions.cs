@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace NuGet.Lucene.Util
 {
@@ -19,6 +20,15 @@ namespace NuGet.Lucene.Util
             {
                 destination.Add(item);
                 timeout = TimeSpan.Zero;
+            }
+        }
+
+        public static IEnumerable<T> WithCancellation<T>(this IEnumerable<T> enumerable, CancellationToken cancellation)
+        {
+            foreach (var item in enumerable)
+            {
+                cancellation.ThrowIfCancellationRequested();
+                yield return item;
             }
         }
     }
