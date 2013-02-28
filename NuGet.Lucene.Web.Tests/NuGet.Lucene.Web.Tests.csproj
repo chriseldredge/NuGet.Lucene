@@ -105,6 +105,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controllers\IndexingControllerTests.cs" />
     <Compile Include="Controllers\PackagesControllerTests.cs" />
     <Compile Include="Controllers\TabCompletionControllerTests.cs" />
     <Compile Include="Controllers\ApiControllerTests.cs" />

@@ -3,6 +3,7 @@ using System.ServiceModel.Activation;
 using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Routing;
+using Microsoft.AspNet.SignalR;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using Ninject;
@@ -25,7 +26,10 @@ namespace NuGet.Lucene.Web
 
             ConfigureWebApi(GlobalConfiguration.Configuration);
 
-            RouteTable.Routes.MapHubs();
+            var hubConfiguration = new HubConfiguration {EnableDetailedErrors = ApplicationConfig.ShowExceptionDetails};
+
+            RouteTable.Routes.MapHubs(hubConfiguration);
+            
             MapApiRoutes(GlobalConfiguration.Configuration.Routes);
             MapDataServiceRoutes(RouteTable.Routes);
         }
@@ -56,7 +60,7 @@ namespace NuGet.Lucene.Web
                                 new { acceptHeader = new AcceptHtmlConstraint() });
 
             routes.MapHttpRoute(RouteNames.IndexingStatus,
-                                "api/status",
+                                "api/indexing/{action}",
                                 new {controller = "Indexing", action = "Status"});
             
             routes.MapHttpRoute(RouteNames.UserApi,

@@ -5,25 +5,35 @@
 </head>
     <body>
         <script type="text/x-handlebars">
-            {{view App.StatusView}}
+            {{#linkTo 'index'}}Home{{/linkTo}}
+            {{#linkTo 'admin'}}Admin{{/linkTo}}
+            
+            <div class="content">
+                {{outlet}}
+            </div>
+
+            {{view App.FooterView}}
         </script>
+
+        <script type="text/x-handlebars" data-template-name="admin">
+            The admin page. running: {{isRunning}} connected: {{isConnected}}
+            <button {{action "synchronize"}} {{bindAttr disabled="isRunning"}}>Synchronize Packages</button>
+            <button {{action "cancel"}}>Cancel</button>
+        </script>
+
+        <script type="text/x-handlebars" data-template-name="footer">
+            {{#with view.content}}
+                <div>
+                    Total Packages: {{totalPackages}}
+                </div>
+                <div>
+                    Synchronizer State: {{synchronizationState}}
+                    {{#if packagesToIndex}}
+                        {{completedPackages}} / {{packagesToIndex}}
+                    {{/if}}
+                </div>
+            {{/with}}
         
-        <script type="text/x-handlebars" data-template-name="indexing-status">
-            <h1>Status</h1>
-            {{#if view.status}}
-                {{#with view.status}}
-                    <dl>
-                        <dt>Indexer State</dt>
-                        <dd>{{state}}</dd>
-                        <dt>Total Packages</dt>
-                        <dd>{{totalPackages}}</dd>
-                        <dt>Last Updated</dt>
-                        <dd>{{lastModification}}</dd>
-                        <dt>Synchronizer State</dt>
-                        <dd>{{synchronizationStatus.synchronizationState}}</dd>
-                    </dl>
-                {{/with}}
-            {{/if}}
         </script>
 
         <script src="Scripts/jquery-1.9.1.js" type="text/javascript"></script>
