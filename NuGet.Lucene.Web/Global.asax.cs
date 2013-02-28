@@ -53,7 +53,7 @@ namespace NuGet.Lucene.Web
             routes.MapHttpRoute(RouteNames.Home,
                                 "",
                                 new { controller = "Home" },
-                                new AcceptHtmlConstraint());
+                                new { acceptHeader = new AcceptHtmlConstraint() });
 
             routes.MapHttpRoute(RouteNames.IndexingStatus,
                                 "api/status",
