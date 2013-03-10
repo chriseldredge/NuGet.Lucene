@@ -113,9 +113,20 @@ namespace NuGet.Lucene.Web.Tests.Controllers
         }
 
         [Test]
-        public async Task GetPackageNotModifiedByDate()
+        public async Task GetPackageNotModifiedByDateSame()
         {
             request.Headers.IfModifiedSince = package.LastUpdated;
+
+            var result = DownloadPackage(HttpMethod.Get, "SomePackage", SampleVersion.SemanticVersion);
+
+            Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.NotModified));
+            Assert.That(await GetContent(result), Is.Empty);
+        }
+
+        [Test]
+        public async Task GetPackageNotModifiedByDateOlder()
+        {
+            request.Headers.IfModifiedSince = package.LastUpdated.AddSeconds(1);
 
             var result = DownloadPackage(HttpMethod.Get, "SomePackage", SampleVersion.SemanticVersion);
 

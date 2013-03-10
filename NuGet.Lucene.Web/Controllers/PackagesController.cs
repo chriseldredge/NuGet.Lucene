@@ -98,10 +98,10 @@ namespace NuGet.Lucene.Web.Controllers
             }
 
             var etagMatch = Request.Headers.IfMatch.Any(etag => !etag.IsWeak && etag.Tag == '"' + package.PackageHash + '"');
-            var modifiedSince = Request.Headers.IfModifiedSince.HasValue &&
-                                Request.Headers.IfModifiedSince <= package.LastUpdated;
+            var notModifiedSince = Request.Headers.IfModifiedSince.HasValue &&
+                                   Request.Headers.IfModifiedSince >= package.LastUpdated;
 
-            if (etagMatch || modifiedSince)
+            if (etagMatch || notModifiedSince)
             {
                 return Request.CreateResponse(HttpStatusCode.NotModified);
             }
