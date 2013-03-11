@@ -109,6 +109,26 @@ namespace NuGet.Lucene.Web.Controllers
             return null;
         }
 
+        [HttpGet]
+        public dynamic Search(string query = "", bool includePrerelease = false, int page = 0, int pageSize = 20)
+        {
+            var queryable = Repository.Search(query, new string[0], includePrerelease).Where(p => p.IsLatestVersion);
+            var totalHits = queryable.Count();
+            var first = page * pageSize;
+            var hits = queryable.Skip(first).Take(pageSize).ToList();
+
+            dynamic result = new ExpandoObject();
+            result.Query = query;
+            result.IncludePrerelease = includePrerelease;
+            result.Page = page;
+            result.PageSize = pageSize;
+            result.TotalHits = totalHits;
+            result.Hits = hits;
+            result.First = first + 1;
+            result.Last = Math.Min(first + pageSize, totalHits);
+            return result;
+        }
+
         public async Task<HttpResponseMessage> DeletePackage([FromUri]PackageSpec packageSpec)
         {
             if (packageSpec == null || string.IsNullOrWhiteSpace(packageSpec.Id) || packageSpec.Version == null)

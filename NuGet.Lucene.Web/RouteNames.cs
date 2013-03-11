@@ -16,6 +16,7 @@ namespace NuGet.Lucene.Web
         public const string PackageInfo = "Package Info";
         public const string PackageDownload = "Download Package";
         public const string PackageDownloadAnyVersion = "Package Download - Latest Version";
+        public const string PackageSearch = "Package Search";
         
         public const string TabCompletionPackageIds = "Package Manager Console Tab Completion - Package IDs";
         public const string TabCompletionPackageVersions = "Package Manager Console Tab Completion - Package Versions";

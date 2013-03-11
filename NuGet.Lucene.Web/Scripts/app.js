@@ -46,6 +46,35 @@ App.IndexingModel = Ember.Object.extend({
     }.property('status'),
 });
 
+App.ApplicationController = Ember.Controller.extend({
+    needs: 'search',
+    queryBinding: 'controllers.search.query',
+    search: function () {
+        this.transitionToRoute('search', this.get('query'));
+    }
+});
+
+App.SearchController = Ember.ObjectController.extend({
+    content: {},
+    query: '',
+    page: 0,
+    pageSize: 20,
+    search: function(query) {
+        this.set('query', query);
+        this.fetch(query);
+    },
+    fetch: function(query) {
+        var self = this;
+        $.ajax("api/v2/package", {
+            type: 'GET',
+            data: {query: query},
+            success: function(data, status, xhr) {
+                self.set('content', data);
+            }
+        });
+    }
+});
+
 App.AdminController = Ember.ObjectController.extend({
     synchronize: function () {
         App.indexingModel.synchronize();
@@ -62,7 +91,9 @@ App.FooterView = Ember.View.extend({
 });
 
 App.Router.map(function () {
+    this.route('index', { path: '/' });
     this.route('admin');
+    this.route('search', { path: '/search/:query'});
 });
 
 App.AdminRoute = Ember.Route.extend({
@@ -71,7 +102,45 @@ App.AdminRoute = Ember.Route.extend({
     }
 });
 
+App.SearchRoute = Ember.Route.extend({
+    setupController: function(controller, params) {
+        var query = params;
+
+        if (params && params.query) {
+            console.log("search for complex " + query.query);
+            query = params.query;
+        }
+        else
+        {
+            console.log("search for string " + query);   
+        }
+
+        controller.search(query);
+    }
+});
+
+Ember.Handlebars.registerBoundHelper('split', function(value, options) {
+    if (!value) value = '';
+    var items = value.split(' ');
+    var result = "";
+
+    for (var i=0; i<items.length; i++) {
+        if (items[i] !== '') {
+            var item = { tag: items[i] };
+            result += options.fn(item);
+        }
+    }
+
+    return result;
+});
+
 $(function () {
     App.indexingModel = App.IndexingModel.create();
     App.advanceReadiness();
+});
+
+$(document).ready(function() {
+    $(".package-icon").error(function() {
+        $(this).unbind("error").attr("src", "http://nuget.org/Content/Images/packageDefaultIcon-50x50.png");
+    });
 });

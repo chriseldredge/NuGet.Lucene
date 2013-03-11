@@ -67,6 +67,11 @@ namespace NuGet.Lucene.Web
                                 "api/users/{username}",
                                 new { controller = "User", username = RouteParameter.Optional });
 
+            routes.MapHttpRoute(RouteNames.PackageSearch,
+                                "api/v2/package",
+                                new { controller = "Packages", action = "Search" },
+                                new { httpMethod = new HttpMethodConstraint(HttpMethod.Get) });
+
             routes.MapHttpRoute(RouteNames.PackageDownloadAnyVersion,
                                 "api/v2/package/{id}/content",
                                 new { controller = "Packages", action = "GetPackageInfo" });

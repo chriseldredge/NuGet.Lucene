@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -26,7 +25,7 @@ namespace NuGet.Lucene.Web.Controllers
 
         private string GetContents()
         {
-            var path = HostingEnvironment.MapPath("~/Views/EmberApp.html");
+            var path = HostingEnvironment.MapPath("~/App.html");
             var writeTime = File.GetLastWriteTime(path);
 
             if (lastWriteTime == null || lastWriteTime != writeTime)

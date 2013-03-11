@@ -175,9 +175,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Views\EmberApp.html" />
+    <Content Include="App.html" />
     <Content Include="DataServices\PackageDataService.svc" />
-    <Content Include="error.html" />
     <Content Include="Global.asax" />
     <Content Include="packages.config" />
     <None Include="Scripts\jquery-1.9.1.intellisense.js" />

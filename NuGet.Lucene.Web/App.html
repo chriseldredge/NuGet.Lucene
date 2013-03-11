@@ -1,0 +1,96 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>NuGet Server</title>
+</head>
+    <body>
+        <script type="text/x-handlebars">
+            <header>
+                <nav>
+                    {{#linkTo 'index'}}Home{{/linkTo}}
+                    {{#linkTo 'admin'}}Admin{{/linkTo}}
+                </nav>
+                <div class="search-box">
+                    {{view Ember.TextField valueBinding="query" action="search" placeholder="Search..."}}
+                </div>
+            </header>
+            
+            <div class="content">
+                {{outlet}}
+            </div>
+
+            {{view App.FooterView}}
+        </script>
+
+        <script type="text/x-handlebars" data-template-name="search">
+            <h1>Search results for "{{content.query}}"</h1>
+            {{#if content.totalHits}}
+                Showing {{content.first}} to {{content.last}} of {{content.totalHits}}.
+
+                <ol start="{{content.first}}">
+                    {{#each content.hits}}
+                    <li>
+                        <div>
+                            {{#if iconUrl}}
+                                <img class="package-icon" {{bindAttr src="iconUrl"}} alt="package icon" />
+                            {{else}}
+                                <img class="package-icon" src="http://nuget.org/Content/Images/packageDefaultIcon-50x50.png" alt="default package icon" />
+                            {{/if}}
+                            {{#if title}}
+                                {{title}}
+                            {{else}}
+                                {{id}}
+                            {{/if}}
+                        </div>
+                        <div>
+                            By:
+                            {{#each author in authors}}
+                                {{#linkTo search author}}{{author}}{{/linkTo}}
+                            {{/each}}
+                        </div>
+                        <div>
+                            {{description}}
+                        </div>
+                        <div>
+                            Tags: 
+                            {{#split tags}}
+                                {{#linkTo search tag}}{{tag}}{{/linkTo}}
+                            {{/split}}
+                        </div>
+                    </li>
+                    {{/each}}
+                </ol>
+            {{else}}
+                No results :(
+            {{/if}}
+
+        </script>
+
+        <script type="text/x-handlebars" data-template-name="admin">
+            The admin page. running: {{isRunning}} connected: {{isConnected}}
+            <button {{action "synchronize"}} {{bindAttr disabled="isRunning"}}>Synchronize Packages</button>
+            <button {{action "cancel"}}>Cancel</button>
+        </script>
+
+        <script type="text/x-handlebars" data-template-name="footer">
+            {{#with view.content}}
+                <div>
+                    Total Packages: {{totalPackages}}
+                </div>
+                <div>
+                    Synchronizer State: {{synchronizationState}}
+                    {{#if packagesToIndex}}
+                        {{completedPackages}} / {{packagesToIndex}}
+                    {{/if}}
+                </div>
+            {{/with}}
+        </script>
+
+        <script src="Scripts/jquery-1.9.1.js" type="text/javascript"></script>
+        <script src="Scripts/jquery.signalR-1.0.1.js" type="text/javascript"></script>
+        <script src="Scripts/handlebars-1.0.9.js" type="text/javascript"></script>
+        <script src="Scripts/ember-1.0.0-rc.1.js" type="text/javascript"></script>
+        <script src="signalr/hubs" type="text/javascript"></script>
+        <script src="Scripts/app.js" type="text/javascript"></script>
+    </body>
+</html>
