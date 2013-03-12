@@ -110,22 +110,18 @@ namespace NuGet.Lucene.Web.Controllers
         }
 
         [HttpGet]
-        public dynamic Search(string query = "", bool includePrerelease = false, int page = 0, int pageSize = 20)
+        public dynamic Search(string query = "", bool includePrerelease = false, int offset = 0, int count = 20)
         {
             var queryable = Repository.Search(query, new string[0], includePrerelease).Where(p => p.IsLatestVersion);
             var totalHits = queryable.Count();
-            var first = page * pageSize;
-            var hits = queryable.Skip(first).Take(pageSize).ToList();
+            var hits = queryable.Skip(offset).Take(count).ToList();
 
             dynamic result = new ExpandoObject();
             result.Query = query;
             result.IncludePrerelease = includePrerelease;
-            result.Page = page;
-            result.PageSize = pageSize;
             result.TotalHits = totalHits;
             result.Hits = hits;
-            result.First = first + 1;
-            result.Last = Math.Min(first + pageSize, totalHits);
+            result.Offset = offset;
             return result;
         }
 

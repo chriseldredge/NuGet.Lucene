@@ -23,17 +23,17 @@
         </script>
 
         <script type="text/x-handlebars" data-template-name="search">
-            {{#if loaded}}
+        {{#if loaded}}
             <h1>Search results for "{{query}}"</h1>
-            {{#if totalHits}}
-                Showing {{first}} to {{last}} of {{totalHits}}.
+            {{#if total}}
+                Showing {{first}} to {{last}} of {{total}}.
 
-                {{#unless isFirstPage}}
+                {{#if hasPrevious}}
                     <a href="#" {{action previousPage}}>Previous Page</a>
-                {{/unless}}
-                {{#unless isLastPage}}
+                {{/if}}
+                {{#if hasNext}}
                     <a href="#" {{action nextPage}}>Next Page</a>
-                {{/unless}}
+                {{/if}}
 
                 <ol {{bindAttr start=first}}>
                     {{#each hits}}
@@ -69,16 +69,16 @@
                     {{/each}}
                 </ol>
 
-                {{#unless isFirstPage}}
+                {{#if hasPrevious}}
                     <a href="#" {{action previousPage}}>Previous Page</a>
-                {{/unless}}
-                {{#unless isLastPage}}
+                {{/if}}
+                {{#if hasNext}}
                     <a href="#" {{action nextPage}}>Next Page</a>
-                {{/unless}}
+                {{/if}}
             {{else}}
                 No results :(
             {{/if}}
-            {{/if}}
+        {{/if}}
         </script>
 
         <script type="text/x-handlebars" data-template-name="admin">

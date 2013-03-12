@@ -46,21 +46,55 @@ App.IndexingModel = Ember.Object.extend({
     }.property('status'),
 });
 
-App.Search = Ember.Object.extend({
+Ember.PaginationSupport = Ember.Mixin.create({
+    hasPaginationSupport: true,
+    total: 0,
+    page: 0,
+    pageSize: 10,
+    didRequestPage: Ember.K,
+
+    first: function() {
+        return this.get('page') * this.get('pageSize') + 1;
+    }.property('page', 'pageSize').cacheable(),
+
+    last: function () {
+        return Math.min((this.get('page') + 1) * this.get('pageSize'), this.get('total'));
+    }.property('page', 'pageSize', 'total').cacheable(),
+
+    hasPrevious: function () {
+        return this.get('page') > 0;
+    }.property('page').cacheable(),
+
+    hasNext: function () {
+        return this.get('last') < this.get('total');
+    }.property('last', 'total').cacheable(),
+
+    nextPage: function () {
+        if (this.get('hasNext')) {
+            this.incrementProperty('page');
+        }
+    },
+
+    previousPage: function () {
+        if (this.get('hasPrevious')) {
+            this.decrementProperty('page');
+        }
+    },
+
+    totalPages: function () {
+        return Math.ceil(this.get('total') / this.get('pageSize'));
+    }.property('total', 'pageSize').cacheable(),
+
+    pageDidChange: function () {
+        this.didRequestPage(this.get('page'));
+    }.observes('page')
+});
+
+App.Search = Ember.Object.extend(Ember.PaginationSupport, {
     data: {},
     query: '',
-    pageSize: 10,
     loaded: false,
-    pageBinding: 'data.page',
-    totalHitsBinding: 'data.totalHits',
-    firstBinding: 'data.first',
-    lastBinding: 'data.last',
-    isFirstPage: function() {
-        return this.get('page') === 0;
-    }.property('page'),
-    isLastPage: function() {
-        return this.get('totalHits') <= this.get('last');
-    }.property('last'),
+    totalBinding: 'data.totalHits',
     hits: function() {
         var copy = [];
         var hits = this.get('data.hits');
@@ -83,20 +117,41 @@ App.Search = Ember.Object.extend({
             copy.push(c);
         }
         return copy;
-    }.property('data.hits'),
-    load: function(query, page) {
+    }.property('data.hits').cacheable(),
+    
+    search: function (query) {
+        console.log('set query to ' + query);
+        this.set('loaded', false);
+        this.setProperties({ page: 0, query: query });
+    },
+    
+    queryAndPage: function() {
+        return { query: this.get('query'), page: this.get('page') };
+    }.property('query', 'page').cacheable(),
+    
+    queryOrPageChanged: function () {
+        this.load();
+    }.observes('queryAndPage'),
+    
+    load: function () {
         var self = this;
-        console.log('loading search results');
-        
+
+        console.log('load search results for query ' + this.get('query') + ' page ' + this.get('page'));
+
         $.ajax("api/v2/package", {
             type: 'GET',
-            data: {query: query, page: page, pageSize: self.get('pageSize')},
-            success: function(data, status, xhr) {
+            data: {
+                query: self.get('query'),
+                offset: self.get('page') * self.get('pageSize'),
+                count: self.get('pageSize')
+            },
+            success: function (data, status, xhr) {
                 self.set('data', data);
                 self.set('loaded', true);
             }
         });
-    }
+    },
+
 });
 
 App.ApplicationController = Ember.Controller.extend({
@@ -113,14 +168,14 @@ App.SearchController = Ember.ObjectController.extend({
     search: function (query) {
         console.log('searchController.search ' + query);
         console.log('searchController model ' + this.get('model'));
-        this.set('query', query);   
-        this.get('model').load(query);
+        this.set('query', query);
+        this.get('model').search(query);
     },
     nextPage: function() {
-        this.get('model').load(this.get('query'), this.get('page') + 1);
+        this.get('model').nextPage();
     },
     previousPage: function() {
-        this.get('model').load(this.get('query', this.get('page') - 1));
+        this.get('model').previousPage();
     }
 });
 
