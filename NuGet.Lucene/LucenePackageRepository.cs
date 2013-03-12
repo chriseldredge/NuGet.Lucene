@@ -198,8 +198,8 @@ namespace NuGet.Lucene
             lucenePackage.Id = package.Id;
             lucenePackage.Version = new StrictSemanticVersion(package.Version.ToString());
             lucenePackage.Title = package.Title;
-            lucenePackage.Authors = package.Authors;
-            lucenePackage.Owners = package.Owners;
+            lucenePackage.Authors = (package.Authors ?? Enumerable.Empty<string>()).Select(i => i.Trim()).ToArray();
+            lucenePackage.Owners = (package.Owners ?? Enumerable.Empty<string>()).Select(i => i.Trim()).ToArray();
             lucenePackage.IconUrl = package.IconUrl;
             lucenePackage.LicenseUrl = package.LicenseUrl;
             lucenePackage.ProjectUrl = package.ProjectUrl;

@@ -74,7 +74,21 @@ namespace NuGet.Lucene.Tests
         }
 
         [Test]
-        public void ConvertPackage_SupporteedFrameworks()
+        public void ConvertPackage_TrimsAuthors()
+        {
+            var package = SetUpConvertPackage();
+
+            package.Object.Authors = new[] {"a", " b"};
+            package.Object.Owners = new[] {"c", " d"};
+
+            var result = repository.Convert(package.Object);
+
+            Assert.That(result.Authors.ToArray(), Is.EqualTo(new[] {"a", "b"}));
+            Assert.That(result.Owners.ToArray(), Is.EqualTo(new[] { "c", "d" }));
+        }
+
+        [Test]
+        public void ConvertPackage_SupportedFrameworks()
         {
             var package = SetUpConvertPackage();
 
