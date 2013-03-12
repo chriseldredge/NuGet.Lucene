@@ -23,12 +23,20 @@
         </script>
 
         <script type="text/x-handlebars" data-template-name="search">
-            <h1>Search results for "{{content.query}}"</h1>
-            {{#if content.totalHits}}
-                Showing {{content.first}} to {{content.last}} of {{content.totalHits}}.
+            {{#if loaded}}
+            <h1>Search results for "{{query}}"</h1>
+            {{#if totalHits}}
+                Showing {{first}} to {{last}} of {{totalHits}}.
 
-                <ol start="{{content.first}}">
-                    {{#each content.hits}}
+                {{#unless isFirstPage}}
+                    <a href="#" {{action previousPage}}>Previous Page</a>
+                {{/unless}}
+                {{#unless isLastPage}}
+                    <a href="#" {{action nextPage}}>Next Page</a>
+                {{/unless}}
+
+                <ol {{bindAttr start=first}}>
+                    {{#each hits}}
                     <li>
                         <div>
                             {{#if iconUrl}}
@@ -53,17 +61,24 @@
                         </div>
                         <div>
                             Tags: 
-                            {{#split tags}}
+                            {{#each tag in tags}}
                                 {{#linkTo search tag}}{{tag}}{{/linkTo}}
-                            {{/split}}
+                            {{/each}}
                         </div>
                     </li>
                     {{/each}}
                 </ol>
+
+                {{#unless isFirstPage}}
+                    <a href="#" {{action previousPage}}>Previous Page</a>
+                {{/unless}}
+                {{#unless isLastPage}}
+                    <a href="#" {{action nextPage}}>Next Page</a>
+                {{/unless}}
             {{else}}
                 No results :(
             {{/if}}
-
+            {{/if}}
         </script>
 
         <script type="text/x-handlebars" data-template-name="admin">

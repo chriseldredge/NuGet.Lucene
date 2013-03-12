@@ -46,32 +46,81 @@ App.IndexingModel = Ember.Object.extend({
     }.property('status'),
 });
 
+App.Search = Ember.Object.extend({
+    data: {},
+    query: '',
+    pageSize: 10,
+    loaded: false,
+    pageBinding: 'data.page',
+    totalHitsBinding: 'data.totalHits',
+    firstBinding: 'data.first',
+    lastBinding: 'data.last',
+    isFirstPage: function() {
+        return this.get('page') === 0;
+    }.property('page'),
+    isLastPage: function() {
+        return this.get('totalHits') <= this.get('last');
+    }.property('last'),
+    hits: function() {
+        var copy = [];
+        var hits = this.get('data.hits');
+        if (!hits) return copy;
+        for (var i = 0; i < hits.length; i++) {
+            var hit = hits[i];
+            var c = {};
+            for (var attr in hit) {
+                c[attr] = hit[attr];
+            }
+            var tagQueries = [];
+            if (!hit.tags) hit.tags = '';
+            var tags = hit.tags.split(' ');
+            c.tags = [];
+            for (var j = 0; j < tags.length; j++) {
+                if (tags[j] === '') continue;
+                tagQueries.push(tags[j]);
+            }
+            c.tags = tagQueries;
+            copy.push(c);
+        }
+        return copy;
+    }.property('data.hits'),
+    load: function(query, page) {
+        var self = this;
+        console.log('loading search results');
+        
+        $.ajax("api/v2/package", {
+            type: 'GET',
+            data: {query: query, page: page, pageSize: self.get('pageSize')},
+            success: function(data, status, xhr) {
+                self.set('data', data);
+                self.set('loaded', true);
+            }
+        });
+    }
+});
+
 App.ApplicationController = Ember.Controller.extend({
     needs: 'search',
-    queryBinding: 'controllers.search.query',
+    queryBinding: Ember.Binding.oneWay('controllers.search.query'),
     search: function () {
         this.transitionToRoute('search', this.get('query'));
     }
 });
 
 App.SearchController = Ember.ObjectController.extend({
-    content: {},
+    content: App.Search.create(),
     query: '',
-    page: 0,
-    pageSize: 20,
-    search: function(query) {
-        this.set('query', query);
-        this.fetch(query);
+    search: function (query) {
+        console.log('searchController.search ' + query);
+        console.log('searchController model ' + this.get('model'));
+        this.set('query', query);   
+        this.get('model').load(query);
     },
-    fetch: function(query) {
-        var self = this;
-        $.ajax("api/v2/package", {
-            type: 'GET',
-            data: {query: query},
-            success: function(data, status, xhr) {
-                self.set('content', data);
-            }
-        });
+    nextPage: function() {
+        this.get('model').load(this.get('query'), this.get('page') + 1);
+    },
+    previousPage: function() {
+        this.get('model').load(this.get('query', this.get('page') - 1));
     }
 });
 
@@ -115,23 +164,9 @@ App.SearchRoute = Ember.Route.extend({
             console.log("search for string " + query);   
         }
 
+        controller.set('model', App.Search.create());
         controller.search(query);
     }
-});
-
-Ember.Handlebars.registerBoundHelper('split', function(value, options) {
-    if (!value) value = '';
-    var items = value.split(' ');
-    var result = "";
-
-    for (var i=0; i<items.length; i++) {
-        if (items[i] !== '') {
-            var item = { tag: items[i] };
-            result += options.fn(item);
-        }
-    }
-
-    return result;
 });
 
 $(function () {
