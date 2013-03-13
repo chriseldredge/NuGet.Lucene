@@ -44,11 +44,13 @@
                             {{else}}
                                 <img class="package-icon" src="http://nuget.org/Content/Images/packageDefaultIcon-50x50.png" alt="default package icon" />
                             {{/if}}
+                            {{#linkTo viewPackage this}}
                             {{#if title}}
                                 {{title}}
                             {{else}}
                                 {{id}}
                             {{/if}}
+                            {{/linkTo}}
                         </div>
                         <div>
                             By:
@@ -79,6 +81,10 @@
                 No results :(
             {{/if}}
         {{/if}}
+        </script>
+
+        <script type="text/x-handlebars" data-template-name="viewPackage">
+            <h1>Package info {{id}} {{version}}</h1>
         </script>
 
         <script type="text/x-handlebars" data-template-name="admin">

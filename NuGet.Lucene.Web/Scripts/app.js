@@ -163,7 +163,6 @@ App.ApplicationController = Ember.Controller.extend({
 });
 
 App.SearchController = Ember.ObjectController.extend({
-    content: App.Search.create(),
     query: '',
     search: function (query) {
         console.log('searchController.search ' + query);
@@ -197,7 +196,8 @@ App.FooterView = Ember.View.extend({
 App.Router.map(function () {
     this.route('index', { path: '/' });
     this.route('admin');
-    this.route('search', { path: '/search/:query'});
+    this.route('search', { path: '/package/search/:query'});
+    this.route('viewPackage', { path: '/package/:id/:version'});
 });
 
 App.AdminRoute = Ember.Route.extend({
@@ -209,19 +209,23 @@ App.AdminRoute = Ember.Route.extend({
 App.SearchRoute = Ember.Route.extend({
     setupController: function(controller, params) {
         var query = params;
-
         if (params && params.query) {
-            console.log("search for complex " + query.query);
             query = params.query;
-        }
-        else
-        {
-            console.log("search for string " + query);   
         }
 
         controller.set('model', App.Search.create());
         controller.search(query);
     }
+});
+
+App.ViewPackageRoute = Ember.Route.extend({
+    setupController: function (controller, params) {
+        controller.set('id', params.id);
+        controller.set('version', params.version);
+    },
+    serialize: function(model) {
+        return { id: model.id, version: model.version };
+    },
 });
 
 $(function () {
