@@ -182,20 +182,18 @@
     <Content Include="DataServices\PackageDataService.svc" />
     <Content Include="Global.asax" />
     <Content Include="packages.config" />
-    <None Include="Scripts\jquery-1.9.1.intellisense.js" />
     <Content Include="Scripts\app.js" />
-    <Content Include="Scripts\ember-1.0.0-rc.1.js" />
-    <Content Include="Scripts\ember-1.0.0-rc.1.min.js" />
-    <Content Include="Scripts\handlebars-1.0.9.js" />
-    <Content Include="Scripts\handlebars.runtime-1.0.9.js" />
-    <Content Include="Scripts\jquery-1.9.1.js" />
-    <Content Include="Scripts\jquery-1.9.1.min.js" />
-    <Content Include="Scripts\jquery.signalR-1.0.1.js" />
-    <Content Include="Scripts\jquery.signalR-1.0.1.min.js" />
+    <Content Include="Scripts\Lib\ember-1.0.0-rc.1.js" />
+    <Content Include="Scripts\Lib\ember-1.0.0-rc.1.min.js" />
+    <Content Include="Scripts\Lib\handlebars-1.0.9.js" />
+    <Content Include="Scripts\Lib\handlebars.runtime-1.0.9.js" />
+    <Content Include="Scripts\Lib\jquery.signalR-1.0.1.js" />
+    <Content Include="Scripts\Lib\jquery.signalR-1.0.1.min.js" />
+    <Content Include="Scripts\main.js" />
+    <Content Include="Scripts\Lib\require-jquery.js" />
     <Content Include="Web.config">
       <SubType>Designer</SubType>
     </Content>
-    <Content Include="Scripts\jquery-1.9.1.min.map" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AcceptHtmlConstraint.cs" />
