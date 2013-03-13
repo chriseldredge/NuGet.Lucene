@@ -191,7 +191,7 @@
     <Content Include="Scripts\Lib\jquery.signalR-1.0.1.min.js" />
     <Content Include="Scripts\main.js" />
     <Content Include="Scripts\Lib\require-jquery.js" />
-    <Content Include="Scripts\Models\IndexingStatus.js" />
+    <Content Include="Scripts\Models\IndexingModel.js" />
     <Content Include="Web.config">
       <SubType>Designer</SubType>
     </Content>
@@ -245,6 +245,7 @@
   <ItemGroup>
     <Content Include="Views\Web.config" />
   </ItemGroup>
+  <ItemGroup />
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
