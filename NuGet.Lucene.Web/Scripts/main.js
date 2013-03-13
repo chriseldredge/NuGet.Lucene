@@ -15,7 +15,7 @@
         },
         'signalr.hubs': {
             deps: ['signalr'],
-            exports: '$.signalR.hub'
+            exports: '$.connection'
         }
     }
 });

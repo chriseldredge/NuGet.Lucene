@@ -1,13 +1,12 @@
 ﻿define([
         'ember',
-        'signalr',
-        'signalr.hubs',
+        'Models/IndexingStatus',
 /*        'app/models/user',
         "app/views/main-views",
         "app/views/access-views",
         "app/views/item-views"
 */
-    ], function(em, connection, hub) {
+    ], function(em, IndexingStatus) {
 
         var app = em.Application.create({
             name: "NuGet",
@@ -15,47 +14,7 @@
 
         app.deferReadiness();
 
-        app.IndexingModel = em.Object.extend({
-            status: {},
-            hub: undefined,
-            init: function() {
-                console.log("Connecting to SignalR status hub");
-                var self = this;
-                var setStatusCallback = function(status) {
-                    self.set('status', status);
-                };
-
-                $.connection.hub.logging = true;
-
-                hub = $.connection.status;
-
-                hub.client.updateStatus = setStatusCallback;
-
-                hub.connection.stateChanged(function(change) {
-                    var isConnected = change.newState === $.signalR.connectionState.connected;
-                    self.set('isConnected', isConnected);
-
-                    if (isConnected) {
-                        hub.server.getStatus().done(setStatusCallback);
-                    } else {
-                        setStatusCallback({});
-                    }
-                });
-
-                this.set('hub', hub);
-
-                $.connection.hub.start();
-            },
-            synchronize: function() {
-                $.ajax("api/indexing/synchronize", { type: 'POST' });
-            },
-            cancel: function() {
-                $.ajax("api/indexing/cancel", { type: 'POST' });
-            },
-            isRunning: function() {
-                return this.status.synchronizationState != 'Idle';
-            }.property('status'),
-        });
+        app.IndexingModel = IndexingStatus;
 
         em.PaginationSupport = em.Mixin.create({
             hasPaginationSupport: true,
@@ -238,7 +197,7 @@
             },
         });
 
-        $(function() {
+        $(document).ready(function() {
             app.indexingModel = app.IndexingModel.create();
             app.advanceReadiness();
         });

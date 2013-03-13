@@ -191,6 +191,7 @@
     <Content Include="Scripts\Lib\jquery.signalR-1.0.1.min.js" />
     <Content Include="Scripts\main.js" />
     <Content Include="Scripts\Lib\require-jquery.js" />
+    <Content Include="Scripts\Models\IndexingStatus.js" />
     <Content Include="Web.config">
       <SubType>Designer</SubType>
     </Content>
