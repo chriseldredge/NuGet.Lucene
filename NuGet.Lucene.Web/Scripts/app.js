@@ -50,6 +50,30 @@
             contentBinding: 'App.indexingModel.status'
         });
 
+    app.PackageIcon = em.View.extend({
+        DefaultIconUrl: 'img/package-default-icon-50x50.png',
+        tagName: 'img',
+        classNames: ['package-icon'],
+        attributeBindings: ['src', 'alt'],
+        alt: 'package icon',
+        src: function () {
+            var url = this.get('content.iconUrl');
+
+            if (!url) {
+                url = this.DefaultIconUrl;
+            }
+            return url;
+            
+        }.property('content.iconUrl'),
+        didInsertElement: function () {
+            var self = this;
+            var img = $(this.get('element'));
+            img.error(function () {
+                img.unbind("error").attr("src", self.DefaultIconUrl);
+            });
+        }
+    });
+    
         app.Router.map(function() {
             this.route('index', { path: '/' });
             this.route('admin');
@@ -90,11 +114,6 @@
             app.advanceReadiness();
         });
 
-        $(document).ready(function() {
-            $(".package-icon").error(function() {
-                $(this).unbind("error").attr("src", "http://nuget.org/Content/Images/packageDefaultIcon-50x50.png");
-            });
-        });
 
         return app;
     });

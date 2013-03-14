@@ -40,11 +40,7 @@
                     {{#each hits}}
                     <li>
                         <div>
-                            {{#if iconUrl}}
-                                <img class="package-icon" {{bindAttr src="iconUrl"}} alt="package icon" />
-                            {{else}}
-                                <img class="package-icon" src="http://nuget.org/Content/Images/packageDefaultIcon-50x50.png" alt="default package icon" />
-                            {{/if}}
+                            {{view App.PackageIcon contentBinding="this"}}
                             {{#linkTo viewPackage this}}
                             {{#if title}}
                                 {{title}}
