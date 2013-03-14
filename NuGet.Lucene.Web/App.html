@@ -24,8 +24,8 @@
         </script>
 
         <script type="text/x-handlebars" data-template-name="search">
+        <h1>Search results for "{{query}}"</h1>
         {{#if loaded}}
-            <h1>Search results for "{{query}}"</h1>
             {{#if total}}
                 Showing {{first}} to {{last}} of {{total}}.
 
@@ -52,7 +52,7 @@
                         <div>
                             By:
                             {{#each author in authors}}
-                                {{#linkTo search author}}{{author}}{{/linkTo}}
+                                <a href="#" {{action goTo author}}>{{author}}</a>
                             {{/each}}
                         </div>
                         <div>
@@ -61,7 +61,7 @@
                         <div>
                             Tags: 
                             {{#each tag in tags}}
-                                {{#linkTo search tag}}{{tag}}{{/linkTo}}
+                                <a href="#" {{action goTo tag}}>{{tag}}</a>
                             {{/each}}
                         </div>
                     </li>
@@ -77,8 +77,10 @@
             {{else}}
                 No results :(
             {{/if}}
+        {{else}}
+            Loading spinner thingy goes here.
         {{/if}}
-        </script>
+    </script>
 
         <script type="text/x-handlebars" data-template-name="viewPackage">
             <h1>Package info {{id}} {{version}}</h1>

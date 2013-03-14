@@ -1,38 +1,39 @@
 ﻿define([
         'ember',
         'Models/IndexingModel',
-        'Models/SearchModel'
-], function (em, IndexingModel, SearchModel) {
+        'Models/Packages',
+        'Models/PaginationSupport'
+], function (em, IndexingModel, Packages, PaginationSupport) {
 
     var app = em.Application.create({
         name: "NuGet",
     });
 
-    app.deferReadiness();
-
     app.IndexingModel = IndexingModel;
-    app.Search = SearchModel;
-
+    app.Packages = Packages.create();
+    
         app.ApplicationController = em.Controller.extend({
             needs: 'search',
             queryBinding: em.Binding.oneWay('controllers.search.query'),
             search: function() {
-                this.transitionToRoute('search', this.get('query'));
+                this.get('controllers.search').goTo(this.get('query'));
             }
         });
 
-        app.SearchController = em.ObjectController.extend({
-            query: '',
-            search: function (query) {
-                this.set('query', query);
-                this.get('model').search(this.get('query'));
+        app.SearchController = em.ObjectController.extend(PaginationSupport, {
+            totalBinding: em.Binding.oneWay('model.totalHits'),
+            pageBinding: em.Binding.oneWay('model.page'),
+            goTo: function (query) {
+                var model = app.Packages.search(query, 0, this.get('pageSize'));
+                this.transitionToRoute('search', model);
             },
-            nextPage: function() {
-                this.get('model').nextPage();
+            didRequestPage: function () {
+                // when a new search is being loaded, ignore when the page gets set back to zero.
+                if (this.get('loading')) return;
+                
+                var model = app.Packages.search(this.get('query'), this.get('page'), this.get('pageSize'));
+                this.set('model', model);
             },
-            previousPage: function() {
-                this.get('model').previousPage();
-            }
         });
 
         app.AdminController = em.ObjectController.extend({
@@ -88,14 +89,11 @@
         });
 
         app.SearchRoute = em.Route.extend({
-            setupController: function(controller, context) {
-                controller.set('model', app.Search.create());
-                
-                if (typeof context === "string") {
-                    controller.search(context);
-                } else {
-                    controller.search(context.query);
-                }
+            model: function (params) {
+                return app.Packages.search(params.query, 0, 10);
+            },
+            serialize: function(model) {
+                return { query: model.query };
             }
         });
 
@@ -109,11 +107,7 @@
             },
         });
 
-        $(document).ready(function() {
-            app.indexingModel = app.IndexingModel.create();
-            app.advanceReadiness();
-        });
-
+        app.indexingModel = app.IndexingModel.create();
 
         return app;
     });
