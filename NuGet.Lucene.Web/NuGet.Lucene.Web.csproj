@@ -204,7 +204,7 @@
     <Content Include="Scripts\Models\PackageStore.js" />
     <Content Include="Scripts\Models\SearchResults.js" />
     <Content Include="Scripts\Models\PaginationSupport.js" />
-    <Content Include="Scripts\Models\IndexingModel.js" />
+    <Content Include="Scripts\Models\PackageIndexer.js" />
     <Content Include="Web.config">
       <SubType>Designer</SubType>
     </Content>

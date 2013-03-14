@@ -3,18 +3,18 @@
         'Controllers/AdminController',
         'Controllers/ApplicationController',
         'Controllers/SearchController',
-        'Models/IndexingModel',
+        'Models/PackageIndexer',
         'Models/PackageStore',
         'Routes/AdminRoute',
         'Routes/SearchRoute',
         'Routes/ViewPackageRoute',
         'Views/Footer',
         'Views/PackageIcon'
-], function (em, AdminController, ApplicationController, SearchController, IndexingModel, PackageStore, AdminRoute, SearchRoute, ViewPackageRoute, Footer, PackageIcon) {
+], function (em, AdminController, ApplicationController, SearchController, PackageIndexer, PackageStore, AdminRoute, SearchRoute, ViewPackageRoute, Footer, PackageIcon) {
 
     var app = em.Application.create({name: "NuGet"});
 
-    app.indexingModel = IndexingModel.create();
+    app.PackageIndexer = PackageIndexer.create();
     app.Packages = PackageStore.create();
 
     app.AdminController = AdminController;

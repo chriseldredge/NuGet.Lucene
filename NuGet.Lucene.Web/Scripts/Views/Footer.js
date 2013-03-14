@@ -2,6 +2,6 @@
     return em.View.extend({
         templateName: 'footer',
         tagName: 'footer',
-        contentBinding: 'App.indexingModel.status'
+        contentBinding: 'App.PackageIndexer.status'
     });
 });
