@@ -20,6 +20,6 @@
     }
 });
 
-require(["app"], function (app) {
+require(["app", "Router"], function (app) {
     window.App = app;
 });

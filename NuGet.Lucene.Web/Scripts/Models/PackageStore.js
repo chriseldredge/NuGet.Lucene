@@ -22,7 +22,6 @@
                     self.convert(json.hits);
                     results.setProperties(json);
                     results.setProperties({ loaded: true, loading: false });
-                    console.log('search results: ', em.inspect(results));
                 }
             });
 

@@ -184,6 +184,15 @@
     <Content Include="img\package-default-icon-50x50.png" />
     <Content Include="packages.config" />
     <Content Include="Scripts\app.js" />
+    <Content Include="Scripts\Controllers\ApplicationController.js" />
+    <Content Include="Scripts\Controllers\AdminController.js" />
+    <Content Include="Scripts\Controllers\SearchController.js" />
+    <Content Include="Scripts\Router.js" />
+    <Content Include="Scripts\Routes\AdminRoute.js" />
+    <Content Include="Scripts\Routes\ViewPackageRoute.js" />
+    <Content Include="Scripts\Routes\SearchRoute.js" />
+    <Content Include="Scripts\Views\PackageIcon.js" />
+    <Content Include="Scripts\Views\Footer.js" />
     <Content Include="Scripts\Lib\ember-1.0.0-rc.1.js" />
     <Content Include="Scripts\Lib\ember-1.0.0-rc.1.min.js" />
     <Content Include="Scripts\Lib\handlebars-1.0.9.js" />
@@ -192,7 +201,7 @@
     <Content Include="Scripts\Lib\jquery.signalR-1.0.1.min.js" />
     <Content Include="Scripts\main.js" />
     <Content Include="Scripts\Lib\require-jquery.js" />
-    <Content Include="Scripts\Models\Packages.js" />
+    <Content Include="Scripts\Models\PackageStore.js" />
     <Content Include="Scripts\Models\SearchResults.js" />
     <Content Include="Scripts\Models\PaginationSupport.js" />
     <Content Include="Scripts\Models\IndexingModel.js" />

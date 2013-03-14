@@ -12,7 +12,7 @@
                     {{#linkTo 'admin'}}Admin{{/linkTo}}
                 </nav>
                 <div class="search-box">
-                    {{view Ember.TextField valueBinding="query" action="search" placeholder="Search..."}}
+                    {{view Ember.TextField valueBinding="searchBox" action="search" placeholder="Search..."}}
                 </div>
             </header>
             
@@ -20,7 +20,7 @@
                 {{outlet}}
             </div>
 
-            {{view App.FooterView}}
+            {{view App.Footer}}
         </script>
 
         <script type="text/x-handlebars" data-template-name="search">
