@@ -6,3 +6,4 @@ _NCrunch*
 *.suo
 bin/
 obj/
+_ReSharper.*
