@@ -168,9 +168,14 @@ namespace NuGet.Lucene
         public LucenePackage LoadFromFileSystem(string path)
         {
             var fullPath = FileSystem.GetFullPath(path);
-            var package = Convert(FastZipPackage.Open(fullPath, HashProvider), new LucenePackage(_ => FileSystem.OpenFile(path)));
+            var package = Convert(OpenPackage(fullPath), new LucenePackage(_ => FileSystem.OpenFile(path)));
             package.Path = FileSystem.MakeRelative(path);
             return package;
+        }
+
+        protected override IPackage OpenPackage(string path)
+        {
+            return FastZipPackage.Open(path, HashProvider);
         }
 
         public LucenePackage Convert(IPackage package)
