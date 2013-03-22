@@ -167,7 +167,8 @@ namespace NuGet.Lucene
 
         public LucenePackage LoadFromFileSystem(string path)
         {
-            var package = Convert(OpenPackage(path), new LucenePackage(_ => FileSystem.OpenFile(path)));
+            var fullPath = FileSystem.GetFullPath(path);
+            var package = Convert(FastZipPackage.Open(fullPath, HashProvider), new LucenePackage(_ => FileSystem.OpenFile(path)));
             package.Path = FileSystem.MakeRelative(path);
             return package;
         }
@@ -223,18 +224,21 @@ namespace NuGet.Lucene
 
         protected virtual void CalculateDerivedData(IPackage sourcePackage, LucenePackage package, string path, Stream stream)
         {
-            byte[] fileBytes;
-            using (stream)
+            var fastPackage = sourcePackage as FastZipPackage;
+            if (fastPackage == null)
             {
-                fileBytes = stream.ReadAllBytes();
+                CalculateDerivedDataSlowlyConsumingLotsOfMemory(package, stream);
+            }
+            else
+            {
+                package.PackageSize = fastPackage.Size;
+                package.PackageHash = System.Convert.ToBase64String(fastPackage.Hash);
+                package.Created = fastPackage.Created;
             }
 
-            package.PackageSize = fileBytes.Length;
-            package.PackageHash = System.Convert.ToBase64String(HashProvider.CalculateHash(fileBytes));
             package.PackageHashAlgorithm = HashAlgorithm;
             package.LastUpdated = FileSystem.GetLastModified(path);
             package.Published = package.LastUpdated;
-            package.Created = GetZipArchiveCreateDate(new MemoryStream(fileBytes));
             package.Path = path;
 
             package.SupportedFrameworks = sourcePackage.GetSupportedFrameworks().Select(VersionUtility.GetShortFrameworkName);
@@ -244,6 +248,19 @@ namespace NuGet.Lucene
             {
                 package.Files = localPackage.GetFiles().Select(f => f.Path);
             }
+        }
+
+        private void CalculateDerivedDataSlowlyConsumingLotsOfMemory(LucenePackage package, Stream stream)
+        {
+            byte[] fileBytes;
+            using (stream)
+            {
+                fileBytes = stream.ReadAllBytes();
+            }
+
+            package.PackageSize = fileBytes.Length;
+            package.PackageHash = System.Convert.ToBase64String(HashProvider.CalculateHash(fileBytes));
+            package.Created = GetZipArchiveCreateDate(new MemoryStream(fileBytes));
         }
 
         private DateTimeOffset GetZipArchiveCreateDate(Stream stream)
