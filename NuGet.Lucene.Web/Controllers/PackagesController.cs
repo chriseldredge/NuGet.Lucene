@@ -39,7 +39,7 @@ namespace NuGet.Lucene.Web.Controllers
                         pkg.Version,
                         pkg.LastUpdated,
                         pkg.VersionDownloadCount,
-                        Link = Url.Link(RouteNames.PackageInfo, new { id = pkg.Id, version = pkg.Version })
+                        Link = Url.Link(RouteNames.Packages.Info, new { id = pkg.Id, version = pkg.Version })
                     });
 
             dynamic result = new ExpandoObject();
@@ -147,7 +147,7 @@ namespace NuGet.Lucene.Web.Controllers
 
         [HttpPut]
         [HttpPost]
-        public async Task<HttpResponseMessage> PutPackage(IPackage package)
+        public async Task<HttpResponseMessage> PutPackage([FromBody]IPackage package)
         {
             if (package == null || string.IsNullOrWhiteSpace(package.Id) || package.Version == null)
             {
@@ -156,7 +156,7 @@ namespace NuGet.Lucene.Web.Controllers
 
             await Repository.AddPackageAsync(package);
 
-            var location = Url.Link(RouteNames.PackageInfo, new { id = package.Id, version = package.Version });
+            var location = Url.Link(RouteNames.Packages.Info, new { id = package.Id, version = package.Version });
 
             var result = Request.CreateResponse(HttpStatusCode.Created);
             result.Headers.Location = new Uri(location);

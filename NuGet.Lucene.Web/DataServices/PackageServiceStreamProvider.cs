@@ -23,11 +23,12 @@ namespace NuGet.Lucene.Web.DataServices
 
         public string GetPackageDownloadPath(DataServicePackage package)
         {
-            var route = RouteTable.Routes[RouteNames.PackageDownload];
+            var route = RouteTable.Routes[RouteNames.Packages.Download];
 
             var routeValues = new {id = package.Id, version = package.Version, httproute = true};
             
-            return route.GetVirtualPath(RequestContext, new RouteValueDictionary(routeValues)).VirtualPath;
+            var path = route.GetVirtualPath(RequestContext, new RouteValueDictionary(routeValues)).VirtualPath;
+            return VirtualPathUtility.ToAbsolute("~/" + path);
         }
 
         private static RequestContext RequestContext

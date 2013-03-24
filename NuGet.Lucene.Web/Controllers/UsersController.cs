@@ -8,7 +8,7 @@ using NuGet.Lucene.Web.Authentication;
 
 namespace NuGet.Lucene.Web.Controllers
 {
-    public class UserController : ApiController
+    public class UsersController : ApiController
     {
         public LuceneDataProvider Provider { get; set; }
 
@@ -32,6 +32,22 @@ namespace NuGet.Lucene.Web.Controllers
             }
 
             return Request.CreateResponse(HttpStatusCode.Created);
+        }
+
+        public HttpResponseMessage Delete(string username)
+        {
+            using (var session = Provider.OpenSession<ApiUser>())
+            {
+                var user = session.Query().SingleOrDefault(u => u.Username == username);
+
+                if (user == null)
+                {
+                    return Request.CreateErrorResponse(HttpStatusCode.NotFound, "User " + username + " not found.");
+                }
+                session.Delete(user);
+            }
+
+            return Request.CreateResponse(HttpStatusCode.OK);
         }
     }
 }

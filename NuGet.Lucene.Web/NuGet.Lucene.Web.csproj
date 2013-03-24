@@ -97,9 +97,6 @@
     <Reference Include="Ninject.Web.Common">
       <HintPath>..\packages\Ninject.Web.Common.3.0.0.7\lib\net45-full\Ninject.Web.Common.dll</HintPath>
     </Reference>
-    <Reference Include="Ninject.Web.Mvc">
-      <HintPath>..\packages\Ninject.MVC3.3.0.0.6\lib\net45-full\Ninject.Web.Mvc.dll</HintPath>
-    </Reference>
     <Reference Include="Ninject.Web.WebApi, Version=3.0.0.0, Culture=neutral, PublicKeyToken=c7192dc5380945e7, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Ninject.Web.WebApi-RC.3.0.0.22\lib\net45-full\Ninject.Web.WebApi.dll</HintPath>
@@ -178,7 +175,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="App.html" />
+    <Content Include="Index.html" />
     <Content Include="DataServices\PackageDataService.svc" />
     <Content Include="Global.asax" />
     <Content Include="img\package-default-icon-50x50.png" />
@@ -210,17 +207,15 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AcceptHtmlConstraint.cs" />
     <Compile Include="Authentication\ApiUser.cs" />
     <Compile Include="ApplicationConfig.cs" />
     <Compile Include="Authentication\IApiKeyAuthentication.cs" />
     <Compile Include="Authentication\LuceneApiKeyAuthentication.cs" />
-    <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ErrorController.cs" />
     <Compile Include="Controllers\IndexingController.cs" />
     <Compile Include="Controllers\PackagesController.cs" />
     <Compile Include="Controllers\TabCompletionController.cs" />
-    <Compile Include="Controllers\UserController.cs" />
+    <Compile Include="Controllers\UsersController.cs" />
     <Compile Include="DataServices\DefaultServiceStreamProvider.cs" />
     <Compile Include="DataServices\PackageDataSource.cs" />
     <Compile Include="DataServices\PackageDataService.svc.cs">

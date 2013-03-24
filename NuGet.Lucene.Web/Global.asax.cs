@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Routing;
 using Microsoft.AspNet.SignalR;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using Ninject;
@@ -21,15 +22,19 @@ namespace NuGet.Lucene.Web
         protected override void OnApplicationStarted()
         {
             TaskScheduler.UnobservedTaskException +=
-                (_, e) => UnhandledExceptionLogger.LogException(e.Exception, 
+                (_, e) => UnhandledExceptionLogger.LogException(e.Exception,
                     string.Format("Unobserved exception in async task: {0}", e.Exception.Message));
 
             ConfigureWebApi(GlobalConfiguration.Configuration);
 
-            var hubConfiguration = new HubConfiguration {EnableDetailedErrors = ApplicationConfig.ShowExceptionDetails};
+            var hubConfiguration = new HubConfiguration
+                {
+                    EnableDetailedErrors = ApplicationConfig.ShowExceptionDetails,
+                    EnableCrossDomain = true
+                };
 
             RouteTable.Routes.MapHubs(hubConfiguration);
-            
+
             MapApiRoutes(GlobalConfiguration.Configuration.Routes);
             MapDataServiceRoutes(RouteTable.Routes);
         }
@@ -50,66 +55,72 @@ namespace NuGet.Lucene.Web
             config.Formatters.Add(new PackageFormDataMediaFormatter());
             config.Formatters.JsonFormatter.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
             config.Formatters.JsonFormatter.SerializerSettings.Converters.Add(new StringEnumConverter());
+            config.Formatters.JsonFormatter.SerializerSettings.Formatting = Formatting.Indented;
         }
 
         public static void MapApiRoutes(HttpRouteCollection routes)
         {
-            routes.MapHttpRoute(RouteNames.Home,
-                                "",
-                                new { controller = "Home" },
-                                new { acceptHeader = new AcceptHtmlConstraint() });
 
-            routes.MapHttpRoute(RouteNames.IndexingStatus,
+            routes.MapHttpRoute(RouteNames.Indexing,
                                 "api/indexing/{action}",
-                                new {controller = "Indexing", action = "Status"});
-            
-            routes.MapHttpRoute(RouteNames.UserApi,
-                                "api/users/{username}",
-                                new { controller = "User", username = RouteParameter.Optional });
+                                new { controller = "Indexing" });
 
-            routes.MapHttpRoute(RouteNames.PackageSearch,
-                                "api/v2/package",
+            routes.MapHttpRoute(RouteNames.Users.All,
+                                "api/users",
+                                new { controller = "Users", action = "GetAllUsers" },
+                                new { httpMethod = new HttpMethodConstraint(HttpMethod.Get) });
+
+            routes.MapHttpRoute(RouteNames.Users.ForUser,
+                                "api/users/{username}",
+                                new { controller = "Users" });
+
+            routes.MapHttpRoute(RouteNames.Packages.Search,
+                                "api/packages",
                                 new { controller = "Packages", action = "Search" },
                                 new { httpMethod = new HttpMethodConstraint(HttpMethod.Get) });
 
-            routes.MapHttpRoute(RouteNames.PackageDownloadAnyVersion,
-                                "api/v2/package/{id}/content",
-                                new { controller = "Packages", action = "GetPackageInfo" });
+            routes.MapHttpRoute(RouteNames.Packages.Upload,
+                                "api/packages",
+                                new { controller = "Packages" },
+                                new { httpMethod = new HttpMethodConstraint(HttpMethod.Put) });
 
-            routes.MapHttpRoute(RouteNames.PackageDownload,
-                                "api/v2/package/{id}/{version}/content",
+            routes.MapHttpRoute(RouteNames.Packages.DownloadLatestVersion,
+                                "api/packages/{id}/content",
                                 new { controller = "Packages", action = "DownloadPackage" });
 
-            routes.MapHttpRoute(RouteNames.PackageInfo,
-                                "api/v2/package/{id}/{version}",
-                                new {controller = "Packages", action = "GetPackageInfo", version = ""},
+            routes.MapHttpRoute(RouteNames.Packages.Download,
+                                "api/packages/{id}/{version}/content",
+                                new { controller = "Packages", action = "DownloadPackage" });
+
+            routes.MapHttpRoute(RouteNames.Packages.Info,
+                                "api/packages/{id}/{version}",
+                                new { controller = "Packages", action = "GetPackageInfo", version = "" },
                                 new { httpMethod = new HttpMethodConstraint(HttpMethod.Get) });
-            
-            routes.MapHttpRoute(RouteNames.PackageApi,
-                                "api/v2/package/{id}/{version}",
-                                new { controller = "Packages", id = "", version = "" },
-                                new { httpMethod = new HttpMethodConstraint(HttpMethod.Put, HttpMethod.Post, HttpMethod.Delete) });
-            
+
+            routes.MapHttpRoute(RouteNames.Packages.Delete,
+                                "api/packages/{id}/{version}",
+                                new { controller = "Packages", action = "DeletePackage" });
+
             routes.MapHttpRoute(RouteNames.TabCompletionPackageIds,
                                 "api/v2/package-ids",
-                                new { controller = "TabCompletion", action = "GetMatchingPackages", maxResults = 30, includePrerelease = false });
+                                new { controller = "TabCompletion", action = "GetMatchingPackages" });
 
             routes.MapHttpRoute(RouteNames.TabCompletionPackageVersions,
                                 "api/v2/package-versions/{packageId}",
-                                new {controller = "TabCompletion", action = "GetPackageVersions", includePrerelease = false});
+                                new { controller = "TabCompletion", action = "GetPackageVersions" });
         }
 
         public static void MapDataServiceRoutes(RouteCollection routes)
         {
             var dataServiceHostFactory = new NinjectDataServiceHostFactory();
-            
-            var serviceRoute = new ServiceRoute("", dataServiceHostFactory, typeof(PackageDataService))
+
+            var serviceRoute = new ServiceRoute("api/odata", dataServiceHostFactory, typeof(PackageDataService))
                 {
                     Defaults = RouteNames.PackageFeedRouteValues,
                     Constraints = RouteNames.PackageFeedRouteValues
                 };
-            
-            routes.Add(RouteNames.PackageFeed, serviceRoute);
+
+            routes.Add(RouteNames.Packages.Feed, serviceRoute);
         }
     }
 

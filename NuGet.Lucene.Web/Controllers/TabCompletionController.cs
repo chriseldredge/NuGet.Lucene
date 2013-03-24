@@ -8,7 +8,7 @@ namespace NuGet.Lucene.Web.Controllers
     {
         public ILucenePackageRepository Repository { get; set; }
 
-        public IEnumerable<string> GetMatchingPackages(string partialId, bool includePrerelease, int maxResults)
+        public IEnumerable<string> GetMatchingPackages(string partialId, bool includePrerelease, int maxResults = 30)
         {
             var packages = GetPackages(includePrerelease);
 

@@ -4,19 +4,27 @@ namespace NuGet.Lucene.Web
 {
     public static class RouteNames
     {
-        public const string PackageFeed = "OData Package Feed";
         public static readonly RouteValueDictionary PackageFeedRouteValues = new RouteValueDictionary { { "serviceType", "odata" } };
 
-        public const string Home = "Home";
-        public const string IndexingStatus = "Status";
+        public const string ApiExplorer = "ApiExplorer";
+        public const string Indexing = "Indexing";
 
-        public const string UserApi = "UserApi";
-        public const string PackageApi = "PackageApi";
+        public static class Users
+        {
+            public const string All = "Users.All";
+            public const string ForUser = "Users.ForUser";
+        }
 
-        public const string PackageInfo = "Package Info";
-        public const string PackageDownload = "Download Package";
-        public const string PackageDownloadAnyVersion = "Package Download - Latest Version";
-        public const string PackageSearch = "Package Search";
+        public static class Packages
+        {
+            public const string Search = "Packages.Search";
+            public const string Upload = "Packages.Upload";
+            public const string Delete = "Packages.Delete";
+            public const string Info = "Packages.Info";
+            public const string Download = "Packages.Download";
+            public const string DownloadLatestVersion = "Packages.Download.Latest";
+            public const string Feed = "OData Package Feed";
+        }
         
         public const string TabCompletionPackageIds = "Package Manager Console Tab Completion - Package IDs";
         public const string TabCompletionPackageVersions = "Package Manager Console Tab Completion - Package Versions";

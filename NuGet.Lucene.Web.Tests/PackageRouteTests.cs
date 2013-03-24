@@ -8,7 +8,7 @@ namespace NuGet.Lucene.Web.Tests
     public class PackageRouteTests : RouteTests
     {
         [Test]
-        [TestCase("api/v2/package/Sample/1.0", "1.0")]
+        [TestCase("api/packages/Sample/1.0", "1.0")]
         public void DeletePackage(string uri, string version)
         {
             Assert.That(routes, HasRouteFor(uri, HttpMethod.Delete)
@@ -18,8 +18,8 @@ namespace NuGet.Lucene.Web.Tests
         }
 
         [Test]
-        [TestCase("api/v2/package/Sample/content", null)]
-        [TestCase("api/v2/package/Sample/1.0/content", "1.0")]
+        [TestCase("api/packages/Sample/content", null)]
+        [TestCase("api/packages/Sample/1.0/content", "1.0")]
         public void DownloadPackage(string uri, object version)
         {
             Assert.That(routes, HasRouteFor(uri)
@@ -29,8 +29,7 @@ namespace NuGet.Lucene.Web.Tests
         }
 
         [Test]
-        [TestCase("api/v2/package", "Put")]
-        [TestCase("api/v2/package", "Post")]
+        [TestCase("api/packages", "Put")]
         public void UploadPackage(string uri, string method)
         {
             var httpMethod = (HttpMethod)typeof(HttpMethod).GetProperties().First(p => p.Name == method).GetValue(null);
@@ -40,8 +39,8 @@ namespace NuGet.Lucene.Web.Tests
         }
 
         [Test]
-        [TestCase("api/v2/package/Sample", "")]
-        [TestCase("api/v2/package/Sample/0.9", "0.9")]
+        [TestCase("api/packages/Sample", "")]
+        [TestCase("api/packages/Sample/0.9", "0.9")]
         public void GetPackageInfo(string uri, object version)
         {
             Assert.That(routes, HasRouteFor(uri)

@@ -34,7 +34,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
 
             package = CreatePackage(SampleVersion);
 
-            SetUpRequest(RouteNames.PackageApi, HttpMethod.Put, "api/v2/package");
+            SetUpRequest(RouteNames.Packages.Search, HttpMethod.Get, "api/packages");
         }
 
         protected override PackagesController CreateController()
@@ -153,7 +153,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
             repository.Verify(r => r.AddPackageAsync(package));
 
             Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.Created));
-            Assert.That(result.Headers.Location, Is.EqualTo(new Uri("http://localhost/api/v2/package/Sample/1.0")));
+            Assert.That(result.Headers.Location, Is.EqualTo(new Uri("http://localhost/api/packages/Sample/1.0")));
         }
 
         [Test]

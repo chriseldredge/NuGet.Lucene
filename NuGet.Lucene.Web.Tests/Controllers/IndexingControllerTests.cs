@@ -15,7 +15,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
         [SetUp]
         public void SetUp()
         {
-            SetUpRequest(RouteNames.PackageApi, HttpMethod.Put, "api/v2/package");
+            SetUpRequest(RouteNames.Indexing, HttpMethod.Get, "api/indexing/status");
         }
 
         protected override IndexingController CreateController()

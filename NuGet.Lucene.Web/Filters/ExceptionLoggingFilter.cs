@@ -2,7 +2,7 @@
 
 namespace NuGet.Lucene.Web.Filters
 {
-    class ExceptionLoggingFilter : ExceptionFilterAttribute
+    public class ExceptionLoggingFilter : ExceptionFilterAttribute
     {
         public override void OnException(HttpActionExecutedContext actionExecutedContext)
         {

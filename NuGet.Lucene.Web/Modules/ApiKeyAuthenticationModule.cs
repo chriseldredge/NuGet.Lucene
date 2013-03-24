@@ -5,7 +5,7 @@ namespace NuGet.Lucene.Web.Modules
 {
     public class ApiKeyAuthenticationModule : HttpModule
     {
-        public IApiKeyAuthentication service { get; set; }
+        public IApiKeyAuthentication Service { get; set; }
 
         protected override void Init()
         {
@@ -14,7 +14,7 @@ namespace NuGet.Lucene.Web.Modules
 
         private void AuthenticateRequest(object sender, EventArgs e)
         {
-            var apiUser = service.AuthenticateRequest(Request);
+            var apiUser = Service.AuthenticateRequest(Request);
             if (apiUser != null)
             {
                 Context.User = apiUser;
