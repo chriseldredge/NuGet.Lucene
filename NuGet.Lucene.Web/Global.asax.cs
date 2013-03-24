@@ -1,7 +1,14 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Net.Http;
 using System.ServiceModel.Activation;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
+using System.Web.Http.Controllers;
+using System.Web.Http.Description;
+using System.Web.Http.Routing;
 using System.Web.Routing;
 using Microsoft.AspNet.SignalR;
 using Newtonsoft.Json;
@@ -10,9 +17,11 @@ using Newtonsoft.Json.Serialization;
 using Ninject;
 using Ninject.Extensions.Wcf;
 using Ninject.Web.Common;
+using NuGet.Lucene.Web.Controllers;
 using NuGet.Lucene.Web.DataServices;
 using NuGet.Lucene.Web.Filters;
 using NuGet.Lucene.Web.Formatters;
+using NuGet.Lucene.Web.MessageHandlers;
 using HttpMethodConstraint = System.Web.Http.Routing.HttpMethodConstraint;
 
 namespace NuGet.Lucene.Web
@@ -30,12 +39,12 @@ namespace NuGet.Lucene.Web
             var hubConfiguration = new HubConfiguration
                 {
                     EnableDetailedErrors = ApplicationConfig.ShowExceptionDetails,
-                    EnableCrossDomain = true
+                    EnableCrossDomain = ApplicationConfig.EnableCrossDomainRequests
                 };
 
             RouteTable.Routes.MapHubs(hubConfiguration);
 
-            MapApiRoutes(GlobalConfiguration.Configuration.Routes);
+            MapApiRoutes(GlobalConfiguration.Configuration);
             MapDataServiceRoutes(RouteTable.Routes);
         }
 
@@ -50,6 +59,7 @@ namespace NuGet.Lucene.Web
                                                   ? IncludeErrorDetailPolicy.Always
                                                   : IncludeErrorDetailPolicy.Default;
 
+            config.MessageHandlers.Add(new CrossOriginMessageHandler(ApplicationConfig.EnableCrossDomainRequests));
             config.Filters.Add(new ExceptionLoggingFilter());
             config.Formatters.Remove(config.Formatters.XmlFormatter);
             config.Formatters.Add(new PackageFormDataMediaFormatter());
@@ -58,8 +68,13 @@ namespace NuGet.Lucene.Web
             config.Formatters.JsonFormatter.SerializerSettings.Formatting = Formatting.Indented;
         }
 
-        public static void MapApiRoutes(HttpRouteCollection routes)
+        public static void MapApiRoutes(HttpConfiguration config)
         {
+            var routes = config.Routes;
+            
+            routes.MapHttpRoute(RouteNames.ApiExplorer,
+                                "api",
+                                new { controller = "ApiExplorer" });
 
             routes.MapHttpRoute(RouteNames.Indexing,
                                 "api/indexing/{action}",
@@ -68,38 +83,11 @@ namespace NuGet.Lucene.Web
             routes.MapHttpRoute(RouteNames.Users.All,
                                 "api/users",
                                 new { controller = "Users", action = "GetAllUsers" },
-                                new { httpMethod = new HttpMethodConstraint(HttpMethod.Get) });
+                                new { httpMethod = new HttpMethodConstraint(HttpMethod.Get, HttpMethod.Options) });
 
             routes.MapHttpRoute(RouteNames.Users.ForUser,
                                 "api/users/{username}",
                                 new { controller = "Users" });
-
-            routes.MapHttpRoute(RouteNames.Packages.Search,
-                                "api/packages",
-                                new { controller = "Packages", action = "Search" },
-                                new { httpMethod = new HttpMethodConstraint(HttpMethod.Get) });
-
-            routes.MapHttpRoute(RouteNames.Packages.Upload,
-                                "api/packages",
-                                new { controller = "Packages" },
-                                new { httpMethod = new HttpMethodConstraint(HttpMethod.Put) });
-
-            routes.MapHttpRoute(RouteNames.Packages.DownloadLatestVersion,
-                                "api/packages/{id}/content",
-                                new { controller = "Packages", action = "DownloadPackage" });
-
-            routes.MapHttpRoute(RouteNames.Packages.Download,
-                                "api/packages/{id}/{version}/content",
-                                new { controller = "Packages", action = "DownloadPackage" });
-
-            routes.MapHttpRoute(RouteNames.Packages.Info,
-                                "api/packages/{id}/{version}",
-                                new { controller = "Packages", action = "GetPackageInfo", version = "" },
-                                new { httpMethod = new HttpMethodConstraint(HttpMethod.Get) });
-
-            routes.MapHttpRoute(RouteNames.Packages.Delete,
-                                "api/packages/{id}/{version}",
-                                new { controller = "Packages", action = "DeletePackage" });
 
             routes.MapHttpRoute(RouteNames.TabCompletionPackageIds,
                                 "api/v2/package-ids",
@@ -108,6 +96,61 @@ namespace NuGet.Lucene.Web
             routes.MapHttpRoute(RouteNames.TabCompletionPackageVersions,
                                 "api/v2/package-versions/{packageId}",
                                 new { controller = "TabCompletion", action = "GetPackageVersions" });
+
+            routes.MapHttpRoute(RouteNames.Packages.Search,
+                                "api/packages",
+                                new { controller = "Packages", action = "Search" },
+                                new { httpMethod = new HttpMethodConstraint(HttpMethod.Get, HttpMethod.Options) });
+
+            routes.MapHttpRoute(RouteNames.Packages.Upload,
+                                "api/packages",
+                                new { controller = "Packages" },
+                                new { httpMethod = new HttpMethodConstraint(HttpMethod.Put, HttpMethod.Options) });
+
+            var route = routes.MapHttpRoute(RouteNames.Packages.DownloadLatestVersion,
+                                "api/packages/{id}/content",
+                                new { controller = "Packages", action = "DownloadPackage" });
+
+            AddApiDescription(config, route, typeof(PackagesController), "DownloadPackage", HttpMethod.Get);
+            AddApiDescription(config, route, typeof(PackagesController), "DownloadPackage", HttpMethod.Head);
+
+            route = routes.MapHttpRoute(RouteNames.Packages.Download,
+                                "api/packages/{id}/{version}/content",
+                                new { controller = "Packages", action = "DownloadPackage" },
+                                new { version = new SemanticVersionConstraint() });
+
+            AddApiDescription(config, route, typeof (PackagesController), "DownloadPackage", HttpMethod.Get);
+            AddApiDescription(config, route, typeof (PackagesController), "DownloadPackage", HttpMethod.Head);
+
+            route = routes.MapHttpRoute(RouteNames.Packages.Info,
+                                "api/packages/{id}/{version}",
+                                new { controller = "Packages", action = "GetPackageInfo", version = "" },
+                                new { httpMethod = new HttpMethodConstraint(HttpMethod.Get), version = new OptionalSemanticVersionConstraint() });
+
+            AddApiDescription(config, route, typeof(PackagesController), "GetPackageInfo", HttpMethod.Get);
+
+            route = routes.MapHttpRoute(RouteNames.Packages.Delete,
+                                "api/packages/{id}/{version}",
+                                new { controller = "Packages", action = "DeletePackage" },
+                                new { version = new SemanticVersionConstraint() });
+
+            AddApiDescription(config, route, typeof(PackagesController), "DeletePackage", HttpMethod.Delete);
+        }
+
+        private static void AddApiDescription(HttpConfiguration config, IHttpRoute route, Type controllerType, string methodName, HttpMethod method)
+        {
+            var apiDescriptions = config.Services.GetApiExplorer().ApiDescriptions;
+            var controllerDesc = new HttpControllerDescriptor(config, "Packages", controllerType);
+            var d = new ApiDescription
+                {
+                    ActionDescriptor =
+                        new ReflectedHttpActionDescriptor(controllerDesc, controllerType.GetMethod(methodName)),
+                    HttpMethod = method,
+                    Route = route,
+                    RelativePath = route.RouteTemplate
+                };
+
+            apiDescriptions.Add(d);
         }
 
         public static void MapDataServiceRoutes(RouteCollection routes)
@@ -123,5 +166,4 @@ namespace NuGet.Lucene.Web
             routes.Add(RouteNames.Packages.Feed, serviceRoute);
         }
     }
-
 }

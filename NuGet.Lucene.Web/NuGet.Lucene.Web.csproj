@@ -211,6 +211,7 @@
     <Compile Include="ApplicationConfig.cs" />
     <Compile Include="Authentication\IApiKeyAuthentication.cs" />
     <Compile Include="Authentication\LuceneApiKeyAuthentication.cs" />
+    <Compile Include="Controllers\ApiExplorerController.cs" />
     <Compile Include="Controllers\ErrorController.cs" />
     <Compile Include="Controllers\IndexingController.cs" />
     <Compile Include="Controllers\PackagesController.cs" />
@@ -230,12 +231,16 @@
     </Compile>
     <Compile Include="DataServices\DataServicePackage.cs" />
     <Compile Include="Hubs\StatusHub.cs" />
+    <Compile Include="MessageHandlers\CrossOriginMessageHandler.cs" />
     <Compile Include="Models\PackageSpec.cs" />
+    <Compile Include="Models\SimpleApiDescription.cs" />
     <Compile Include="Modules\ApiKeyAuthenticationModule.cs" />
     <Compile Include="Modules\ErrorRoutingModule.cs" />
     <Compile Include="Modules\HttpModule.cs" />
+    <Compile Include="OptionalSemanticVersionConstraint.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RouteNames.cs" />
+    <Compile Include="SemanticVersionConstraint.cs" />
     <Compile Include="SignalRModule.cs" />
     <Compile Include="ReusableCancellationTokenSource.cs" />
     <Compile Include="UnhandledExceptionLogger.cs" />

@@ -56,6 +56,11 @@ namespace NuGet.Lucene.Web
         {
             get { return GetFlagFromAppSetting("showExceptionDetails", false); }
         }
+        
+        public static bool EnableCrossDomainRequests
+        {
+            get { return GetFlagFromAppSetting("enableCrossDomainRequests", false); }
+        }
 
         internal static bool GetFlagFromAppSetting(string key, bool defaultValue)
         {
