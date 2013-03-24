@@ -1,5 +1,6 @@
 ﻿define(['ember', 'Models/SearchResults'], function (em, SearchResults) {
     return em.Object.extend({
+        restClient: null,
         search: function (query, page, pageSize) {
             console.log('load search results for query', query, 'page', page);
 
@@ -11,8 +12,7 @@
 
             var self = this;
             
-            $.ajax("api/v2/package", {
-                type: 'GET',
+            this.get('restClient').ajax('packages.search', {
                 data: {
                     query: query,
                     offset: page * pageSize,

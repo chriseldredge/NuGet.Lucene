@@ -184,6 +184,7 @@
     <Content Include="Scripts\Controllers\ApplicationController.js" />
     <Content Include="Scripts\Controllers\AdminController.js" />
     <Content Include="Scripts\Controllers\SearchController.js" />
+    <Content Include="Scripts\Models\RestClient.js" />
     <Content Include="Scripts\Router.js" />
     <Content Include="Scripts\Routes\AdminRoute.js" />
     <Content Include="Scripts\Routes\ViewPackageRoute.js" />
