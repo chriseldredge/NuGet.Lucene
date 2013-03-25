@@ -6,10 +6,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
-using System.Web.Http.Description;
-using System.Web.Http.Hosting;
 using System.Web.Http.Routing;
-using Common.Logging;
 using NuGet.Lucene.Web.Models;
 
 namespace NuGet.Lucene.Web.MessageHandlers
@@ -70,7 +67,7 @@ namespace NuGet.Lucene.Web.MessageHandlers
 
         public static IEnumerable<SimpleApiDescription> GetMatchingApis(HttpRouteCollection routes, HttpRequestMessage request)
         {
-            request = Copy(request);
+            request = CopyRequest(request);
 
             var apiExplorer = request.GetConfiguration().Services.GetApiExplorer();
 
@@ -100,18 +97,16 @@ namespace NuGet.Lucene.Web.MessageHandlers
                 if (!routeData.Values.TryGetValue("action", out requestedAction) ||
                     string.Equals(requestedAction as string, desc.ActionDescriptor.ActionName, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    Console.WriteLine("match {0} {1}", desc.ID, desc.ActionDescriptor.ActionName);
                     yield return new SimpleApiDescription(request, desc);
                 }
             }
         }
 
-        private static HttpRequestMessage Copy(HttpRequestMessage request)
+        private static HttpRequestMessage CopyRequest(HttpRequestMessage request)
         {
             var copy = new HttpRequestMessage(request.Method, request.RequestUri);
-            //copy.Properties.Add(HttpPropertyKeys.HttpConfigurationKey, request.GetConfiguration());
             copy.Properties.AddRange(request.Properties);
-            copy.Properties.Remove(HttpPropertyKeys.HttpRouteDataKey);
+
             foreach (var h in request.Headers)
             {
                 copy.Headers.Add(h.Key, h.Value);
