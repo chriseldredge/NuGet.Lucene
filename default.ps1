@@ -8,6 +8,7 @@ properties {
   $release_dir = "$base_dir\Release"
   $sln_file = "$source_dir\NuGet.Lucene.sln"
   $version = "1.0.0"
+  $assemblyversion = $version + ".0"
   $revision = ""
   $tools_dir = "$base_dir\Tools"
   $nunitconsole = "nunit-console.exe"
@@ -31,7 +32,7 @@ task Init -depends Clean {
     Generate-Assembly-Info `
         -file "$build_dir\VersionInfo.cs" `
         -revision $revision `
-        -version $version
+        -version $assemblyversion
 }
 
 task Compile -depends Init {

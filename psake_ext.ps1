@@ -11,7 +11,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 [assembly: AssemblyVersionAttribute(""$($version.Split('-')[0])"")]
-[assembly: AssemblyInformationalVersionAttribute(""$version / $revision"")]
+[assembly: AssemblyInformationalVersionAttribute(""$version / scm revision $revision"")]
 [assembly: AssemblyFileVersionAttribute(""$($version.Split('-')[0])"")]
 "
 
