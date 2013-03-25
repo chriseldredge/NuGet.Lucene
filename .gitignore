@@ -1,4 +1,6 @@
-/packages/
+/build/
+/Release/
+/source/packages/
 App_Data/
 _NCrunch*
 *.ncrunch*

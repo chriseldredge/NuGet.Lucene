@@ -105,6 +105,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\..\build\VersionInfo.cs" Condition="Exists('..\..\build\VersionInfo.cs')">
+      <Link>Properties\VersionInfo.cs</Link>
+    </Compile>
     <Compile Include="Controllers\ApiExplorerControllerTests.cs" />
     <Compile Include="Controllers\IndexingControllerTests.cs" />
     <Compile Include="Controllers\PackagesControllerTests.cs" />

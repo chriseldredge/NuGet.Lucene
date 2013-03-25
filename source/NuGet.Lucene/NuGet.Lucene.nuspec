@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>NuGet.Lucene</id>
+    <title>NuGet.Lucene</title>
+    <version>$version$</version>
+    <owners>The Motley Fool, LLC</owners>
+    <authors>Chris Eldredge</authors>
+    <copyright>Copyright 2013 The Motley Fool, LLC</copyright>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <projectUrl>https://github.com/themotleyfool/NuGet.Lucene</projectUrl>
+    <licenseUrl>https://github.com/themotleyfool/NuGet.Lucene/blob/master/LICENSE.txt</licenseUrl>
+    <tags>nuget</tags>
+    <summary>
+      Provides NuGet package repository that stores package metadata in a Lucene index for
+      very fast package lookup and search capabilities.
+    </summary>
+    <description>
+      Implementation of NuGet package repository that stores package metadata in a Lucene index for
+      very fast package lookup and search capabilities. Includes an optinal file system watcher that
+      will keep packages on disk in sync with the Lucene index. This package does not serve as a
+      standalone package feed or package server; instead it must be embedded in other projects.
+    </description>
+    <releaseNotes>
+    </releaseNotes>
+  </metadata>
+  <files>
+    <file src="readme.txt"/>
+  </files>
+</package>

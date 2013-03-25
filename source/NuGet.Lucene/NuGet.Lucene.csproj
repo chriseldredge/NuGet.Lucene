@@ -80,6 +80,9 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\..\build\VersionInfo.cs" Condition="Exists('..\..\build\VersionInfo.cs')">
+      <Link>Properties\VersionInfo.cs</Link>
+    </Compile>
     <Compile Include="FastZipPackage.cs" />
     <Compile Include="LuceneRepositoryConfigurator.cs" />
     <Compile Include="OneFolderPerPackageIdPathResolver.cs" />
@@ -105,7 +108,9 @@
     <Compile Include="Util\FileSystemExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="NuGet.Lucene.nuspec" />
     <None Include="packages.config" />
+    <None Include="readme.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />

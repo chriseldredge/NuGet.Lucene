@@ -175,6 +175,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\..\build\VersionInfo.cs" Condition="Exists('..\..\build\VersionInfo.cs')">
+      <Link>Properties\VersionInfo.cs</Link>
+    </Compile>
     <Content Include="Index.html" />
     <Content Include="DataServices\PackageDataService.svc" />
     <Content Include="Global.asax" />
