@@ -1,4 +1,4 @@
-﻿var BaseDataUrl = '';
+﻿var BaseDataUrl = '/api/';
 var ApiKey = '';
 
 require.config({
