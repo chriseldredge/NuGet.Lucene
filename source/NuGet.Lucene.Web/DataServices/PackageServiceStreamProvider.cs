@@ -1,5 +1,6 @@
 using System;
 using System.Data.Services;
+using System.IO;
 using System.Web;
 using System.Web.Routing;
 
@@ -33,7 +34,53 @@ namespace NuGet.Lucene.Web.DataServices
 
         private static RequestContext RequestContext
         {
-            get { return new RequestContext(new HttpContextWrapper(HttpContext.Current), new RouteData()); }
+            get
+            {
+                var httpContext = HttpContext.Current;
+                var request = new EmptyInputStreamHttpRequestWrapper(httpContext.Request);
+                return new RequestContext(new HttpContextWrapperWithRequest(httpContext, request), new RouteData());
+            }
+        }
+    }
+
+    /// <summary>
+    /// Allow HttpContext.Request to be replaced with an arbitrary HttpRequestBase instance.
+    /// </summary>
+    class HttpContextWrapperWithRequest : HttpContextWrapper
+    {
+        private readonly HttpRequestBase request;
+
+        public HttpContextWrapperWithRequest(HttpContext httpContext, HttpRequestBase request) : base(httpContext)
+        {
+            this.request = request;
+        }
+
+        public override HttpRequestBase Request
+        {
+            get
+            {
+                return request;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Prevents "System.Web.HttpException (0x80004005): This method or property is not
+    /// supported after HttpRequest.GetBufferlessInputStream has been invoked." from being
+    /// thrown at System.Web.HttpRequest.get_InputStream().
+    /// </summary>
+    class EmptyInputStreamHttpRequestWrapper : HttpRequestWrapper
+    {
+        public EmptyInputStreamHttpRequestWrapper(HttpRequest httpRequest) : base(httpRequest)
+        {
+        }
+
+        public override Stream InputStream
+        {
+            get
+            {
+                return new MemoryStream();
+            }
         }
     }
 }
