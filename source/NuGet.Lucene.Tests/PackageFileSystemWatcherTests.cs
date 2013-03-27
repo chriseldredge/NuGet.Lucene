@@ -11,13 +11,15 @@ namespace NuGet.Lucene.Tests
     [TestFixture]
     public class PackageFileSystemWatcherTests : TestBase
     {
-        private PackageFileSystemWatcher watcher;
-        private Mock<IPackageIndexer> indexer;
         private Mock<ILog> log;
+        private Mock<IPackageIndexer> indexer;
+        private PackageFileSystemWatcher watcher;
 
         [SetUp]
         public void SetUp()
         {
+            log = new Mock<ILog>();
+
             indexer = new Mock<IPackageIndexer>(MockBehavior.Strict);
 
             watcher = new PackageFileSystemWatcher
@@ -25,11 +27,9 @@ namespace NuGet.Lucene.Tests
                               FileSystem = fileSystem.Object,
                               Indexer = indexer.Object,
                               PackageRepository = loader.Object,
-                              QuietTime = TimeSpan.Zero
+                              QuietTime = TimeSpan.Zero,
+                              Log = log.Object
                           };
-
-            log = new Mock<ILog>();
-            PackageFileSystemWatcher.Log = log.Object;
         }
 
         [Test]
@@ -48,13 +48,14 @@ namespace NuGet.Lucene.Tests
         {
             var exception = new Exception("LoadFromIndex: mock error");
 
-            loader.Setup(ld => ld.LoadFromIndex(@".\Sample.1.0.nupkg")).Throws(exception);
-            log.Setup(l => l.Error(exception));
+            loader.Setup(ld => ld.LoadFromIndex(@"Sample.1.0.nupkg")).Throws(exception);
+            log.Setup(l => l.Error(exception)).Verifiable();
 
-            await watcher.OnPackageModified(@".\Sample.1.0.nupkg");
+            await watcher.OnPackageModified(@"Sample.1.0.nupkg");
 
             loader.Verify();
             indexer.Verify();
+            log.Verify();
         }
 
         [Test]
@@ -74,14 +75,15 @@ namespace NuGet.Lucene.Tests
             var exception = new Exception("RemovePackage: mock error");
             var lucenePackage = new LucenePackage(fileSystem.Object);
 
-            loader.Setup(ld => ld.LoadFromIndex(@".\Sample.1.0.nupkg")).Returns(lucenePackage);
+            loader.Setup(ld => ld.LoadFromIndex(@"Sample.1.0.nupkg")).Returns(lucenePackage);
             indexer.Setup(idx => idx.RemovePackage(lucenePackage)).Throws(exception);
-            log.Setup(l => l.Error(exception));
+            log.Setup(l => l.Error(exception)).Verifiable();
 
             await watcher.OnPackageDeleted("Sample.1.0.nupkg");
 
             loader.Verify();
             indexer.Verify();
+            log.Verify();
         }
 
         [Test]

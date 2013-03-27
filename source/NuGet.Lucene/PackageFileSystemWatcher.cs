@@ -10,11 +10,11 @@ namespace NuGet.Lucene
 {
     public class PackageFileSystemWatcher : IDisposable
     {
-        public static ILog Log = LogManager.GetLogger<PackageFileSystemWatcher>();
-
         private FileSystemWatcher fileWatcher;
         private IDisposable fileObserver;
         private IDisposable dirObserver;
+
+        public ILog Log { get; set; }
 
         public IFileSystem FileSystem { get; set; }
 
@@ -31,6 +31,7 @@ namespace NuGet.Lucene
 
         public PackageFileSystemWatcher()
         {
+            Log = LogManager.GetLogger<PackageFileSystemWatcher>();
             QuietTime = TimeSpan.FromSeconds(3);
         }
 
@@ -112,7 +113,9 @@ namespace NuGet.Lucene
 
         private async Task AddToIndex(string fullPath)
         {
-            Action checkTimestampAndIndexPackage = async () =>
+            LucenePackage package = null;
+
+            Action checkTimestampAndLoadPackage = () =>
                 {
                     var existingPackage = PackageRepository.LoadFromIndex(fullPath);
 
@@ -121,12 +124,15 @@ namespace NuGet.Lucene
                                                                          FileSystem.GetLastModified(fullPath)));
                     if (!flag) return;
 
-                    var package = PackageRepository.LoadFromFileSystem(fullPath);
-
-                    await Indexer.AddPackage(package);
+                    package = PackageRepository.LoadFromFileSystem(fullPath);
                 };
 
-            await Task.Factory.StartNew(checkTimestampAndIndexPackage);
+            await Task.Factory.StartNew(checkTimestampAndLoadPackage);
+
+            if (package != null)
+            {
+                await Indexer.AddPackage(package);
+            }
         }
 
         private async Task RemoveFromIndex(string fullPath)
@@ -142,7 +148,7 @@ namespace NuGet.Lucene
         {
             if (task.IsFaulted)
             {
-                Log.Error(task.Exception);
+                task.Exception.Handle(ex => { Log.Error(ex); return true; });
             }
         }
 
