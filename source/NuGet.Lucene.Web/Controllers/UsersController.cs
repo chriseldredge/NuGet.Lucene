@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -12,14 +13,24 @@ namespace NuGet.Lucene.Web.Controllers
     {
         public LuceneDataProvider Provider { get; set; }
 
-        public IEnumerable<ApiUser> GetAllUsers()
+        public IEnumerable<dynamic> GetAllUsers()
         {
-            return Provider.AsQueryable<ApiUser>().ToList();
+            return Provider.AsQueryable<ApiUser>()
+                .Select(DescribeUser)
+                .ToList();
         }
 
-        public ApiUser Get(string username)
+        public dynamic Get(string username)
         {
-            return Provider.AsQueryable<ApiUser>().SingleOrDefault(u => u.Username == username);
+            var user = Provider.AsQueryable<ApiUser>()
+                .SingleOrDefault(u => u.Username == username);
+
+            if (user == null)
+            {
+                return Request.CreateErrorResponse(HttpStatusCode.NotFound, "User " + username + " not found.");
+            }
+
+            return DescribeUser(user);
         }
 
         public HttpResponseMessage Put(string username, [FromBody]ApiUser user)
@@ -48,6 +59,17 @@ namespace NuGet.Lucene.Web.Controllers
             }
 
             return Request.CreateResponse(HttpStatusCode.OK);
+        }
+
+        private dynamic DescribeUser(ApiUser user)
+        {
+            dynamic d = new ExpandoObject();
+            d.Username = user.Username;
+
+            // if current user is admin
+            // d.ApiKey = user.ApiKey
+
+            return d;
         }
     }
 }
