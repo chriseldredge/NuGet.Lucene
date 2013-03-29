@@ -1,4 +1,4 @@
-﻿define(['ember', 'signalr', 'signalr.hubs'], function (em) {
+﻿define(['ember'], function (em) {
     return em.Mixin.create({
         hasPaginationSupport: true,
         total: 0,

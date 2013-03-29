@@ -1,5 +1,7 @@
 ﻿define([
         'ember',
+        'config',
+        'restapi',
         'Controllers/AdminController',
         'Controllers/ApplicationController',
         'Controllers/SearchController',
@@ -11,21 +13,22 @@
         'Routes/ViewPackageRoute',
         'Views/Footer',
         'Views/PackageIcon'
-], function (em, AdminController, ApplicationController, SearchController, PackageIndexer, PackageStore, RestClient, AdminRoute, SearchRoute, ViewPackageRoute, Footer, PackageIcon) {
+], function (em, config, restapi, AdminController, ApplicationController, SearchController, PackageIndexer, PackageStore, RestClient, AdminRoute, SearchRoute, ViewPackageRoute, Footer, PackageIcon) {
 
     var app = em.Application.create({name: "NuGet"});
     app.deferReadiness();
+    
+    restapi.then(function () {
+        app.advanceReadiness();
+    });
 
     app.RestClient = RestClient.create({
-        baseUrl: BaseDataUrl,
-        apiKey: ApiKey,
-        ready: function () {
-            app.advanceReadiness();
-        }
+        baseUrl: config.baseDataUrl,
+        apiKey: config.apiKey,
     });
-    
+
     app.PackageIndexer = PackageIndexer.create({
-        restClient: app.RestClient
+        restClient: app.RestClient,
     });
     
     app.Packages = PackageStore.create({

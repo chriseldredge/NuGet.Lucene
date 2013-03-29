@@ -1,24 +1,23 @@
-﻿var BaseDataUrl = '/api/';
-var ApiKey = '';
-
-require.config({
+﻿require.config({
     paths: {
         'handlebars': 'lib/handlebars-1.0.9',
         'ember': 'lib/ember-1.0.0-rc.1',
-        'signalr': 'lib/jquery.signalR-1.0.1',
-        'signalr.hubs': BaseDataUrl + '../signalr/hubs?noext'
+        'signalR': 'lib/jquery.signalR-1.0.1'
     },
     shim: {
         'ember': {
             deps: ['handlebars'],
             exports: 'Ember'
         },
-        'signalr.hubs': {
-            deps: ['signalr'],
+        'signalR': {
+            deps: ['jquery'],
+            init: function ($) {
+                return $.signalR;
+            }
         }
     }
 });
 
-require(["app", "Router"], function (app) {
+require(['app', 'Router'], function (app) {
     window.App = app;
 });

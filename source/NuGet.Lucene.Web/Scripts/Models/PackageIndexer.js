@@ -1,23 +1,25 @@
-﻿define(['ember', 'signalr', 'signalr.hubs'], function (em) {
+﻿define(['ember', 'signalR', 'hubs'], function (em, signalR, hubs) {
     return em.Object.extend({
         restClient: null,
         status: {},
         hub: undefined,
         init: function () {
-            console.log("Connecting to SignalR status hub " + $.connection.version);
+            hubs.then(this.get('connect').bind(this));
+        },
+        connect: function() {
             var self = this;
             var setStatusCallback = function (status) {
                 self.set('status', status);
             };
-
-            $.connection.hub.logging = true;
-
-            hub = $.connection.status;
-
+            
+            var hub = hubs.get('status');
+            
+            console.log('Connecting to SignalR indexing status hub', signalR.version, signalR.hub.url);
+            
             hub.client.updateStatus = setStatusCallback;
-
+            
             hub.connection.stateChanged(function (change) {
-                var isConnected = change.newState === $.connection.connectionState.connected;
+                var isConnected = change.newState === signalR.connectionState.connected;
                 self.set('isConnected', isConnected);
 
                 if (isConnected) {
@@ -26,12 +28,11 @@
                     setStatusCallback({});
                 }
             });
-
-            this.set('hub', hub);
-
-            $.connection.hub.url = BaseDataUrl + '../signalr';
             
-            $.connection.hub.start({ waitForPageLoad: false });
+            self.set('hub', hub);
+            
+            signalR.hub.start({ waitForPageLoad: false });
+            
         },
         synchronize: function () {
             this.get('restClient').ajax('indexing.synchronize', {

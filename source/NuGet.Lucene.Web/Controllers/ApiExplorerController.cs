@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Web.Http;
-using System.Web.Http.Controllers;
 using System.Web.Http.Description;
 using NuGet.Lucene.Web.Models;
 
@@ -20,7 +19,8 @@ namespace NuGet.Lucene.Web.Controllers
         {
             get
             {
-                yield return new SimpleApiDescription(Request, "OData", "api/odata");
+                yield return new SimpleApiDescription(Request, "OData", RoutePaths.OData);
+                yield return new SimpleApiDescription(Request, "SignalR", RoutePaths.SignalR);
             }
         }
 

@@ -187,6 +187,9 @@
     <Content Include="Scripts\Controllers\ApplicationController.js" />
     <Content Include="Scripts\Controllers\AdminController.js" />
     <Content Include="Scripts\Controllers\SearchController.js" />
+    <Content Include="Scripts\config.js" />
+    <Content Include="Scripts\restapi.js" />
+    <Content Include="Scripts\hubs.js" />
     <Content Include="Scripts\Models\RestClient.js" />
     <Content Include="Scripts\Router.js" />
     <Content Include="Scripts\Routes\AdminRoute.js" />
@@ -244,6 +247,7 @@
     <Compile Include="OptionalSemanticVersionConstraint.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RouteNames.cs" />
+    <Compile Include="RoutePaths.cs" />
     <Compile Include="SemanticVersionConstraint.cs" />
     <Compile Include="SignalRModule.cs" />
     <Compile Include="ReusableCancellationTokenSource.cs" />

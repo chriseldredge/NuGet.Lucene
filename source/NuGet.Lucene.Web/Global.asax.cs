@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Net.Http;
 using System.ServiceModel.Activation;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Controllers;
@@ -36,18 +33,11 @@ namespace NuGet.Lucene.Web
 
             ConfigureWebApi(GlobalConfiguration.Configuration);
 
-            var hubConfiguration = new HubConfiguration
-                {
-                    EnableDetailedErrors = ApplicationConfig.ShowExceptionDetails,
-                    EnableCrossDomain = ApplicationConfig.EnableCrossDomainRequests
-                };
-
-            RouteTable.Routes.MapHubs(hubConfiguration);
-
             MapApiRoutes(GlobalConfiguration.Configuration);
             MapDataServiceRoutes(RouteTable.Routes);
+            MapHubs(RouteTable.Routes);
         }
-
+        
         protected override IKernel CreateKernel()
         {
             return new StandardKernel(new ApplicationConfig(), new SignalRModule());
@@ -141,7 +131,7 @@ namespace NuGet.Lucene.Web
         {
             var apiDescriptions = config.Services.GetApiExplorer().ApiDescriptions;
             var controllerDesc = new HttpControllerDescriptor(config, "Packages", controllerType);
-            var d = new ApiDescription
+            var api = new ApiDescription
                 {
                     ActionDescriptor =
                         new ReflectedHttpActionDescriptor(controllerDesc, controllerType.GetMethod(methodName)),
@@ -150,14 +140,25 @@ namespace NuGet.Lucene.Web
                     RelativePath = route.RouteTemplate
                 };
 
-            apiDescriptions.Add(d);
+            apiDescriptions.Add(api);
+        }
+
+        private static void MapHubs(RouteCollection routes)
+        {
+            var hubConfiguration = new HubConfiguration
+            {
+                EnableDetailedErrors = ApplicationConfig.ShowExceptionDetails,
+                EnableCrossDomain = ApplicationConfig.EnableCrossDomainRequests,
+            };
+
+            routes.MapHubs(RoutePaths.SignalR, hubConfiguration);
         }
 
         public static void MapDataServiceRoutes(RouteCollection routes)
         {
             var dataServiceHostFactory = new NinjectDataServiceHostFactory();
 
-            var serviceRoute = new ServiceRoute("api/odata", dataServiceHostFactory, typeof(PackageDataService))
+            var serviceRoute = new ServiceRoute(RoutePaths.OData, dataServiceHostFactory, typeof(PackageDataService))
                 {
                     Defaults = RouteNames.PackageFeedRouteValues,
                     Constraints = RouteNames.PackageFeedRouteValues
