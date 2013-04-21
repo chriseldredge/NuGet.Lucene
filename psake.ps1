@@ -26,7 +26,7 @@ if (!$buildNumber) {
 }
 
 if (!$properties["version"]) {
-    $properties["version"] = "1.0.0"
+    $properties["version"] = "1.0.1"
 }
 if (!$properties["assemblyversion"]) {
     $properties["assemblyversion"] = $properties["version"] + ".$buildNumber"
