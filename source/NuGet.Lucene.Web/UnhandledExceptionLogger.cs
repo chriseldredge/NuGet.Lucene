@@ -6,16 +6,16 @@ using Common.Logging;
 
 namespace NuGet.Lucene.Web
 {
-    internal class UnhandledExceptionLogger
+    public static class UnhandledExceptionLogger
     {
-        internal static readonly ILog Log = LogManager.GetLogger<UnhandledExceptionLogger>();
+        internal static readonly ILog Log = LogManager.GetLogger(typeof(UnhandledExceptionLogger));
 
-        internal static void LogException(Exception exception)
+        public static void LogException(Exception exception)
         {
             LogException(exception, string.Format("Unhandled exception: {0}: {1}", exception.GetType(), exception.Message));
         }
 
-        internal static void LogException(Exception exception, string message)
+        public static void LogException(Exception exception, string message)
         {
             var log = GetLogSeverityDelegate(exception);
 

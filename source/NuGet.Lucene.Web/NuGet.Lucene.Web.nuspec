@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>NuGet.Lucene.Web</id>
+    <title>NuGet.Lucene.Web</title>
+    <version>$version$</version>
+    <owners>The Motley Fool, LLC</owners>
+    <authors>Chris Eldredge</authors>
+    <copyright>Copyright 2013 The Motley Fool, LLC</copyright>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <projectUrl>https://github.com/themotleyfool/NuGet.Lucene</projectUrl>
+    <licenseUrl>https://github.com/themotleyfool/NuGet.Lucene/blob/master/LICENSE.txt</licenseUrl>
+    <tags>nuget</tags>
+    <summary>asp.net mvc 4 api controllers and WCF Data Services for NuGet.Lucene.</summary>
+    <description>Provides controllers and WCF Data Services classes that can be exposed in an asp.net application to expose a NuGet.Lucene repository over the web.</description>
+    <releaseNotes>
+    </releaseNotes>
+    <dependencies>
+      <dependency id="NuGet.Lucene" version="[$version$,2.0)" />
+    </dependencies>
+  </metadata>
+</package>

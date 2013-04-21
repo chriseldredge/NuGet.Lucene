@@ -20,7 +20,7 @@ namespace NuGet.Lucene.Web.DataServices
             config.DataServiceBehavior.MaxProtocolVersion = DataServiceProtocolVersion.V2;
             config.SetEntitySetAccessRule("Packages", EntitySetRights.AllRead);
             config.SetEntitySetPageSize("Packages", 40);
-            config.UseVerboseErrors = ApplicationConfig.ShowExceptionDetails;
+            config.UseVerboseErrors = NuGetWebApiModule.ShowExceptionDetails;
             RegisterServices(config);
         }
 

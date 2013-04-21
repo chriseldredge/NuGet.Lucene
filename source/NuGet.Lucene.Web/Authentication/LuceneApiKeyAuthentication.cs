@@ -25,7 +25,7 @@ namespace NuGet.Lucene.Web.Authentication
         
         public bool AuthenticationRequired
         {
-            get { return ApplicationConfig.GetFlagFromAppSetting("requireApiKey", true); }
+            get { return NuGetWebApiModule.GetFlagFromAppSetting("requireApiKey", true); }
         }
     }
 }

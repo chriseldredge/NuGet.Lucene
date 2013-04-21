@@ -1,7 +1,5 @@
 ﻿using System.Linq;
-using System.Net;
 using System.Net.Http;
-using Moq;
 using NUnit.Framework;
 using NuGet.Lucene.Web.Controllers;
 
@@ -18,7 +16,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
 
         protected override ApiExplorerController CreateController()
         {
-            return new ApiExplorerController();
+            return new ApiExplorerController { NuGetWebApiRouteMapper = new NuGetWebApiRouteMapper("api/") };
         }
 
         [Test]

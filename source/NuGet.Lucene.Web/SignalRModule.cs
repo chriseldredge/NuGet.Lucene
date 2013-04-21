@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 using Microsoft.AspNet.SignalR;
 using Microsoft.AspNet.SignalR.Infrastructure;
 using Microsoft.AspNet.SignalR.Json;

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
 using System.Reflection;
@@ -10,14 +9,16 @@ using Ninject;
 using Ninject.Components;
 using Ninject.Modules;
 using Ninject.Selection.Heuristics;
-using Ninject.Web.Common;
 using NuGet.Lucene.Web.Authentication;
 using NuGet.Lucene.Web.Modules;
 
 namespace NuGet.Lucene.Web
 {
-    public class ApplicationConfig : NinjectModule
+    public class NuGetWebApiModule : NinjectModule
     {
+        public const string AppSettingNamesapce = "NuGet.Lucene.Web:";
+        public const string DefaultRoutePathPrefix = "api/";
+
         public override void Load()
         {
             var cfg = new LuceneRepositoryConfigurator
@@ -31,9 +32,10 @@ namespace NuGet.Lucene.Web
             cfg.Initialize();
 
             Kernel.Components.Add<IInjectionHeuristic, NonDecoratedPropertyInjectionHeuristic>();
-            Bind<Func<IKernel>>().ToMethod(ctx => () => Kernel);
-            Bind<IHttpModule>().To<HttpApplicationInitializationHttpModule>();
-            
+
+            var routeMapper = new NuGetWebApiRouteMapper(RoutePathPrefix);
+
+            Bind<NuGetWebApiRouteMapper>().ToConstant(routeMapper);
             Bind<ILucenePackageRepository>().ToConstant(cfg.Repository).OnDeactivation(_ => cfg.Dispose());
             Bind<LuceneDataProvider>().ToConstant(cfg.Provider);
             Bind<IQueryable<ApiUser>>().ToConstant(cfg.Provider.AsQueryable<ApiUser>());
@@ -62,22 +64,22 @@ namespace NuGet.Lucene.Web
             get { return GetFlagFromAppSetting("enableCrossDomainRequests", false); }
         }
 
+        public static string RoutePathPrefix
+        {
+            get { return GetAppSetting("routePathPrefix", DefaultRoutePathPrefix); }
+        }
+
         internal static bool GetFlagFromAppSetting(string key, bool defaultValue)
         {
-            var flag = ConfigurationManager.AppSettings[key];
+            var flag = GetAppSetting(key, string.Empty);
 
             bool result;
             return bool.TryParse(flag ?? string.Empty, out result) ? result : defaultValue;
         }
-
+        
         internal static string MapPathFromAppSetting(string key, string defaultValue)
         {
-            var path = ConfigurationManager.AppSettings[key];
-
-            if (string.IsNullOrWhiteSpace(path))
-            {
-                path = defaultValue;
-            }
+            var path = GetAppSetting(key, defaultValue);
 
             if (path.StartsWith("~/"))
             {
@@ -85,6 +87,17 @@ namespace NuGet.Lucene.Web
             }
 
             return path;
+        }
+
+        internal static string GetAppSetting(string key, string defaultValue)
+        {
+            var value = ConfigurationManager.AppSettings[GetAppSettingKey(key)];
+            return string.IsNullOrWhiteSpace(value) ? defaultValue : value;
+        }
+
+        private static string GetAppSettingKey(string key)
+        {
+            return AppSettingNamesapce + key;
         }
     }
 

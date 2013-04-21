@@ -8,6 +8,8 @@ namespace NuGet.Lucene.Web.Controllers
 {
     public class ApiExplorerController : ApiController
     {
+        public NuGetWebApiRouteMapper NuGetWebApiRouteMapper { get; set; }
+
         public IEnumerable<SimpleApiDescription> GetApiMethods()
         {
             return WebApiDescriptions
@@ -19,8 +21,8 @@ namespace NuGet.Lucene.Web.Controllers
         {
             get
             {
-                yield return new SimpleApiDescription(Request, "OData", RoutePaths.OData);
-                yield return new SimpleApiDescription(Request, "SignalR", RoutePaths.SignalR);
+                yield return new SimpleApiDescription(Request, "OData", NuGetWebApiRouteMapper.ODataRoutePath);
+                yield return new SimpleApiDescription(Request, "SignalR", NuGetWebApiRouteMapper.SignalrRoutePath);
             }
         }
 

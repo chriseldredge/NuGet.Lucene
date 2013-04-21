@@ -14,7 +14,7 @@ namespace NuGet.Lucene.Web.Tests
         {
             routes = new HttpRouteCollection();
             configuration = new HttpConfiguration(routes);
-            Global.MapApiRoutes(configuration);
+            new NuGetWebApiRouteMapper("api/").MapApiRoutes(configuration);
         }
 
         public RouteResolveContstraint HasRouteFor(string url)
