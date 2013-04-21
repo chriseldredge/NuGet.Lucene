@@ -59,6 +59,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data.Services" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Net.Http.Formatting, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.AspNet.WebApi.Client.4.0.20710.0\lib\net40\System.Net.Http.Formatting.dll</HintPath>
@@ -89,6 +90,7 @@
     <Compile Include="Controllers\PackagesControllerTests.cs" />
     <Compile Include="Controllers\TabCompletionControllerTests.cs" />
     <Compile Include="Controllers\ApiControllerTests.cs" />
+    <Compile Include="DataServices\PackageDataServiceTests.cs" />
     <Compile Include="Formatters\MultipartFormDataMediaFormatterTests.cs" />
     <Compile Include="Formatters\PackageFormDataMediaFormatterTests.cs" />
     <Compile Include="CrossOriginMessageHandlerTests.cs" />

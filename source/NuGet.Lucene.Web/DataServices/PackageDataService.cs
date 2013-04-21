@@ -59,6 +59,11 @@ namespace NuGet.Lucene.Web.DataServices
 
         protected DataServiceOperationContext OperationContext { get; set; }
 
+        protected virtual Uri CurrentRequestUri
+        {
+            get { return OperationContext.AbsoluteRequestUri; }
+        }
+
         [WebGet]
         public IQueryable<DataServicePackage> Search(string searchTerm, string targetFramework, bool includePrerelease)
         {
@@ -83,7 +88,7 @@ namespace NuGet.Lucene.Web.DataServices
         {
             get
             {
-                var query = System.Web.HttpUtility.ParseQueryString(OperationContext.AbsoluteRequestUri.Query);
+                var query = System.Web.HttpUtility.ParseQueryString(CurrentRequestUri.Query);
 
                 return string.IsNullOrWhiteSpace(query["$orderby"]);
             }
