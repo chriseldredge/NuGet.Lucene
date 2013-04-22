@@ -1,11 +1,11 @@
 using System;
-using System.Collections.Generic;
 using System.Data.Services;
 using System.Data.Services.Common;
 using System.Data.Services.Providers;
 using System.Linq;
 using System.ServiceModel.Web;
 using Lucene.Net.Linq;
+using NuGet.Lucene.Web.Models;
 
 namespace NuGet.Lucene.Web.DataServices
 {
@@ -112,8 +112,6 @@ namespace NuGet.Lucene.Web.DataServices
 
             var idValues = packageIds.Trim().Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
             var versionValues = versions.Trim().Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
-            var targetFrameworkValues = String.IsNullOrEmpty(targetFrameworks) ? null :
-                                                                                 targetFrameworks.Split('|').Select(VersionUtility.ParseFrameworkName).ToList();
 
             if ((idValues.Length == 0) || (idValues.Length != versionValues.Length))
             {
@@ -121,14 +119,21 @@ namespace NuGet.Lucene.Web.DataServices
                 return Enumerable.Empty<DataServicePackage>().AsQueryable();
             }
 
-            var packagesToUpdate = new List<IPackageMetadata>();
-            for (int i = 0; i < idValues.Length; i++)
-            {
-                packagesToUpdate.Add(new PackageBuilder { Id = idValues[i], Version = new SemanticVersion(versionValues[i]) });
-            }
+            var packages = idValues
+                .Zip(
+                    versionValues.Select(v => new SemanticVersion(v)),
+                    (id, version) => new PackageSpec {Id = id, Version = version})
+                .GroupBy(p => p.Id).Select(g => g.OrderBy(gp => gp.Version).First())
+                .ToList();
 
-            return from package in PackageRepository.GetUpdatesCore(packagesToUpdate, includePrerelease, includeAllVersions, targetFrameworkValues).AsQueryable()
-                   select AsDataServicePackage(package);
+            var targetFrameworkValues = (targetFrameworks ?? "")
+                .Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries)
+                .Distinct()
+                .Select(VersionUtility.ParseFrameworkName)
+                .ToList();
+
+            var updates = PackageRepository.GetUpdates(packages, includePrerelease, includeAllVersions, targetFrameworkValues);
+            return updates.Select(AsDataServicePackage).AsQueryable();
         }
 
         public static DataServicePackage AsDataServicePackage(IPackage package)

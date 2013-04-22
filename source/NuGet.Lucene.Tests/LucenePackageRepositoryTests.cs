@@ -112,6 +112,42 @@ namespace NuGet.Lucene.Tests
             Assert.That(result.Files.ToArray(), Is.EquivalentTo(new[] { "path1" }));
         }
 
+        [Test]
+        public void GetUpdates()
+        {
+            var a1 = MakeSamplePackage("a", "1.0");
+            var a2 = MakeSamplePackage("a", "2.0");
+            var a3 = MakeSamplePackage("a", "3.0");
+
+            a3.IsLatestVersion = true;
+
+            InsertPackage(a1);
+            InsertPackage(a2);
+            InsertPackage(a3);
+
+            var result = repository.GetUpdates(new[] {a1}, false, false, new FrameworkName[0]);
+
+            Assert.That(result.Single().Version.ToString(), Is.EqualTo(a3.Version.ToString()));
+        }
+
+        [Test]
+        public void GetUpdatesIncludeAll()
+        {
+            var a1 = MakeSamplePackage("a", "1.0");
+            var a2 = MakeSamplePackage("a", "2.0-pre");
+            var a3 = MakeSamplePackage("a", "3.0");
+
+            a3.IsLatestVersion = true;
+
+            InsertPackage(a1);
+            InsertPackage(a2);
+            InsertPackage(a3);
+
+            var result = repository.GetUpdates(new[] { a1 }, true, true, new FrameworkName[0]);
+
+            Assert.That(result.Select(p => p.Version.ToString()).ToArray(), Is.EqualTo(new[] {a2.Version.ToString(), a3.Version.ToString()}));
+        }
+
         private Mock<PackageWithFiles> SetUpConvertPackage()
         {
             var package = new Mock<PackageWithFiles>();

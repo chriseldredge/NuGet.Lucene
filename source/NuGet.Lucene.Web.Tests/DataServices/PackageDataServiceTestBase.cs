@@ -8,11 +8,10 @@ using NuGet.Lucene.Web.DataServices;
 
 namespace NuGet.Lucene.Web.Tests.DataServices
 {
-    [TestFixture]
-    public class PackageDataServiceTests
+    public abstract class PackageDataServiceTestBase
     {
-        private TestablePackageDataService service;
-        private Mock<ILucenePackageRepository> repo;
+        protected TestablePackageDataService service;
+        protected Mock<ILucenePackageRepository> repo;
 
         [SetUp]
         public void SetUp()
@@ -25,47 +24,22 @@ namespace NuGet.Lucene.Web.Tests.DataServices
                 };
         }
 
-        [Test]
-        public void SearchSortsByScore()
-        {
-            var packages = new LucenePackage[0];
-
-            repo.Setup(r => r.Search("foo", new string[0], false)).Returns(packages.AsQueryable());
-
-            var query = service.Search("foo", "", includePrerelease: false);
-
-            AssertOrderingBy(query, "result => result.Score()");
-        }
-
-        [Test]
-        public void SearchNoSortWhenSpecifiedInQueryString()
-        {
-            service.FakeRequestUri = new Uri("http://localhost/packages?$orderby=DownloadCount");
-            var packages = new LucenePackage[0];
-
-            repo.Setup(r => r.Search("foo", new string[0], false)).Returns(packages.AsQueryable());
-
-            var query = service.Search("foo", "", includePrerelease: false);
-
-            AssertOrderingBy(query);
-        }
-
-        private static void AssertOrderingBy(IQueryable<Web.DataServices.DataServicePackage> query, params string[] expectedOrdering)
+        protected static void AssertOrderingBy(IQueryable<Web.DataServices.DataServicePackage> query, params string[] expectedOrdering)
         {
             var finder = new OrderingClauseFinder();
 
             finder.Visit(query.Expression);
 
-            Assert.That(finder.Matches.Count(), Is.EqualTo(expectedOrdering.Length), "ordering expressions");
-            var expressions = finder.Matches.Select(m => m.Arguments.Last().ToString()).ToArray();
+            Assert.That(Enumerable.Count<MethodCallExpression>(finder.Matches), Is.EqualTo(expectedOrdering.Length), "ordering expressions");
+            var expressions = Enumerable.Select<MethodCallExpression, string>(finder.Matches, m => m.Arguments.Last().ToString()).ToArray();
             Assert.That(expressions, Is.EqualTo(expectedOrdering), "ordering expression");
         }
 
-        class TestablePackageDataService : PackageDataService
+        protected class TestablePackageDataService : PackageDataService
         {
             public Uri FakeRequestUri { get; set; }
 
-            protected override System.Uri CurrentRequestUri
+            protected override Uri CurrentRequestUri
             {
                 get
                 {
@@ -74,7 +48,7 @@ namespace NuGet.Lucene.Web.Tests.DataServices
             }
         }
 
-        class OrderingClauseFinder : ExpressionVisitor
+        private class OrderingClauseFinder : ExpressionVisitor
         {
             private static readonly string[] methodNames = new[] {"OrderBy", "OrderByDescending", "ThenBy", "ThenByDescending"};
             private readonly List<MethodCallExpression> matches = new List<MethodCallExpression>();

@@ -90,7 +90,9 @@
     <Compile Include="Controllers\PackagesControllerTests.cs" />
     <Compile Include="Controllers\TabCompletionControllerTests.cs" />
     <Compile Include="Controllers\ApiControllerTests.cs" />
-    <Compile Include="DataServices\PackageDataServiceTests.cs" />
+    <Compile Include="DataServices\PackageDataServiceGetUpdatesTests.cs" />
+    <Compile Include="DataServices\PackageDataServiceTestBase.cs" />
+    <Compile Include="DataServices\PackageDataServiceSearchTests.cs" />
     <Compile Include="Formatters\MultipartFormDataMediaFormatterTests.cs" />
     <Compile Include="Formatters\PackageFormDataMediaFormatterTests.cs" />
     <Compile Include="CrossOriginMessageHandlerTests.cs" />

@@ -136,8 +136,28 @@ namespace NuGet.Lucene
 
         public IEnumerable<IPackage> GetUpdates(IEnumerable<IPackage> packages, bool includePrerelease, bool includeAllVersions, IEnumerable<FrameworkName> targetFramework)
         {
-            //TODO: could this be optimized?
-            return this.GetUpdatesCore(packages, includePrerelease, includeAllVersions, targetFramework);
+            var baseQuery = LucenePackages;
+
+            if (!includeAllVersions)
+            {
+                baseQuery = baseQuery.Where(pkg => pkg.IsLatestVersion);
+            }
+
+            if (!includePrerelease)
+            {
+                baseQuery = baseQuery.Where(pkg => !pkg.IsPrerelease);
+            }
+
+            var results = new List<IPackage>();
+
+            foreach (var current in packages)
+            {
+                var id = current.Id;
+                var currentVersion = new StrictSemanticVersion(current.Version);
+                results.AddRange(baseQuery.Where(pkg => pkg.Id == id && pkg.Version > currentVersion));
+            }
+
+            return results;
         }
 
         public Task SynchronizeWithFileSystem(CancellationToken cancellationToken)
