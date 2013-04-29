@@ -232,9 +232,9 @@ namespace NuGet.Lucene
             lucenePackage.Title = package.Title;
             lucenePackage.Authors = (package.Authors ?? Enumerable.Empty<string>()).Select(i => i.Trim()).ToArray();
             lucenePackage.Owners = (package.Owners ?? Enumerable.Empty<string>()).Select(i => i.Trim()).ToArray();
-            lucenePackage.IconUrl = package.IconUrl;
-            lucenePackage.LicenseUrl = package.LicenseUrl;
-            lucenePackage.ProjectUrl = package.ProjectUrl;
+            lucenePackage.IconUrl = FilterPlaceholderUri(package.IconUrl);
+            lucenePackage.LicenseUrl = FilterPlaceholderUri(package.LicenseUrl);
+            lucenePackage.ProjectUrl = FilterPlaceholderUri(package.ProjectUrl);
             lucenePackage.RequireLicenseAcceptance = package.RequireLicenseAcceptance;
             lucenePackage.Description = package.Description;
             lucenePackage.Summary = package.Summary;
@@ -251,6 +251,16 @@ namespace NuGet.Lucene
             lucenePackage.Listed = package.Listed;
             lucenePackage.Published = package.Published;
             lucenePackage.AssemblyReferences = package.AssemblyReferences;
+        }
+
+        private Uri FilterPlaceholderUri(Uri uri)
+        {
+            if (uri != null && uri.IsAbsoluteUri && uri.Host.ToLowerInvariant().Contains("url_here_or_delete_this_line"))
+            {
+                return null;
+            }
+
+            return uri;
         }
 
         protected virtual void CalculateDerivedData(IPackage sourcePackage, LucenePackage package, string path, Stream stream)

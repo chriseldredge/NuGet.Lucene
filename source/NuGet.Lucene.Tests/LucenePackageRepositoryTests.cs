@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -110,6 +111,22 @@ namespace NuGet.Lucene.Tests
 
             Assert.That(result.Files, Is.Not.Null, "Files");
             Assert.That(result.Files.ToArray(), Is.EquivalentTo(new[] { "path1" }));
+        }
+
+        [Test]
+        public void ConvertPackage_RemovesPlaceholderUrls()
+        {
+            var package = SetUpConvertPackage();
+
+            package.Object.IconUrl = new Uri("http://ICON_URL_HERE_OR_DELETE_THIS_LINE");
+            package.Object.LicenseUrl = new Uri("http://LICENSE_URL_HERE_OR_DELETE_THIS_LINE");
+            package.Object.ProjectUrl = new Uri("http://PROJECT_URL_HERE_OR_DELETE_THIS_LINE");
+
+            var result = repository.Convert(package.Object);
+
+            Assert.That(result.IconUrl, Is.Null, "IconUrl");
+            Assert.That(result.LicenseUrl, Is.Null, "LicenseUrl");
+            Assert.That(result.ProjectUrl, Is.Null, "ProjectUrl");
         }
 
         [Test]
