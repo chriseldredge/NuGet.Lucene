@@ -1,0 +1,45 @@
+﻿using NUnit.Framework;
+using MyDataServicePackage = global::NuGet.Lucene.Web.DataServices.DataServicePackage;
+
+namespace NuGet.Lucene.Web.Tests.DataServices
+{
+    [TestFixture]
+    public class DataServicePackageTests
+    {
+        [Test]
+        public void Equals()
+        {
+            var a1 = new MyDataServicePackage(new DataServicePackage { Id = "a", Version = "1.0" });
+            var a2 = new MyDataServicePackage(new DataServicePackage { Id = "a", Version = "1.0" });
+
+            Assert.That(a1, Is.EqualTo(a2));
+        }
+
+        [Test]
+        public void EqualsIgnoresOtherProperties()
+        {
+            var a1 = new MyDataServicePackage(new DataServicePackage { Id = "a", Version = "1.0", Description = "ignore me" });
+            var a2 = new MyDataServicePackage(new DataServicePackage { Id = "a", Version = "1.0", Description = "ignore me and me too" });
+
+            Assert.That(a1, Is.EqualTo(a2));
+        }
+
+        [Test]
+        public void DifferentIdNotEqual()
+        {
+            var a1 = new MyDataServicePackage(new DataServicePackage { Id = "a", Version = "1.0" });
+            var a2 = new MyDataServicePackage(new DataServicePackage { Id = "b", Version = "1.0" });
+
+            Assert.That(a1, Is.Not.EqualTo(a2));
+        }
+
+        [Test]
+        public void DifferentVersionNotEqual()
+        {
+            var a1 = new MyDataServicePackage(new DataServicePackage { Id = "a", Version = "1.0" });
+            var a2 = new MyDataServicePackage(new DataServicePackage { Id = "a", Version = "2.0" });
+
+            Assert.That(a1, Is.Not.EqualTo(a2));
+        }
+    }
+}

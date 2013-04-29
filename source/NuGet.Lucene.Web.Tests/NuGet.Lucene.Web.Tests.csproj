@@ -90,6 +90,7 @@
     <Compile Include="Controllers\PackagesControllerTests.cs" />
     <Compile Include="Controllers\TabCompletionControllerTests.cs" />
     <Compile Include="Controllers\ApiControllerTests.cs" />
+    <Compile Include="DataServices\DataServicePackageTests.cs" />
     <Compile Include="DataServices\PackageDataServiceGetUpdatesTests.cs" />
     <Compile Include="DataServices\PackageDataServiceTestBase.cs" />
     <Compile Include="DataServices\PackageDataServiceSearchTests.cs" />
