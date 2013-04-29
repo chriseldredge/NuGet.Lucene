@@ -61,9 +61,10 @@ namespace NuGet.Lucene
             await Indexer.AddPackage(Convert(package));
         }
 
-        public override async void AddPackage(IPackage package)
+        public override void AddPackage(IPackage package)
         {
-            await AddPackageAsync(package);
+            var task = Task.Run(() => AddPackageAsync(package));
+            task.Wait();
         }
 
         public async Task IncrementDownloadCount(IPackage package)
@@ -80,12 +81,16 @@ namespace NuGet.Lucene
 
         public async Task RemovePackageAsync(IPackage package)
         {
-            await Task.Run(() => base.RemovePackage(package)).ContinueWith(_ => Indexer.RemovePackage(package));
+            base.RemovePackage(package);
+            
+            await Indexer.RemovePackage(package);
         }
 
-        public override async void RemovePackage(IPackage package)
+        public override void RemovePackage(IPackage package)
         {
-            await RemovePackageAsync(package);
+            var task = Task.Run(() => RemovePackageAsync(package));
+            
+            task.Wait();
         }
 
         public override IQueryable<IPackage> GetPackages()
@@ -200,9 +205,10 @@ namespace NuGet.Lucene
 
         public LucenePackage Convert(IPackage package)
         {
-            if (package is LucenePackage) return (LucenePackage)package;
+            var lucenePackage = package as LucenePackage;
+            if (lucenePackage != null) return lucenePackage;
 
-            var lucenePackage = new LucenePackage(FileSystem);
+            lucenePackage = new LucenePackage(FileSystem);
 
             return Convert(package, lucenePackage);
         }
