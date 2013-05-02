@@ -14,9 +14,15 @@
     <summary>asp.net mvc 4 api controllers and WCF Data Services for NuGet.Lucene.</summary>
     <description>Provides controllers and WCF Data Services classes that can be exposed in an asp.net application to expose a NuGet.Lucene repository over the web.</description>
     <releaseNotes>
+      Enhancement: Improve GetUpdates implementation
+      Feature: automatically mirror packages from nuget.org or another feed when a
+               client attempts to install or restore a package that isn't already in the local repository.
     </releaseNotes>
     <dependencies>
-      <dependency id="NuGet.Lucene" version="[1.0.1,2.0)" />
+      <dependency id="NuGet.Lucene" version="[1.0.3,2.0)" />
     </dependencies>
   </metadata>
+  <files>
+    <file src="readme.txt"/>
+  </files>
 </package>

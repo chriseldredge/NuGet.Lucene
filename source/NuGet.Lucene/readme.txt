@@ -1,4 +1,4 @@
-## Overview
+## NuGet.Lucene - Overview
 
 This package provides a class library that implements NuGet.Core's IPackageRepository and related interfaces
 to provide very fast package listing, lookup, search and aggregation functionality.

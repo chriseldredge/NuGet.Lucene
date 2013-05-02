@@ -185,6 +185,7 @@
     <Compile Include="ReusableCancellationTokenSource.cs" />
     <Compile Include="UnhandledExceptionLogger.cs" />
     <Compile Include="Util\TaskUtils.cs" />
+    <None Include="readme.txt" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\NuGet.Lucene\NuGet.Lucene.csproj">

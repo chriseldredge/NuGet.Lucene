@@ -14,6 +14,9 @@
     <summary>Provides NuGet package repository that stores package metadata in a Lucene index for very fast package lookup and search capabilities.</summary>
     <description>Implementation of NuGet package repository that stores package metadata in a Lucene index for very fast package lookup and search capabilities. Includes an optional file system watcher that will keep packages on disk in sync with the Lucene index. This package does not serve as a standalone package feed or package server; instead it must be embedded in other projects.</description>
     <releaseNotes>
+      Bug Fix: Make AddPackage and RemovePackage block until operation is complete
+      Enhancement: Improve GetUpdates implementation
+      Enhancement: Strip out placeholder URLs from package metadata such as http://icon_url_here_or_delete_this_line
     </releaseNotes>
   </metadata>
   <files>
