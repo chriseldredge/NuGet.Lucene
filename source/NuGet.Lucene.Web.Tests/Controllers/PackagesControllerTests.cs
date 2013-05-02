@@ -18,7 +18,8 @@ namespace NuGet.Lucene.Web.Tests.Controllers
     [TestFixture]
     public class PackagesControllerTests : ApiControllerTests<PackagesController>
     {
-        private Mock<ILucenePackageRepository> repository;
+        private Mock<ILucenePackageRepository> luceneRepository;
+        private Mock<IMirroringPackageRepository> mirroringRepository;
         private List<LucenePackage> packages;
         private Task completeTask;
         private static readonly StrictSemanticVersion SampleVersion = new StrictSemanticVersion("1.0");
@@ -39,9 +40,10 @@ namespace NuGet.Lucene.Web.Tests.Controllers
 
         protected override PackagesController CreateController()
         {
-            repository = new Mock<ILucenePackageRepository>();
+            luceneRepository = new Mock<ILucenePackageRepository>();
+            mirroringRepository = new Mock<IMirroringPackageRepository>();
 
-            return new PackagesController {Repository = repository.Object};
+            return new PackagesController {LuceneRepository = luceneRepository.Object, MirroringRepository = mirroringRepository.Object};
         }
 
         [Test]
@@ -146,11 +148,11 @@ namespace NuGet.Lucene.Web.Tests.Controllers
         [Test]
         public async Task PutPackage()
         {
-            repository.Setup(r => r.AddPackageAsync(package)).Returns(completeTask);
+            luceneRepository.Setup(r => r.AddPackageAsync(package)).Returns(completeTask);
 
             var result = await controller.PutPackage(package);
 
-            repository.Verify(r => r.AddPackageAsync(package));
+            luceneRepository.Verify(r => r.AddPackageAsync(package));
 
             Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.Created));
             Assert.That(result.Headers.Location, Is.EqualTo(new Uri("http://localhost/api/packages/Sample/1.0")));
@@ -161,7 +163,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
         {
             var result = await controller.PutPackage(null);
             
-            repository.Verify(r => r.AddPackageAsync(It.IsAny<IPackage>()), Times.Never());
+            luceneRepository.Verify(r => r.AddPackageAsync(It.IsAny<IPackage>()), Times.Never());
 
             Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
         }
@@ -171,7 +173,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
         {
             var result = await controller.DeletePackage(null);
 
-            repository.Verify(r => r.RemovePackageAsync(It.IsAny<IPackage>()), Times.Never());
+            luceneRepository.Verify(r => r.RemovePackageAsync(It.IsAny<IPackage>()), Times.Never());
 
             Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
         }
@@ -181,7 +183,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
         {
             var result = await controller.DeletePackage(new PackageSpec { Version = new SemanticVersion("1.0") });
 
-            repository.Verify(r => r.AddPackageAsync(It.IsAny<IPackage>()), Times.Never());
+            luceneRepository.Verify(r => r.AddPackageAsync(It.IsAny<IPackage>()), Times.Never());
 
             Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
         }
@@ -189,11 +191,11 @@ namespace NuGet.Lucene.Web.Tests.Controllers
         [Test]
         public async Task DeletePackageNotFound()
         {
-            repository.Setup(r => r.FindPackage(package.Id, package.Version.SemanticVersion)).Returns((IPackage)null);
+            luceneRepository.Setup(r => r.FindPackage(package.Id, package.Version.SemanticVersion)).Returns((IPackage)null);
 
             var result = await controller.DeletePackage(new PackageSpec { Id = package.Id, Version = package.Version.SemanticVersion });
 
-            repository.Verify(r => r.AddPackageAsync(It.IsAny<IPackage>()), Times.Never());
+            luceneRepository.Verify(r => r.AddPackageAsync(It.IsAny<IPackage>()), Times.Never());
 
             Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
         }
@@ -201,12 +203,12 @@ namespace NuGet.Lucene.Web.Tests.Controllers
         [Test]
         public async Task DeletePackage()
         {
-            repository.Setup(r => r.FindPackage(package.Id, package.Version.SemanticVersion)).Returns(package);
-            repository.Setup(r => r.RemovePackageAsync(package)).Returns(Task.FromResult(""));
+            luceneRepository.Setup(r => r.FindPackage(package.Id, package.Version.SemanticVersion)).Returns(package);
+            luceneRepository.Setup(r => r.RemovePackageAsync(package)).Returns(Task.FromResult(""));
 
             var result = await controller.DeletePackage(new PackageSpec { Id = package.Id, Version = package.Version.SemanticVersion });
             
-            repository.VerifyAll();
+            luceneRepository.VerifyAll();
 
             Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.OK));
         }
@@ -226,7 +228,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
             packages.Add(v1);
             packages.Add(CreatePackage(new StrictSemanticVersion("2.0")));
 
-            repository.Setup(r => r.LucenePackages).Returns(packages.AsQueryable());
+            luceneRepository.Setup(r => r.LucenePackages).Returns(packages.AsQueryable());
 
             dynamic result = controller.GetPackageInfo(new PackageSpec {Id = v1.Id, Version = new SemanticVersion("1.0")});
 
@@ -243,7 +245,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
             packages.Add(v2);
             packages.Add(CreatePackage(new StrictSemanticVersion("1.0")));
 
-            repository.Setup(r => r.LucenePackages).Returns(packages.AsQueryable());
+            luceneRepository.Setup(r => r.LucenePackages).Returns(packages.AsQueryable());
 
             var result = controller.GetPackageInfo(new PackageSpec { Id = v2.Id, Version = null });
 
@@ -254,7 +256,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
         [Test]
         public void GetPackageInfoNotFound()
         {
-            repository.Setup(r => r.LucenePackages).Returns(packages.AsQueryable());
+            luceneRepository.Setup(r => r.LucenePackages).Returns(packages.AsQueryable());
 
             var result = controller.GetPackageInfo(new PackageSpec { Id = "NoneSuch", Version = null });
 
@@ -282,12 +284,14 @@ namespace NuGet.Lucene.Web.Tests.Controllers
 
             if (version != null)
             {
-                repository.Setup(r => r.FindPackage(packageId, version)).Returns(package);
+                mirroringRepository.Setup(r => r.FindPackage(packageId, version)).Returns(package);
             }
             else
             {
-                repository.Setup(r => r.FindPackagesById(packageId)).Returns(packages);
+                luceneRepository.Setup(r => r.FindPackagesById(packageId)).Returns(packages);
             }
+
+            luceneRepository.Setup(r => r.Convert(It.IsAny<IPackage>())).Returns<IPackage>(p => (LucenePackage)p);
 
             return controller.DownloadPackage(new PackageSpec { Id = packageId, Version = version });
         }

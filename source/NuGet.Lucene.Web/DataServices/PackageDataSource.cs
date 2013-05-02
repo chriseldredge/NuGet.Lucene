@@ -4,9 +4,9 @@ namespace NuGet.Lucene.Web.DataServices
 {
     public class PackageDataSource
     {
-        private readonly ILucenePackageRepository packageRepository;
+        private readonly IPackageRepository packageRepository;
 
-        public PackageDataSource(ILucenePackageRepository packageRepository)
+        public PackageDataSource(IPackageRepository packageRepository)
         {
             this.packageRepository = packageRepository;
         }
@@ -15,7 +15,7 @@ namespace NuGet.Lucene.Web.DataServices
         {
             get
             {
-                return packageRepository.LucenePackages.Select(pkg => PackageDataService.AsDataServicePackage(pkg));
+                return packageRepository.GetPackages().Select(pkg => PackageDataService.AsDataServicePackage(pkg));
             }
         }
     }

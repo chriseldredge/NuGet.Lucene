@@ -91,12 +91,15 @@
     <Compile Include="Controllers\TabCompletionControllerTests.cs" />
     <Compile Include="Controllers\ApiControllerTests.cs" />
     <Compile Include="DataServices\DataServicePackageTests.cs" />
+    <Compile Include="DataServices\PackageDataServiceFindPackagesByIdTests.cs" />
     <Compile Include="DataServices\PackageDataServiceGetUpdatesTests.cs" />
     <Compile Include="DataServices\PackageDataServiceTestBase.cs" />
     <Compile Include="DataServices\PackageDataServiceSearchTests.cs" />
     <Compile Include="Formatters\MultipartFormDataMediaFormatterTests.cs" />
     <Compile Include="Formatters\PackageFormDataMediaFormatterTests.cs" />
     <Compile Include="CrossOriginMessageHandlerTests.cs" />
+    <Compile Include="MirroringPackageRepositoryFactoryTests.cs" />
+    <Compile Include="Models\MirroringPackageRepositoryTests.cs" />
     <Compile Include="PackageRouteTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReusableCancellationTokenSourceTests.cs" />

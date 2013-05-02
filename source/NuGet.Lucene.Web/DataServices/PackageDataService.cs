@@ -13,7 +13,7 @@ namespace NuGet.Lucene.Web.DataServices
     {
         public static PackageServiceStreamProvider PackageServiceStreamProvider { get; private set; }
 
-        public ILucenePackageRepository PackageRepository { get; set; }
+        public IMirroringPackageRepository PackageRepository { get; set; }
 
         public static void InitializeService(DataServiceConfiguration config)
         {
@@ -52,18 +52,6 @@ namespace NuGet.Lucene.Web.DataServices
             return null;
         }
 
-        protected override void OnStartProcessingRequest(ProcessRequestArgs args)
-        {
-            this.OperationContext = args.OperationContext;
-        }
-
-        protected DataServiceOperationContext OperationContext { get; set; }
-
-        protected virtual Uri CurrentRequestUri
-        {
-            get { return OperationContext.AbsoluteRequestUri; }
-        }
-
         [WebGet]
         public IQueryable<DataServicePackage> Search(string searchTerm, string targetFramework, bool includePrerelease)
         {
@@ -84,22 +72,12 @@ namespace NuGet.Lucene.Web.DataServices
             return from package in searchQuery select AsDataServicePackage(package);
         }
 
-        private bool ClientDoesNotSpecifyOrder
-        {
-            get
-            {
-                var query = System.Web.HttpUtility.ParseQueryString(CurrentRequestUri.Query);
-
-                return string.IsNullOrWhiteSpace(query["$orderby"]);
-            }
-        }
-
         [WebGet]
         public IQueryable<DataServicePackage> FindPackagesById(string id)
         {
             return PackageRepository.FindPackagesById(id)
-                                    .Select(AsDataServicePackage)
-                                    .AsQueryable();
+                        .Select(AsDataServicePackage)
+                        .AsQueryable();
         }
 
         [WebGet]
@@ -138,7 +116,39 @@ namespace NuGet.Lucene.Web.DataServices
 
         public static DataServicePackage AsDataServicePackage(IPackage package)
         {
-            return new DataServicePackage((LucenePackage)package);
+            var lucenePackage = package as LucenePackage;
+
+            if (lucenePackage != null)
+                return new DataServicePackage(lucenePackage);
+
+            var dataServicePackage = package as NuGet.DataServicePackage;
+            
+            if (dataServicePackage != null)
+                return new DataServicePackage(dataServicePackage);
+
+            throw new ArgumentException("Cannot convert package of type " + package.GetType() + " to DataServicePackage.");
+        }
+
+        protected override void OnStartProcessingRequest(ProcessRequestArgs args)
+        {
+            this.OperationContext = args.OperationContext;
+        }
+
+        protected DataServiceOperationContext OperationContext { get; set; }
+
+        protected virtual Uri CurrentRequestUri
+        {
+            get { return OperationContext.AbsoluteRequestUri; }
+        }
+
+        protected virtual bool ClientDoesNotSpecifyOrder
+        {
+            get
+            {
+                var query = System.Web.HttpUtility.ParseQueryString(CurrentRequestUri.Query);
+
+                return string.IsNullOrWhiteSpace(query["$orderby"]);
+            }
         }
     }
 }

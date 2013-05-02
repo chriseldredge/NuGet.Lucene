@@ -14,11 +14,12 @@ namespace NuGet.Lucene.Web.Controllers
 {
     public class PackagesController : ApiController
     {
-        public ILucenePackageRepository Repository { get; set; }
+        public ILucenePackageRepository LuceneRepository { get; set; }
+        public IMirroringPackageRepository MirroringRepository { get; set; }
 
         public dynamic GetPackageInfo([FromUri]PackageSpec packageSpec)
         {
-            var packages = Repository
+            var packages = LuceneRepository
                             .LucenePackages
                             .Where(p => p.Id == packageSpec.Id)
                             .OrderBy(p => p.Version)
@@ -67,7 +68,7 @@ namespace NuGet.Lucene.Web.Controllers
             {
                 result.Content = new StreamContent(package.GetStream());
                 
-                TaskUtils.FireAndForget(() => Repository.IncrementDownloadCount(package), UnhandledExceptionLogger.LogException);
+                TaskUtils.FireAndForget(() => LuceneRepository.IncrementDownloadCount(package), UnhandledExceptionLogger.LogException);
             }
             else
             {
@@ -112,7 +113,7 @@ namespace NuGet.Lucene.Web.Controllers
         [HttpGet]
         public dynamic Search(string query = "", bool includePrerelease = false, int offset = 0, int count = 20)
         {
-            var queryable = Repository.Search(query, new string[0], includePrerelease).Where(p => p.IsLatestVersion);
+            var queryable = LuceneRepository.Search(query, new string[0], includePrerelease).Where(p => p.IsLatestVersion);
             var totalHits = queryable.Count();
             var hits = queryable.Skip(offset).Take(count).ToList();
 
@@ -132,7 +133,7 @@ namespace NuGet.Lucene.Web.Controllers
                 return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "Must specify package id and version.");
             }
 
-            var package = Repository.FindPackage(packageSpec.Id, packageSpec.Version);
+            var package = LuceneRepository.FindPackage(packageSpec.Id, packageSpec.Version);
 
             if (package == null)
             {
@@ -140,7 +141,7 @@ namespace NuGet.Lucene.Web.Controllers
                 return Request.CreateErrorResponse(HttpStatusCode.NotFound, message);
             }
 
-            await Repository.RemovePackageAsync(package);
+            await LuceneRepository.RemovePackageAsync(package);
 
             return Request.CreateResponse(HttpStatusCode.OK);
         }
@@ -154,7 +155,7 @@ namespace NuGet.Lucene.Web.Controllers
                 return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "Must provide package with valid id and version.");
             }
 
-            await Repository.AddPackageAsync(package);
+            await LuceneRepository.AddPackageAsync(package);
 
             var location = Url.Link(RouteNames.Packages.Info, new { id = package.Id, version = package.Version });
 
@@ -165,20 +166,22 @@ namespace NuGet.Lucene.Web.Controllers
 
         private LucenePackage FindPackage(PackageSpec packageSpec)
         {
-            LucenePackage package;
+            if (packageSpec.Version == null)
+            {
+                return FindNewestReleasePackage(packageSpec.Id);
+            }
 
-            if (packageSpec.Version != null)
-            {
-                package = (LucenePackage)Repository.FindPackage(packageSpec.Id, packageSpec.Version);
-            }
-            else
-            {
-                package = Repository.FindPackagesById(packageSpec.Id)
-                                    .Cast<LucenePackage>()
-                                    .Where(p => p.IsPrerelease == false)
-                                    .OrderBy(p => p.Version).LastOrDefault();
-            }
-            return package;
+            var package = MirroringRepository.FindPackage(packageSpec.Id, packageSpec.Version);
+            return package != null ? LuceneRepository.Convert(package) : null;
+        }
+
+        private LucenePackage FindNewestReleasePackage(string packageId)
+        {
+            return (LucenePackage) LuceneRepository
+                    .FindPackagesById(packageId)
+                    .Where(p => p.IsReleaseVersion())
+                    .OrderByDescending(p => p.Version)
+                    .FirstOrDefault();
         }
     }
 }

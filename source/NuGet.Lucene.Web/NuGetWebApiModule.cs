@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
 using System.Reflection;
@@ -10,6 +11,7 @@ using Ninject.Components;
 using Ninject.Modules;
 using Ninject.Selection.Heuristics;
 using NuGet.Lucene.Web.Authentication;
+using NuGet.Lucene.Web.Models;
 using NuGet.Lucene.Web.Modules;
 
 namespace NuGet.Lucene.Web
@@ -34,9 +36,11 @@ namespace NuGet.Lucene.Web
             Kernel.Components.Add<IInjectionHeuristic, NonDecoratedPropertyInjectionHeuristic>();
 
             var routeMapper = new NuGetWebApiRouteMapper(RoutePathPrefix);
+            var mirroringPackageRepository = MirroringPackageRepositoryFactory.Create(cfg.Repository, PackageMirrorTargetUrl, PackageMirrorTimeout);
 
             Bind<NuGetWebApiRouteMapper>().ToConstant(routeMapper);
             Bind<ILucenePackageRepository>().ToConstant(cfg.Repository).OnDeactivation(_ => cfg.Dispose());
+            Bind<IMirroringPackageRepository>().ToConstant(mirroringPackageRepository);
             Bind<LuceneDataProvider>().ToConstant(cfg.Provider);
             Bind<IQueryable<ApiUser>>().ToConstant(cfg.Provider.AsQueryable<ApiUser>());
             Bind<IApiKeyAuthentication>().To<LuceneApiKeyAuthentication>();
@@ -69,6 +73,20 @@ namespace NuGet.Lucene.Web
             get { return GetAppSetting("routePathPrefix", DefaultRoutePathPrefix); }
         }
 
+        public static string PackageMirrorTargetUrl
+        {
+            get { return GetAppSetting("packageMirrorTargetUrl", string.Empty); }
+        }
+
+        public static TimeSpan PackageMirrorTimeout
+        {
+            get
+            {
+                var str = GetAppSetting("packageMirrorTimeout", "0:00:15");
+                TimeSpan ts;
+                return TimeSpan.TryParse(str, out ts) ? ts : TimeSpan.FromSeconds(15);
+            }
+        }
         internal static bool GetFlagFromAppSetting(string key, bool defaultValue)
         {
             var flag = GetAppSetting(key, string.Empty);

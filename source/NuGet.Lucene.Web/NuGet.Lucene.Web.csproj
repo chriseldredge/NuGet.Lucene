@@ -151,6 +151,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Authentication\ApiUser.cs" />
+    <Compile Include="Models\DelegatingPackageRepository.cs" />
+    <Compile Include="Models\MirroringPackageRepository.cs" />
     <Compile Include="NuGetWebApiModule.cs" />
     <Compile Include="Authentication\IApiKeyAuthentication.cs" />
     <Compile Include="Authentication\LuceneApiKeyAuthentication.cs" />
@@ -174,6 +176,7 @@
     <Compile Include="Modules\ApiKeyAuthenticationModule.cs" />
     <Compile Include="Modules\HttpModule.cs" />
     <Compile Include="OptionalSemanticVersionConstraint.cs" />
+    <Compile Include="MirroringPackageRepositoryFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="NuGetWebApiRouteMapper.cs" />
     <Compile Include="RouteNames.cs" />
