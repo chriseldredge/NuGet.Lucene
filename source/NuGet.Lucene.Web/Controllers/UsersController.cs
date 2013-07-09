@@ -9,6 +9,15 @@ using NuGet.Lucene.Web.Authentication;
 
 namespace NuGet.Lucene.Web.Controllers
 {
+    /// <summary>
+    /// <para>
+    /// Provides methods to view, create and delete users and api keys for authentication.
+    /// </para>
+    /// <para>
+    /// Clients can authenticate using api keys by setting the <c>X-NuGet-ApiKey</c> header
+    /// on requests.
+    /// </para>
+    /// </summary>
     public class UsersController : ApiController
     {
         public LuceneDataProvider Provider { get; set; }
@@ -20,6 +29,9 @@ namespace NuGet.Lucene.Web.Controllers
                 .ToList();
         }
 
+        /// <summary>
+        /// Retrieve information about a user.
+        /// </summary>
         public dynamic Get(string username)
         {
             var user = Provider.AsQueryable<ApiUser>()
@@ -33,6 +45,12 @@ namespace NuGet.Lucene.Web.Controllers
             return DescribeUser(user);
         }
 
+        /// <summary>
+        /// Creates or replaces a user.
+        /// </summary>
+        /// <param name="username"></param>
+        /// <param name="user"></param>
+        /// <returns></returns>
         public HttpResponseMessage Put(string username, [FromBody]ApiUser user)
         {
             user.Username = username;

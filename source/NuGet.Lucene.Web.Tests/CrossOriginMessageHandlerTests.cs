@@ -124,7 +124,6 @@ namespace NuGet.Lucene.Web.Tests
         {
             return CrossOriginMessageHandler.GetMatchingApis(routes, CreateOptionsRequest(appRelativeUri))
                 .Select(i => new HttpMethod(i.Method))
-                .Distinct()
                 .ToArray();
         }
 
