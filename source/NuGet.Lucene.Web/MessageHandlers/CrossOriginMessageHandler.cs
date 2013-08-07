@@ -62,7 +62,11 @@ namespace NuGet.Lucene.Web.MessageHandlers
 
             var resp = new HttpResponseMessage(HttpStatusCode.OK);
             resp.Headers.Add("Access-Control-Allow-Methods", string.Join(",", supportedMethods));
-            resp.Content = new ObjectContent(typeof(IEnumerable<SimpleApiDescription>), apis, request.GetConfiguration().Formatters.JsonFormatter);
+
+            var neg = request.GetConfiguration().Services.GetContentNegotiator();
+            var res = neg.Negotiate(typeof (IEnumerable<SimpleApiDescription>), request, request.GetConfiguration().Formatters);
+            resp.Content = new ObjectContent(typeof(IEnumerable<SimpleApiDescription>), apis, res.Formatter);
+            
             return await Task.FromResult(resp);
         }
 
