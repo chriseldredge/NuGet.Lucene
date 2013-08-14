@@ -230,11 +230,11 @@ namespace NuGet.Lucene.Web.Tests.Controllers
 
             luceneRepository.Setup(r => r.LucenePackages).Returns(packages.AsQueryable());
 
-            dynamic result = controller.GetPackageInfo(new PackageSpec {Id = v1.Id, Version = new SemanticVersion("1.0")});
+            var result = (PackageWithVersionHistory)controller.GetPackageInfo(new PackageSpec {Id = v1.Id, Version = new SemanticVersion("1.0")});
 
             Assert.That(result, Is.Not.Null);
-            Assert.That(result.Package, Is.SameAs(v1));
-            Assert.That(Enumerable.Count(result.VersionHistory), Is.EqualTo(2));
+            Assert.That(result.Id, Is.EqualTo(package.Id));
+            Assert.That(result.VersionHistory.Count(), Is.EqualTo(2));
         }
 
         [Test]
@@ -247,10 +247,11 @@ namespace NuGet.Lucene.Web.Tests.Controllers
 
             luceneRepository.Setup(r => r.LucenePackages).Returns(packages.AsQueryable());
 
-            var result = controller.GetPackageInfo(new PackageSpec { Id = v2.Id, Version = null });
+            var result = (PackageWithVersionHistory)controller.GetPackageInfo(new PackageSpec { Id = v2.Id, Version = null });
 
             Assert.That(result, Is.Not.Null);
-            Assert.That(result.Package, Is.SameAs(v2));
+            Assert.That(result.Id, Is.EqualTo(package.Id));
+            Assert.That(result.Version, Is.EqualTo(v2.Version));
         }
 
         [Test]
@@ -261,7 +262,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
             var result = controller.GetPackageInfo(new PackageSpec { Id = "NoneSuch", Version = null });
 
             Assert.That(result, Is.InstanceOf<HttpResponseMessage>());
-            Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
+            Assert.That(((HttpResponseMessage)result).StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
         }
 
         private static LucenePackage CreatePackage(StrictSemanticVersion version)

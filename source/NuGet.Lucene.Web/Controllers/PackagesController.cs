@@ -7,17 +7,25 @@ using System.Net.Http.Headers;
 using System.Net.Mime;
 using System.Threading.Tasks;
 using System.Web.Http;
+using AspNet.WebApi.HtmlMicrodataFormatter;
 using NuGet.Lucene.Web.Models;
 using NuGet.Lucene.Web.Util;
 
 namespace NuGet.Lucene.Web.Controllers
 {
+    /// <summary>
+    /// Provides methods to search, get metadata, download, upload and delete packages.
+    /// </summary>
     public class PackagesController : ApiController
     {
         public ILucenePackageRepository LuceneRepository { get; set; }
         public IMirroringPackageRepository MirroringRepository { get; set; }
 
-        public dynamic GetPackageInfo([FromUri]PackageSpec packageSpec)
+        /// <summary>
+        /// Gets metadata about a package from the <c>nuspec</c> files and other
+        /// metadata such as package size, date published, download counts, etc.
+        /// </summary>
+        public object GetPackageInfo([FromUri]PackageSpec packageSpec)
         {
             var packages = LuceneRepository
                             .LucenePackages
@@ -34,23 +42,32 @@ namespace NuGet.Lucene.Web.Controllers
                 return Request.CreateErrorResponse(HttpStatusCode.NotFound, "Package not found.");
             }
 
-            var versionHistory = packages.Select(
-                pkg => new
-                    {
-                        pkg.Version,
-                        pkg.LastUpdated,
-                        pkg.VersionDownloadCount,
-                        Link = Url.Link(RouteNames.Packages.Info, new { id = pkg.Id, version = pkg.Version })
-                    });
+            var versionHistory = packages.Select(pkg => new PackageVersionSummary(pkg, new Link(GetPackageInfoUrl(pkg), pkg.Version.ToString()))).ToList();
 
-            dynamic result = new ExpandoObject();
-            result.Package = package;
+            versionHistory.Select(v => v.Link).SetRelationships(packages.IndexOf(package));
+
+            var result = new PackageWithVersionHistory();
+
+            package.ShallowClone(result);
+
+            result.PackageDownloadLink = new Link(Url.Link(RouteNames.Packages.Download, new { id = result.Id, version = result.Version }), "attachment", "Download Package");
             result.VersionHistory = versionHistory.ToArray();
+
             return result;
         }
 
-        [HttpGet]
-        [HttpHead]
+        private string GetPackageInfoUrl(LucenePackage pkg)
+        {
+            return Url.Link(RouteNames.Packages.Info, new { id = pkg.Id, version = pkg.Version });
+        }
+
+        /// <summary>
+        /// Downloads the complete <c>.nupkg</c> content. The HTTP HEAD method
+        /// is also supported for verifying package size, and modification date.
+        /// The <c>ETag</c> response header will contain the md5 hash of the
+        /// package content.
+        /// </summary>
+        [HttpGet, HttpHead]
         public HttpResponseMessage DownloadPackage([FromUri]PackageSpec packageSpec)
         {
             var package = FindPackage(packageSpec);
@@ -110,6 +127,16 @@ namespace NuGet.Lucene.Web.Controllers
             return null;
         }
 
+        /// <summary>
+        /// Searches for packages that match <paramref name="query"/>, or if no query
+        /// is provided, returns all packages in the repository.
+        /// </summary>
+        /// <param name="query">Search terms. May include special characters to support prefix,
+        /// wildcard or phrase queries.
+        /// </param>
+        /// <param name="includePrerelease">Specify <c>true</c> to look for pre-release packages.</param>
+        /// <param name="offset">Number of results to skip, for pagination.</param>
+        /// <param name="count">Number of results to return, for pagination.</param>
         [HttpGet]
         public dynamic Search(string query = "", bool includePrerelease = false, int offset = 0, int count = 20)
         {
@@ -126,6 +153,9 @@ namespace NuGet.Lucene.Web.Controllers
             return result;
         }
 
+        /// <summary>
+        /// Permanently delete a package from the repository.
+        /// </summary>
         public async Task<HttpResponseMessage> DeletePackage([FromUri]PackageSpec packageSpec)
         {
             if (packageSpec == null || string.IsNullOrWhiteSpace(packageSpec.Id) || packageSpec.Version == null)
@@ -146,6 +176,10 @@ namespace NuGet.Lucene.Web.Controllers
             return Request.CreateResponse(HttpStatusCode.OK);
         }
 
+        /// <summary>
+        /// Upload a package to the repository. If a package already exists
+        /// with the same Id and Version, it will be replaced with the new package.
+        /// </summary>
         [HttpPut]
         [HttpPost]
         public async Task<HttpResponseMessage> PutPackage([FromBody]IPackage package)

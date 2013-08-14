@@ -1,5 +1,8 @@
 ﻿using System.Net.Http;
 using System.Web.Http;
+using System.Web.Http.Description;
+using AspNet.WebApi.HtmlMicrodataFormatter;
+using Moq;
 using NUnit.Framework;
 
 namespace NuGet.Lucene.Web.Tests
@@ -8,12 +11,16 @@ namespace NuGet.Lucene.Web.Tests
     {
         protected HttpConfiguration configuration;
         protected HttpRouteCollection routes;
+        protected Mock<IDocumentationProviderEx> documentationProvider;
 
         [SetUp]
         public void BuildRouteTable()
         {
             routes = new HttpRouteCollection();
             configuration = new HttpConfiguration(routes);
+
+            documentationProvider = new Mock<IDocumentationProviderEx>();
+            configuration.Services.Replace(typeof(IDocumentationProvider), documentationProvider.Object);
             new NuGetWebApiRouteMapper("api/").MapApiRoutes(configuration);
         }
 

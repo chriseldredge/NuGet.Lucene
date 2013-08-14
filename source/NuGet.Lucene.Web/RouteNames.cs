@@ -6,7 +6,6 @@ namespace NuGet.Lucene.Web
     {
         public static readonly RouteValueDictionary PackageFeedRouteValues = new RouteValueDictionary { { "serviceType", "odata" } };
 
-        public const string ApiExplorer = "ApiExplorer";
         public const string Indexing = "Indexing";
 
         public static class Users

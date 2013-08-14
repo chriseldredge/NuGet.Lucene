@@ -6,6 +6,7 @@ using System.Web.Http.Controllers;
 using System.Web.Http.Description;
 using System.Web.Http.Routing;
 using System.Web.Routing;
+using AspNet.WebApi.HtmlMicrodataFormatter;
 using Microsoft.AspNet.SignalR;
 using Ninject.Extensions.Wcf;
 using NuGet.Lucene.Web.Controllers;
@@ -27,10 +28,14 @@ namespace NuGet.Lucene.Web
         {
             var routes = config.Routes;
 
-            routes.MapHttpRoute(RouteNames.ApiExplorer,
+            routes.MapHttpRoute(AspNet.WebApi.HtmlMicrodataFormatter.RouteNames.ApiDocumentation,
                                 pathPrefix,
-                                new { controller = "ApiExplorer" });
+                                new { controller = "NuGetDocumentation", action = "GetApiDocumentation" });
 
+            routes.MapHttpRoute(AspNet.WebApi.HtmlMicrodataFormatter.RouteNames.TypeDocumentation,
+                                pathPrefix + "schema/{typeName}",
+                                new { controller = "NuGetDocumentation", action = "GetTypeDocumentation" });
+            
             routes.MapHttpRoute(RouteNames.Indexing,
                                 pathPrefix + "indexing/{action}",
                                 new { controller = "Indexing" });
@@ -66,14 +71,17 @@ namespace NuGet.Lucene.Web
                                 pathPrefix + "packages/{id}/content",
                                 new { controller = "Packages", action = "DownloadPackage" });
 
+            route.HideFromDocumentationExplorer();
+
             AddApiDescription(config, route, typeof(PackagesController), "DownloadPackage", HttpMethod.Get);
             AddApiDescription(config, route, typeof(PackagesController), "DownloadPackage", HttpMethod.Head);
+            
 
             route = routes.MapHttpRoute(RouteNames.Packages.Download,
                                 pathPrefix + "packages/{id}/{version}/content",
                                 new { controller = "Packages", action = "DownloadPackage" },
                                 new { version = new SemanticVersionConstraint() });
-
+            
             AddApiDescription(config, route, typeof(PackagesController), "DownloadPackage", HttpMethod.Get);
             AddApiDescription(config, route, typeof(PackagesController), "DownloadPackage", HttpMethod.Head);
 
@@ -81,7 +89,7 @@ namespace NuGet.Lucene.Web
                                 pathPrefix + "packages/{id}/{version}",
                                 new { controller = "Packages", action = "GetPackageInfo", version = "" },
                                 new { httpMethod = new HttpMethodConstraint(HttpMethod.Get), version = new OptionalSemanticVersionConstraint() });
-
+            
             AddApiDescription(config, route, typeof(PackagesController), "GetPackageInfo", HttpMethod.Get);
 
             route = routes.MapHttpRoute(RouteNames.Packages.Delete,
@@ -116,20 +124,41 @@ namespace NuGet.Lucene.Web
             routes.Add(RouteNames.Packages.Feed, serviceRoute);
         }
 
+        /// <summary>
+        /// In some cases, <see cref="HttpRouteCollectionExtensions.MapHttpRoute(HttpRouteCollection,string,string)"/>
+        /// does not include a given route in <see cref="IApiExplorer"/>'s list of api descriptions. This method
+        /// allows those routes to be included explicitly.
+        /// </summary>
         public void AddApiDescription(HttpConfiguration config, IHttpRoute route, Type controllerType, string methodName, HttpMethod method)
         {
             var apiDescriptions = config.Services.GetApiExplorer().ApiDescriptions;
+            var docProvider = config.Services.GetDocumentationProvider();
             var controllerDesc = new HttpControllerDescriptor(config, "Packages", controllerType);
+            var methodInfo = controllerType.GetMethod(methodName);
+            var actionDescriptor = new ReflectedHttpActionDescriptor(controllerDesc, methodInfo);
+
             var api = new ApiDescription
             {
-                ActionDescriptor =
-                    new ReflectedHttpActionDescriptor(controllerDesc, controllerType.GetMethod(methodName)),
+                ActionDescriptor = actionDescriptor,
                 HttpMethod = method,
                 Route = route,
-                RelativePath = route.RouteTemplate
+                RelativePath = route.RouteTemplate,
+                Documentation = docProvider.GetDocumentation(actionDescriptor)
             };
 
+            api.ParameterDescriptions.Add(CreateParameterDescription(api, "id"));
+            api.ParameterDescriptions.Add(CreateParameterDescription(api, "version", string.Empty));
+
             apiDescriptions.Add(api);
+        }
+
+        private static ApiParameterDescription CreateParameterDescription(ApiDescription api, string name, string defaultValue = null)
+        {
+            var parameterInfo = defaultValue != null
+                                    ? new SimpleParameterInfo<string>(name, defaultValue)
+                                    : new SimpleParameterInfo<string>(name);
+
+            return new ApiParameterDescription {Name = name, ParameterDescriptor = new ReflectedHttpParameterDescriptor(api.ActionDescriptor, parameterInfo), Source = new ApiParameterSource()};
         }
 
         public string PathPrefix { get { return pathPrefix; } }

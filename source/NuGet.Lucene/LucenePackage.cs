@@ -11,6 +11,9 @@ using DateTimeOffsetToTicksConverter = Lucene.Net.Linq.Converters.DateTimeOffset
 
 namespace NuGet.Lucene
 {
+    /// <summary>
+    /// Representation of a NuGet package stored/retrieved in a Lucene index.
+    /// </summary>
     [DebuggerDisplay("Id = {Id}, Version = {Version}")]
     public class LucenePackage : IPackage
     {

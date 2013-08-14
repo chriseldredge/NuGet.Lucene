@@ -30,6 +30,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\NuGet.Lucene.Web.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -40,6 +41,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AspNet.WebApi.HtmlMicrodataFormatter, Version=1.0.0.24, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\AspNet.WebApi.HtmlMicrodataFormatter.1.0.0\lib\net40\AspNet.WebApi.HtmlMicrodataFormatter.dll</HintPath>
+    </Reference>
     <Reference Include="Common.Logging, Version=2.1.2.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Common.Logging.2.1.2\lib\net40\Common.Logging.dll</HintPath>
@@ -136,7 +141,7 @@
       <HintPath>..\packages\Microsoft.AspNet.WebApi.Core.4.0.20710.0\lib\net40\System.Web.Http.dll</HintPath>
     </Reference>
     <Reference Include="System.Web.Http.WebHost, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.AspNet.WebApi.WebHost.4.0.20710.0\lib\net40\System.Web.Http.WebHost.dll</HintPath>
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.WebHost.4.0.30506.0\lib\net40\System.Web.Http.WebHost.dll</HintPath>
     </Reference>
     <Reference Include="System.Xml" />
     <Reference Include="WebActivator">
@@ -153,10 +158,11 @@
     <Compile Include="Authentication\ApiUser.cs" />
     <Compile Include="Models\DelegatingPackageRepository.cs" />
     <Compile Include="Models\MirroringPackageRepository.cs" />
+    <Compile Include="Models\PackageVersionSummary.cs" />
     <Compile Include="NuGetWebApiModule.cs" />
     <Compile Include="Authentication\IApiKeyAuthentication.cs" />
     <Compile Include="Authentication\LuceneApiKeyAuthentication.cs" />
-    <Compile Include="Controllers\ApiExplorerController.cs" />
+    <Compile Include="Controllers\NuGetDocumentationController.cs" />
     <Compile Include="Controllers\IndexingController.cs" />
     <Compile Include="Controllers\PackagesController.cs" />
     <Compile Include="Controllers\TabCompletionController.cs" />
@@ -172,7 +178,6 @@
     <Compile Include="Hubs\StatusHub.cs" />
     <Compile Include="MessageHandlers\CrossOriginMessageHandler.cs" />
     <Compile Include="Models\PackageSpec.cs" />
-    <Compile Include="Models\SimpleApiDescription.cs" />
     <Compile Include="Modules\ApiKeyAuthenticationModule.cs" />
     <Compile Include="Modules\HttpModule.cs" />
     <Compile Include="OptionalSemanticVersionConstraint.cs" />
@@ -183,7 +188,9 @@
     <Compile Include="SemanticVersionConstraint.cs" />
     <Compile Include="SignalRModule.cs" />
     <Compile Include="ReusableCancellationTokenSource.cs" />
+    <Compile Include="SimpleParameterInfo.cs" />
     <Compile Include="UnhandledExceptionLogger.cs" />
+    <Compile Include="Util\DynamicUtils.cs" />
     <Compile Include="Util\TaskUtils.cs" />
     <None Include="readme.txt" />
   </ItemGroup>

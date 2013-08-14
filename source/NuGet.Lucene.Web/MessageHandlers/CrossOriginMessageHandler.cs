@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Routing;
-using NuGet.Lucene.Web.Models;
+using AspNet.WebApi.HtmlMicrodataFormatter;
 
 namespace NuGet.Lucene.Web.MessageHandlers
 {
@@ -102,7 +102,7 @@ namespace NuGet.Lucene.Web.MessageHandlers
                 if (!routeData.Values.TryGetValue("action", out requestedAction) ||
                     string.Equals(requestedAction as string, desc.ActionDescriptor.ActionName, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    yield return new SimpleApiDescription(request, desc);
+                    yield return desc.Simplify();
                 }
             }
         }

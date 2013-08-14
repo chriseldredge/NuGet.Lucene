@@ -9,6 +9,9 @@ using NuGet.Lucene.Web.Models;
 
 namespace NuGet.Lucene.Web.DataServices
 {
+    /// <summary>
+    /// WCF Data Services / OData provider for Lucene based NuGet package repository.
+    /// </summary>
     public class PackageDataService : DataService<PackageDataSource>, IServiceProvider
     {
         public static PackageServiceStreamProvider PackageServiceStreamProvider { get; private set; }
