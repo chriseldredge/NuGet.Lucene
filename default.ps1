@@ -7,7 +7,7 @@ properties {
   $release_build_dir = "$build_dir\bin\release"
   $release_dir = "$base_dir\Release"
   $sln_file = "$source_dir\NuGet.Lucene.sln"
-  $version = "1.0.3"
+  $version = "1.1.0"
   $assemblyversion = $version + ".0"
   $revision = ""
   $tools_dir = "$base_dir\Tools"
