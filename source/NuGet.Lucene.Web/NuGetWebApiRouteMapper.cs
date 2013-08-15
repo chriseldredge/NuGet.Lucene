@@ -143,7 +143,7 @@ namespace NuGet.Lucene.Web
                 HttpMethod = method,
                 Route = route,
                 RelativePath = route.RouteTemplate,
-                Documentation = docProvider.GetDocumentation(actionDescriptor)
+                Documentation = docProvider != null ? docProvider.GetDocumentation(actionDescriptor) : string.Empty
             };
 
             api.ParameterDescriptions.Add(CreateParameterDescription(api, "id"));

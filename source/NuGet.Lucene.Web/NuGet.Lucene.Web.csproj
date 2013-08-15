@@ -144,6 +144,7 @@
       <HintPath>..\packages\Microsoft.AspNet.WebApi.WebHost.4.0.30506.0\lib\net40\System.Web.Http.WebHost.dll</HintPath>
     </Reference>
     <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
     <Reference Include="WebActivator">
       <HintPath>..\packages\WebActivator.1.5.3\lib\net40\WebActivator.dll</HintPath>
     </Reference>
@@ -156,6 +157,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Authentication\ApiUser.cs" />
+    <Compile Include="Formatters\NuGetHtmlMicrodataFormatter.cs" />
+    <Compile Include="Formatters\PackageHtmlSerializer.cs" />
+    <Compile Include="Formatters\PackageSummaryListSerializer.cs" />
     <Compile Include="Models\DelegatingPackageRepository.cs" />
     <Compile Include="Models\MirroringPackageRepository.cs" />
     <Compile Include="Models\PackageVersionSummary.cs" />

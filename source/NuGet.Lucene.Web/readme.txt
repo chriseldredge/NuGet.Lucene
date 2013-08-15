@@ -28,6 +28,24 @@ as follows:
         routeMapper.MapHubs(RouteTable.Routes);
     }
 
+## HtmlMicrodataFormatter
+
+This project depends on AspNet.WebApi.HtmlMicrodataFormatter to format responses
+using html5 and microdata. To enable this functionality, add the following
+to your start up code:
+
+    public static void ConfigureWebApi(HttpConfiguration config)
+	{
+	    // load xml documentation for assemblies
+        var documentation = new HtmlDocumentation();
+        documentation.Load();
+        config.Services.Replace(typeof(IDocumentationProvider), new WebApiHtmlDocumentationProvider(documentation));
+
+		// register the formatter
+        config.Formatters.Add(new NuGetHtmlMicrodataFormatter());
+    }
+
+
 ## Configuration
 
 The following appSetting keys configure the module:
