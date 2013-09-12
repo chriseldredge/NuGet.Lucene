@@ -84,7 +84,7 @@ namespace NuGet.Lucene.Web.DataServices
         }
 
         [WebGet]
-        public IQueryable<DataServicePackage> GetUpdates(string packageIds, string versions, bool includePrerelease, bool includeAllVersions, string targetFrameworks)
+        public IQueryable<DataServicePackage> GetUpdates(string packageIds, string versions, bool includePrerelease, bool includeAllVersions, string targetFrameworks, string versionConstraints)
         {
             if (String.IsNullOrEmpty(packageIds) || String.IsNullOrEmpty(versions))
             {
@@ -93,6 +93,9 @@ namespace NuGet.Lucene.Web.DataServices
 
             var idValues = packageIds.Trim().Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
             var versionValues = versions.Trim().Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
+            var versionConstraintValues = string.IsNullOrEmpty(versionConstraints)
+                                            ? new string[idValues.Length]
+                                            : versionConstraints.Trim().Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
 
             if ((idValues.Length == 0) || (idValues.Length != versionValues.Length))
             {
@@ -104,16 +107,16 @@ namespace NuGet.Lucene.Web.DataServices
                 .Zip(
                     versionValues.Select(v => new SemanticVersion(v)),
                     (id, version) => new PackageSpec {Id = id, Version = version})
-                .GroupBy(p => p.Id).Select(g => g.OrderBy(gp => gp.Version).First())
                 .ToList();
 
             var targetFrameworkValues = (targetFrameworks ?? "")
                 .Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries)
-                .Distinct()
                 .Select(VersionUtility.ParseFrameworkName)
                 .ToList();
 
-            var updates = PackageRepository.GetUpdates(packages, includePrerelease, includeAllVersions, targetFrameworkValues);
+            var versionSpecs = versionConstraintValues.Select((v,i) => string.IsNullOrWhiteSpace(v) ? new VersionSpec(packages[i].Version) : VersionUtility.ParseVersionSpec(v)).ToList();
+
+            var updates = PackageRepository.GetUpdates(packages, includePrerelease, includeAllVersions, targetFrameworkValues, versionSpecs);
             return updates.Select(AsDataServicePackage).AsQueryable();
         }
 

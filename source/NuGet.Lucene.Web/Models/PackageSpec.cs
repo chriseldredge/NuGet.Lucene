@@ -39,7 +39,7 @@ namespace NuGet.Lucene.Web.Models
             throw new NotSupportedException();
         }
 
-        protected override IEnumerable<IPackageAssemblyReference> GetAssemblyReferencesBase()
+        protected override IEnumerable<IPackageAssemblyReference> GetAssemblyReferencesCore()
         {
             throw new NotSupportedException();
         }

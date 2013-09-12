@@ -51,10 +51,10 @@ namespace NuGet.Lucene.Web.Models
             return target.Search(searchTerm, targetFrameworks, allowPrereleaseVersions);
         }
 
-        public virtual IEnumerable<IPackage> GetUpdates(IEnumerable<IPackage> packages, bool includePrerelease, bool includeAllVersions,
-                                                        IEnumerable<FrameworkName> targetFrameworks)
+        IEnumerable<IPackage> IServiceBasedRepository.GetUpdates(IEnumerable<IPackage> packages, bool includePrerelease, bool includeAllVersions,
+            IEnumerable<FrameworkName> targetFrameworks, IEnumerable<IVersionSpec> versionConstraints)
         {
-            return target.GetUpdates(packages, includePrerelease, includeAllVersions, targetFrameworks);
+            return target.GetUpdates(packages, includePrerelease, includeAllVersions, targetFrameworks, versionConstraints);
         }
 
         public override void AddPackage(IPackage package)
@@ -66,5 +66,6 @@ namespace NuGet.Lucene.Web.Models
         {
             target.RemovePackage(package);
         }
+
     }
 }

@@ -14,40 +14,55 @@ namespace NuGet.Lucene.Web.Tests.DataServices
         {
             var packages = new[] {new LucenePackage(path => null)  {Id = "id1", Version = new StrictSemanticVersion("2.0")}};
 
-            repo.Setup(r => r.GetUpdates(It.Is<IEnumerable<IPackage>>(p => p.Count() == 1), false, false, new FrameworkName[0]))
+            repo.Setup(r => r.GetUpdates(
+                It.Is<IEnumerable<IPackage>>(p => p.Count() == 1),
+                false,
+                false,
+                It.Is<IEnumerable<FrameworkName>>(p => !p.Any()),
+                It.Is<IEnumerable<IVersionSpec>>(p => p.Single().ToString() == new VersionSpec(new SemanticVersion("1.0")).ToString())))
                 .Returns(packages);
 
-            var result = service.GetUpdates("id1", "1.0", false, false, "");
+            var result = service.GetUpdates("id1", "1.0", false, false, "", "");
+
+            repo.VerifyAll();
 
             Assert.That(result.Count(), Is.EqualTo(1));
             Assert.That(result.First().Id, Is.EqualTo("id1"));
             Assert.That(result.First().Version, Is.EqualTo("2.0"));
         }
 
+        [Test]
+        public void GetUpdatesWithVersionConstraint()
+        {
+            var packages = new[] { new LucenePackage(path => null) { Id = "id1", Version = new StrictSemanticVersion("1.8") } };
+
+            repo.Setup(r => r.GetUpdates(
+                It.Is<IEnumerable<IPackage>>(p => p.Count() == 1),
+                false,
+                false,
+                It.Is<IEnumerable<FrameworkName>>(p => !p.Any()),
+                It.Is<IEnumerable<IVersionSpec>>(p => p.Single().ToString() == VersionUtility.ParseVersionSpec("[1.0, 2.0)").ToString())))
+                .Returns(packages);
+
+            var result = service.GetUpdates("id1", "1.0", false, false, "", "[1.0,2.0)");
+
+            repo.VerifyAll();
+
+            Assert.That(result.Count(), Is.EqualTo(1));
+            Assert.That(result.First().Id, Is.EqualTo("id1"));
+            Assert.That(result.First().Version, Is.EqualTo("1.8"));
+        }
         [Test]
         public void GetUpdatesMultiple()
         {
             var packages = new[] { new LucenePackage(path => null) { Id = "id1", Version = new StrictSemanticVersion("2.0") } };
 
-            repo.Setup(r => r.GetUpdates(It.Is<IEnumerable<IPackage>>(p => p.Count() == 2), true, true, new FrameworkName[0]))
+            repo.Setup(r => r.GetUpdates(It.Is<IEnumerable<IPackage>>(p => p.Count() == 2), true, true, new FrameworkName[0], It.IsAny<IEnumerable<IVersionSpec>>()))
                 .Returns(packages);
 
-            var result = service.GetUpdates("id1|id2", "1.0|1.5", true, true, "");
+            var result = service.GetUpdates("id1|id2", "1.0|1.5", true, true, "", "");
 
-            Assert.That(result.Count(), Is.EqualTo(1));
-            Assert.That(result.First().Id, Is.EqualTo("id1"));
-            Assert.That(result.First().Version, Is.EqualTo("2.0"));
-        }
-
-        [Test]
-        public void RemovesRedundancies()
-        {
-            var packages = new[] { new LucenePackage(path => null) { Id = "id1", Version = new StrictSemanticVersion("2.0") } };
-
-            repo.Setup(r => r.GetUpdates(It.Is<IEnumerable<IPackage>>(p => p.Count() == 1), true, true, new FrameworkName[0]))
-                .Returns(packages);
-
-            var result = service.GetUpdates("id1|id1", "1.0|1.5", true, true, "");
+            repo.VerifyAll();
 
             Assert.That(result.Count(), Is.EqualTo(1));
             Assert.That(result.First().Id, Is.EqualTo("id1"));
@@ -57,19 +72,19 @@ namespace NuGet.Lucene.Web.Tests.DataServices
         [Test]
         public void IgnoresUnbalancedIdsAndVersions()
         {
-            var result = service.GetUpdates("id1|id2", "1.0", false, false, "");
+            var result = service.GetUpdates("id1|id2", "1.0", false, false, "", "");
 
             Assert.That(result.Count(), Is.EqualTo(0));
-            repo.Verify(r => r.GetUpdates(It.IsAny<IEnumerable<IPackage>>(), It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<IEnumerable<FrameworkName>>()), Times.Never());
+            repo.Verify(r => r.GetUpdates(It.IsAny<IEnumerable<IPackage>>(), It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<IEnumerable<FrameworkName>>(), Enumerable.Empty<IVersionSpec>()), Times.Never());
         }
 
         [Test]
         public void IgnoresEmptyIdsAndVersions()
         {
-            var result = service.GetUpdates("", "", false, false, "");
+            var result = service.GetUpdates("", "", false, false, "", "");
 
             Assert.That(result.Count(), Is.EqualTo(0));
-            repo.Verify(r => r.GetUpdates(It.IsAny<IEnumerable<IPackage>>(), It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<IEnumerable<FrameworkName>>()), Times.Never());
+            repo.Verify(r => r.GetUpdates(It.IsAny<IEnumerable<IPackage>>(), It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<IEnumerable<FrameworkName>>(), Enumerable.Empty<IVersionSpec>()), Times.Never());
         }
     }
 }

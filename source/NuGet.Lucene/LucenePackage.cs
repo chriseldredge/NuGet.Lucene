@@ -55,6 +55,9 @@ namespace NuGet.Lucene
         [Field("Version", Key = true, Converter = typeof(CachingSemanticVersionConverter))]
         public StrictSemanticVersion Version { get; set; }
 
+        [Field("MinClientVersion", Converter = typeof(CachingVersionConverter))]
+        public Version MinClientVersion { get; set; }
+
         public string Title { get; set; }
 
         [Field(IndexMode.NotIndexed)]
@@ -135,6 +138,9 @@ namespace NuGet.Lucene
         
         [IgnoreField]
         public IEnumerable<IPackageAssemblyReference> AssemblyReferences { get; set; }
+
+        [IgnoreField]
+        public ICollection<PackageReferenceSet> PackageAssemblyReferences { get; set; }
 
         public IEnumerable<FrameworkName> GetSupportedFrameworks()
         {

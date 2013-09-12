@@ -77,18 +77,7 @@ namespace NuGet.Lucene.Web.Models
 
         public virtual IPackage FindPackageInOrigin(string packageId, SemanticVersion version)
         {
-            var package = origin.FindPackage(packageId, version);
-
-            DiddlePackage(package);
-
-            return package;
-        }
-
-        private void DiddlePackage(IPackage package)
-        {
-            var dataPackage = package as DataServicePackage;
-
-            if (dataPackage == null) return;
+            return origin.FindPackage(packageId, version);
         }
     }
 }

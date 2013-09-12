@@ -36,6 +36,8 @@ namespace NuGet.Lucene
         public Uri ReportAbuseUrl { get; private set; }
         public int DownloadCount { get; private set; }
         public byte[] Hash { get; private set; }
+        public Version MinClientVersion { get; private set; }
+
         public IEnumerable<IPackageFile> GetFiles()
         {
             return new IPackageFile[0];
@@ -56,6 +58,7 @@ namespace NuGet.Lucene
         public bool Listed { get; private set; }
         public DateTimeOffset? Published { get; private set; }
         public IEnumerable<IPackageAssemblyReference> AssemblyReferences { get; private set; }
+        public ICollection<PackageReferenceSet> PackageAssemblyReferences { get; private set; }
         public DateTimeOffset Created { get; private set; }
         public long Size { get; private set; }
 
@@ -87,10 +90,11 @@ namespace NuGet.Lucene
 
         protected void ReadManifest(Stream manifestStream)
         {
-            var manifest = Manifest.ReadFrom(manifestStream);
+            var manifest = Manifest.ReadFrom(manifestStream, validateSchema:false);
             var packageMetadata = (IPackageMetadata)manifest.Metadata;
             Id = packageMetadata.Id;
             Version = packageMetadata.Version;
+            MinClientVersion = packageMetadata.MinClientVersion;
             Title = packageMetadata.Title;
             Authors = packageMetadata.Authors;
             Owners = packageMetadata.Owners;
@@ -106,6 +110,8 @@ namespace NuGet.Lucene
             DependencySets = packageMetadata.DependencySets;
             FrameworkAssemblies = packageMetadata.FrameworkAssemblies;
             Copyright = packageMetadata.Copyright;
+            PackageAssemblyReferences = packageMetadata.PackageAssemblyReferences;
+            
             if (string.IsNullOrEmpty(Tags))
                 return;
             Tags = " " + Tags + " ";

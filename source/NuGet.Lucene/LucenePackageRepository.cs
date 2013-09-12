@@ -139,27 +139,57 @@ namespace NuGet.Lucene
             return packages;
         }
 
-        public IEnumerable<IPackage> GetUpdates(IEnumerable<IPackage> packages, bool includePrerelease, bool includeAllVersions, IEnumerable<FrameworkName> targetFramework)
+        public IEnumerable<IPackage> GetUpdates(IEnumerable<IPackage> packages, bool includePrerelease, bool includeAllVersions,
+            IEnumerable<FrameworkName> targetFrameworks, IEnumerable<IVersionSpec> versionConstraints)
         {
             var baseQuery = LucenePackages;
-
-            if (!includeAllVersions)
-            {
-                baseQuery = baseQuery.Where(pkg => pkg.IsLatestVersion);
-            }
 
             if (!includePrerelease)
             {
                 baseQuery = baseQuery.Where(pkg => !pkg.IsPrerelease);
             }
 
+            var targetFrameworkList = (targetFrameworks ?? Enumerable.Empty<FrameworkName>()).ToList();
+            var versionConstraintList = (versionConstraints ?? Enumerable.Empty<IVersionSpec>()).ToList();
+            
             var results = new List<IPackage>();
+            var i = 0;
 
             foreach (var current in packages)
             {
+                var ii = i;
                 var id = current.Id;
                 var currentVersion = new StrictSemanticVersion(current.Version);
-                results.AddRange(baseQuery.Where(pkg => pkg.Id == id && pkg.Version > currentVersion));
+                var matchedPackages = (IEnumerable<LucenePackage>)baseQuery.Where(pkg => pkg.Id == id).OrderBy(pkg => pkg.Version).ToList();
+
+                if (targetFrameworkList.Any())
+                {
+                    matchedPackages = matchedPackages.Where(pkg => pkg.GetSupportedFrameworks().Any(fwk => fwk == targetFrameworkList[ii]));
+                }
+
+                if (versionConstraintList.Any() && versionConstraintList[ii] != null)
+                {
+                    matchedPackages = matchedPackages.Where(pkg => versionConstraintList[ii].Satisfies(pkg.Version.SemanticVersion));
+                }
+                else
+                {
+                    matchedPackages = matchedPackages.Where(pkg => pkg.Version > currentVersion);
+                }
+
+                if (includeAllVersions)
+                {
+                    results.AddRange(matchedPackages);
+                }
+                else
+                {
+                    var latest = matchedPackages.LastOrDefault();
+                    if (latest != null)
+                    {
+                        results.Add(latest);
+                    }
+                }
+
+                i++;
             }
 
             return results;
@@ -229,6 +259,7 @@ namespace NuGet.Lucene
         {
             lucenePackage.Id = package.Id;
             lucenePackage.Version = new StrictSemanticVersion(package.Version.ToString());
+            lucenePackage.MinClientVersion = package.MinClientVersion;
             lucenePackage.Title = package.Title;
             lucenePackage.Authors = (package.Authors ?? Enumerable.Empty<string>()).Select(i => i.Trim()).ToArray();
             lucenePackage.Owners = (package.Owners ?? Enumerable.Empty<string>()).Select(i => i.Trim()).ToArray();
@@ -251,6 +282,7 @@ namespace NuGet.Lucene
             lucenePackage.Listed = package.Listed;
             lucenePackage.Published = package.Published;
             lucenePackage.AssemblyReferences = package.AssemblyReferences;
+            lucenePackage.PackageAssemblyReferences = package.PackageAssemblyReferences;
         }
 
         private Uri FilterPlaceholderUri(Uri uri)
