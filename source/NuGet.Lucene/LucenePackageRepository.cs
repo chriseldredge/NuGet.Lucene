@@ -310,7 +310,7 @@ namespace NuGet.Lucene
             }
 
             package.PackageHashAlgorithm = HashAlgorithm;
-            package.LastUpdated = FileSystem.GetLastModified(path);
+            package.LastUpdated = GetLastModified(package, path);
             package.Published = package.LastUpdated;
             package.Path = path;
 
@@ -321,6 +321,16 @@ namespace NuGet.Lucene
             {
                 package.Files = localPackage.GetFiles().Select(f => f.Path);
             }
+        }
+
+        private DateTimeOffset GetLastModified(LucenePackage package, string path)
+        {
+            var lastModified = FileSystem.GetLastModified(path);
+            if (lastModified.Year <= 1700)
+            {
+                lastModified = package.Created;
+            }
+            return lastModified;
         }
 
         private void CalculateDerivedDataSlowlyConsumingLotsOfMemory(LucenePackage package, Stream stream)

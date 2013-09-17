@@ -100,6 +100,16 @@ namespace NuGet.Lucene.Tests
         }
 
         [Test]
+        public void ConvertPackage_DetectsInvalidModifiedTime()
+        {
+            var package = SetUpConvertPackage();
+            fileSystem.Setup(fs => fs.GetLastModified(It.IsAny<string>())).Returns(new DateTime(1601, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc));
+            var result = repository.Convert(package.Object);
+
+            Assert.That(result.Published, Is.EqualTo(result.Created));
+        }
+
+        [Test]
         public void ConvertPackage_Files()
         {
             var package = SetUpConvertPackage();
