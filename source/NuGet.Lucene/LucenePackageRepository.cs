@@ -348,16 +348,12 @@ namespace NuGet.Lucene
 
         private DateTimeOffset GetZipArchiveCreateDate(Stream stream)
         {
-            var f = new ZipFile(stream);
-            foreach (ZipEntry file in f)
-            {
-                if (file.Name.EndsWith(".nuspec"))
-                {
-                    return file.DateTime;
-                }
-            }
+            var zip = new ZipFile(stream);
 
-            return DateTimeOffset.MinValue;
+            return zip.Cast<ZipEntry>()
+                .Where(f => f.Name.EndsWith(".nuspec"))
+                .Select(f => f.DateTime)
+                .FirstOrDefault();
         }
     }
 }
