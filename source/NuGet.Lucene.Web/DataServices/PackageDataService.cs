@@ -4,6 +4,7 @@ using System.Data.Services.Common;
 using System.Data.Services.Providers;
 using System.Linq;
 using System.ServiceModel.Web;
+using System.Text.RegularExpressions;
 using Lucene.Net.Linq;
 using NuGet.Lucene.Web.Models;
 
@@ -12,7 +13,7 @@ namespace NuGet.Lucene.Web.DataServices
     /// <summary>
     /// WCF Data Services / OData provider for Lucene based NuGet package repository.
     /// </summary>
-    public class PackageDataService : DataService<PackageDataSource>, IServiceProvider
+    public class PackageDataService : DataService<PackageDataSource>, IServiceProvider, IOperationContext
     {
         public static PackageServiceStreamProvider PackageServiceStreamProvider { get; private set; }
 
@@ -42,7 +43,7 @@ namespace NuGet.Lucene.Web.DataServices
 
         protected override PackageDataSource CreateDataSource()
         {
-            return new PackageDataSource(PackageRepository);
+            return new PackageDataSource(PackageRepository, this);
         }
 
         public object GetService(Type serviceType)
@@ -142,12 +143,12 @@ namespace NuGet.Lucene.Web.DataServices
 
         protected DataServiceOperationContext OperationContext { get; set; }
 
-        protected virtual Uri CurrentRequestUri
+        public virtual Uri CurrentRequestUri
         {
-            get { return OperationContext.AbsoluteRequestUri; }
+            get { return OperationContext == null ? null : OperationContext.AbsoluteRequestUri; }
         }
 
-        protected virtual bool ClientDoesNotSpecifyOrder
+        public virtual bool ClientDoesNotSpecifyOrder
         {
             get
             {
@@ -155,6 +156,27 @@ namespace NuGet.Lucene.Web.DataServices
 
                 return string.IsNullOrWhiteSpace(query["$orderby"]);
             }
+        }
+
+        private static readonly Regex QueryForSpecificPackage = new Regex(@"Packages\(Id='(?<id>.+)',Version='(?<version>.+)'\)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        public bool IsQueryForSpecificPackage(out string packageId, out SemanticVersion version)
+        {
+            var input = CurrentRequestUri.GetComponents(UriComponents.PathAndQuery, UriFormat.Unescaped);
+            var match = QueryForSpecificPackage.Match(input);
+
+            if (match.Success)
+            {
+                packageId = match.Groups["id"].Value;
+                version = new SemanticVersion(match.Groups["version"].Value);
+            }
+            else
+            {
+                packageId = null;
+                version = null;
+            }
+
+            return match.Success;
         }
     }
 }

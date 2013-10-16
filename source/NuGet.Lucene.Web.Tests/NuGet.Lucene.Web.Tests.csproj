@@ -100,6 +100,7 @@
     <Compile Include="DataServices\DataServicePackageTests.cs" />
     <Compile Include="DataServices\PackageDataServiceFindPackagesByIdTests.cs" />
     <Compile Include="DataServices\PackageDataServiceGetUpdatesTests.cs" />
+    <Compile Include="DataServices\PackageDataServiceOperationTests.cs" />
     <Compile Include="DataServices\PackageDataServiceTestBase.cs" />
     <Compile Include="DataServices\PackageDataServiceSearchTests.cs" />
     <Compile Include="Formatters\MultipartFormDataMediaFormatterTests.cs" />

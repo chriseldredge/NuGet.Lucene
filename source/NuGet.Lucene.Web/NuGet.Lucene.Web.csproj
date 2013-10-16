@@ -162,6 +162,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Authentication\ApiUser.cs" />
+    <Compile Include="DataServices\IOperationContext.cs" />
     <Compile Include="Formatters\NuGetHtmlMicrodataFormatter.cs" />
     <Compile Include="Formatters\PackageHtmlSerializer.cs" />
     <Compile Include="Formatters\PackageSummaryListSerializer.cs" />

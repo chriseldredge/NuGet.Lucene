@@ -42,7 +42,7 @@ namespace NuGet.Lucene.Web.Tests.DataServices
             public string FakePackageProxyTargetUri { get; set; }
             public bool FakeIsRestoreOperation { get; set; }
 
-            protected override Uri CurrentRequestUri
+            public override Uri CurrentRequestUri
             {
                 get
                 {
