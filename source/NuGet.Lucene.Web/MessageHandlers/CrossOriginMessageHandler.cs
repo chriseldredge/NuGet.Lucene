@@ -102,7 +102,7 @@ namespace NuGet.Lucene.Web.MessageHandlers
                 if (!routeData.Values.TryGetValue("action", out requestedAction) ||
                     string.Equals(requestedAction as string, desc.ActionDescriptor.ActionName, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    yield return desc.Simplify();
+                    yield return desc.Simplify(request.GetConfiguration());
                 }
             }
         }
