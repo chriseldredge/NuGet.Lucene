@@ -43,9 +43,9 @@
     <DocumentationFile>bin\NuGet.Lucene.Web.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AspNet.WebApi.HtmlMicrodataFormatter, Version=1.0.0.24, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="AspNet.WebApi.HtmlMicrodataFormatter, Version=1.1.0.26, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\AspNet.WebApi.HtmlMicrodataFormatter.1.0.0\lib\net40\AspNet.WebApi.HtmlMicrodataFormatter.dll</HintPath>
+      <HintPath>..\packages\AspNet.WebApi.HtmlMicrodataFormatter.1.1.0\lib\net40\AspNet.WebApi.HtmlMicrodataFormatter.dll</HintPath>
     </Reference>
     <Reference Include="Common.Logging, Version=2.1.2.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>

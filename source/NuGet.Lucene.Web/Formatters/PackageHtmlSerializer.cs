@@ -20,32 +20,32 @@ namespace NuGet.Lucene.Web.Formatters
             Property("VersionHistory", RenderVersionHistory);
         }
 
-        private IEnumerable<XObject> RenderLink(IPackage package, SerializationContext context)
+        private XElement RenderLink(IPackage package, SerializationContext context)
         {
             var urlHelper = new UrlHelper(context.Request);
             var href = urlHelper.Link(RouteNames.Packages.Info, new { package.Id, package.Version });
             var link = new Link(href, "canonical", "details");
 
-            return new LinkSerializer().Serialize("Link", link, context);
+            return new LinkSerializer().CreateAnchor("Link", link, context);
         }
 
-        private IEnumerable<XObject> RenderVersionHistory(IPackage package, SerializationContext context)
+        private XElement RenderVersionHistory(IPackage package, SerializationContext context)
         {
             var packageWithVersionHistory = package as PackageWithVersionHistory;
 
             if (packageWithVersionHistory != null)
             {
-                return context.RootSerializer.Serialize("VersionHistory", packageWithVersionHistory.VersionHistory, context);
+                return (XElement)context.Serialize("VersionHistory", packageWithVersionHistory.VersionHistory).Single();
             }
 
             var urlHelper = new UrlHelper(context.Request);
             var href = urlHelper.Link(RouteNames.Packages.Info, new { package.Id, package.Version }) + "#versionHistory";
             var link = new Link(href, "version history");
 
-            return new LinkSerializer().Serialize("VersionHistory", link, context);
+            return new LinkSerializer().CreateAnchor("VersionHistory", link, context);
         }
 
-        private IEnumerable<XObject> RenderTitle(IPackage arg, SerializationContext context)
+        private XElement RenderTitle(IPackage arg, SerializationContext context)
         {
             var title = arg.Title;
 
@@ -54,14 +54,14 @@ namespace NuGet.Lucene.Web.Formatters
                 title = arg.Id;
             }
 
-            yield return new XElement("span",
-                                      new XAttribute("itemprop", "title"),
-                                      new XText(title));
+            return new XElement("span",
+                                new XAttribute("itemprop", "title"),
+                                new XText(title));
         }
 
-        private IEnumerable<XObject> RenderIcon(string propertyName, Uri uri, SerializationContext context)
+        private XElement RenderIcon(string propertyName, Uri uri, SerializationContext context)
         {
-            if (uri == null) return Enumerable.Empty<XObject>();
+            if (uri == null) return null;
 
             var img = new XElement("img",
                                    new XAttribute("src", uri.GetComponents(UriComponents.AbsoluteUri, UriFormat.UriEscaped)),
@@ -69,29 +69,27 @@ namespace NuGet.Lucene.Web.Formatters
 
             SetPropertyName(img, propertyName, context);
 
-            return new[] { img };
+            return img;
         }
 
-        private IEnumerable<XObject> RenderLicense(string propertyName, Uri arg, SerializationContext context)
+        private XElement RenderLicense(string propertyName, Uri arg, SerializationContext context)
         {
-            if (arg == null || !arg.IsAbsoluteUri) yield break;
+            if (arg == null || !arg.IsAbsoluteUri) return null;
 
-            yield return new XElement("a",
-                                      new XAttribute("href", arg.GetComponents(UriComponents.AbsoluteUri, UriFormat.UriEscaped)),
-                                      new XAttribute("rel", "license"),
-                                      new XAttribute("itemprop", "licenseUrl"),
-                                      new XText(arg.GetComponents(UriComponents.AbsoluteUri, UriFormat.Unescaped))
-                );
-
+            return new XElement("a",
+                                new XAttribute("href", arg.GetComponents(UriComponents.AbsoluteUri, UriFormat.UriEscaped)),
+                                new XAttribute("rel", "license"),
+                                new XAttribute("itemprop", "licenseUrl"),
+                                new XText(arg.GetComponents(UriComponents.AbsoluteUri, UriFormat.Unescaped)));
         }
 
-        private IEnumerable<XObject> RenderReleaseNotes(string propName, string value, SerializationContext context)
+        private XElement RenderReleaseNotes(string propName, string value, SerializationContext context)
         {
-            if (string.IsNullOrWhiteSpace(value)) yield break;
+            if (string.IsNullOrWhiteSpace(value)) return null;
 
-            yield return new XElement("pre",
-                                      new XAttribute("itemprop", "releaseNotes"),
-                                      new XText(value));
+            return new XElement("pre",
+                                new XAttribute("itemprop", "releaseNotes"),
+                                new XText(value));
         }
 
         protected override IEnumerable<KeyValuePair<string, object>> Reflect(object value)
