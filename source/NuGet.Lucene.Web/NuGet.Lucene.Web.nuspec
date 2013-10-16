@@ -21,6 +21,6 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="readme.txt"/>
+    <file src="readme.markdown" target="readme.txt"/>
   </files>
 </package>

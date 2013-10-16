@@ -3,17 +3,23 @@ powered by Lucene.Net.Linq to provide very fast package listing, lookup, search
 and aggregation functionality, and an Asp.NET Web Api project that exposes
 a NuGet package feed with related functionality.
 
-## NuGet.Lucene.Web Available Soon on Chocolatey Gallery
+## Available on NuGet Gallery
 
-Binary packages of NuGet.Lucene.Web will be published to [Chocolatey Gallery](http://chocolatey.org/) soon.
+To install the [NuGet.Lucene.Web package](http://nuget.org/packages/NuGet.Lucene.Web),
+run the following command in the [Package Manager Console](http://docs.nuget.org/docs/start-here/using-the-package-manager-console)
 
-## NuGet.Lucene Available on NuGet Gallery
+    PM> Install-Package NuGet.Lucene.Web
 
-To install the [NuGet.Lucene package](http://nuget.org/packages/NuGet.Lucene),
+If you do not need the web server components, you can install the [NuGet.Lucene package](http://nuget.org/packages/NuGet.Lucene),
 run the following command in the [Package Manager Console](http://docs.nuget.org/docs/start-here/using-the-package-manager-console)
 
     PM> Install-Package NuGet.Lucene
 
-### Getting Started with NuGet.Lucene
+## Getting Started
 
-See [NuGet.Lucene's readme](source/NuGet.Lucene/readme.txt) for information on embedding NuGet.Lucene in your project.
+See [NuGet.Lucene's readme](source/NuGet.Lucene/readme.markdown) for information on embedding NuGet.Lucene in your project.
+
+## Reference Project
+
+The reference usage of these libraries is [Klondike](https://github.com/themotleyfool/Klondike), a fully integrated web
+application for hosting a NuGet package feed.

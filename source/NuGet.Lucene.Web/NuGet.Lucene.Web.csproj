@@ -204,7 +204,7 @@
     <Compile Include="UnhandledExceptionLogger.cs" />
     <Compile Include="Util\DynamicUtils.cs" />
     <Compile Include="Util\TaskUtils.cs" />
-    <None Include="readme.txt" />
+    <None Include="readme.markdown" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\NuGet.Lucene\NuGet.Lucene.csproj">

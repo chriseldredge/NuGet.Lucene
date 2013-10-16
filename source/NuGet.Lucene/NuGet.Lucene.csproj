@@ -113,7 +113,7 @@
   <ItemGroup>
     <None Include="NuGet.Lucene.nuspec" />
     <None Include="packages.config" />
-    <None Include="readme.txt" />
+    <None Include="readme.markdown" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
