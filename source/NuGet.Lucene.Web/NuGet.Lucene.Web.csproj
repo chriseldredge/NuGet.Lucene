@@ -196,6 +196,7 @@
     <Compile Include="MirroringPackageRepositoryFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="NuGetWebApiRouteMapper.cs" />
+    <Compile Include="RoleNames.cs" />
     <Compile Include="RouteNames.cs" />
     <Compile Include="SemanticVersionConstraint.cs" />
     <Compile Include="SignalRModule.cs" />

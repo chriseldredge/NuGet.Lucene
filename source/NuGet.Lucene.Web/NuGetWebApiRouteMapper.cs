@@ -40,14 +40,23 @@ namespace NuGet.Lucene.Web
                                 pathPrefix + "indexing/{action}",
                                 new { controller = "Indexing" });
 
-            routes.MapHttpRoute(RouteNames.Users.All,
+            var save = routes.MapHttpRoute(RouteNames.Users.All,
                                 pathPrefix + "users",
                                 new { controller = "Users", action = "GetAllUsers" },
                                 new { httpMethod = new HttpMethodConstraint(HttpMethod.Get, HttpMethod.Options) });
 
             routes.MapHttpRoute(RouteNames.Users.ForUser,
-                                pathPrefix + "users/{username}",
-                                new { controller = "Users" });
+                                pathPrefix + "users/{*username}",
+                                new { controller = "Users" },
+                                new { username = ".+" });
+
+            routes.MapHttpRoute(RouteNames.Users.GetAuthenticationInfo,
+                                pathPrefix + "session",
+                                new { controller = "Users", action = "GetAuthenticationInfo" });
+
+            routes.MapHttpRoute(RouteNames.Users.GetRequiredAuthenticationInfo,
+                                pathPrefix + "authenticate",
+                                new { controller = "Users", action = "GetRequiredAuthenticationInfo" });
 
             routes.MapHttpRoute(RouteNames.TabCompletionPackageIds,
                                 pathPrefix + "v2/package-ids",
@@ -73,31 +82,33 @@ namespace NuGet.Lucene.Web
 
             route.HideFromDocumentationExplorer();
 
-            AddApiDescription(config, route, typeof(PackagesController), "DownloadPackage", HttpMethod.Get);
-            AddApiDescription(config, route, typeof(PackagesController), "DownloadPackage", HttpMethod.Head);
+            AddApiDescription(config, route, "Packages", typeof(PackagesController), "DownloadPackage", HttpMethod.Get, AddIdAndVersionParameters);
+            AddApiDescription(config, route, "Packages", typeof(PackagesController), "DownloadPackage", HttpMethod.Head, AddIdAndVersionParameters);
             
 
             route = routes.MapHttpRoute(RouteNames.Packages.Download,
                                 pathPrefix + "packages/{id}/{version}/content",
                                 new { controller = "Packages", action = "DownloadPackage" },
                                 new { version = new SemanticVersionConstraint() });
-            
-            AddApiDescription(config, route, typeof(PackagesController), "DownloadPackage", HttpMethod.Get);
-            AddApiDescription(config, route, typeof(PackagesController), "DownloadPackage", HttpMethod.Head);
+
+            AddApiDescription(config, route, "Packages", typeof(PackagesController), "DownloadPackage", HttpMethod.Get, AddIdAndVersionParameters);
+            AddApiDescription(config, route, "Packages", typeof(PackagesController), "DownloadPackage", HttpMethod.Head, AddIdAndVersionParameters);
 
             route = routes.MapHttpRoute(RouteNames.Packages.Info,
                                 pathPrefix + "packages/{id}/{version}",
                                 new { controller = "Packages", action = "GetPackageInfo", version = "" },
                                 new { httpMethod = new HttpMethodConstraint(HttpMethod.Get), version = new OptionalSemanticVersionConstraint() });
-            
-            AddApiDescription(config, route, typeof(PackagesController), "GetPackageInfo", HttpMethod.Get);
+
+            AddApiDescription(config, route, "Packages", typeof(PackagesController), "GetPackageInfo", HttpMethod.Get, AddIdAndVersionParameters);
 
             route = routes.MapHttpRoute(RouteNames.Packages.Delete,
                                 pathPrefix + "packages/{id}/{version}",
                                 new { controller = "Packages", action = "DeletePackage" },
                                 new { version = new SemanticVersionConstraint() });
 
-            AddApiDescription(config, route, typeof(PackagesController), "DeletePackage", HttpMethod.Delete);
+            AddApiDescription(config, route, "Packages", typeof(PackagesController), "DeletePackage", HttpMethod.Delete, AddIdAndVersionParameters);
+
+            AddApiDescription(config, save, "Users", typeof(UsersController), "GetAllUsers", HttpMethod.Get, _ => { });
         }
 
         public void MapHubs(RouteCollection routes)
@@ -129,11 +140,11 @@ namespace NuGet.Lucene.Web
         /// does not include a given route in <see cref="IApiExplorer"/>'s list of api descriptions. This method
         /// allows those routes to be included explicitly.
         /// </summary>
-        public void AddApiDescription(HttpConfiguration config, IHttpRoute route, Type controllerType, string methodName, HttpMethod method)
+        public void AddApiDescription(HttpConfiguration config, IHttpRoute route, string controllerName, Type controllerType, string methodName, HttpMethod method, Action<ApiDescription> customize)
         {
             var apiDescriptions = config.Services.GetApiExplorer().ApiDescriptions;
             var docProvider = config.Services.GetDocumentationProvider();
-            var controllerDesc = new HttpControllerDescriptor(config, "Packages", controllerType);
+            var controllerDesc = new HttpControllerDescriptor(config, controllerName, controllerType);
             var methodInfo = controllerType.GetMethod(methodName);
             var actionDescriptor = new ReflectedHttpActionDescriptor(controllerDesc, methodInfo);
 
@@ -146,10 +157,15 @@ namespace NuGet.Lucene.Web
                 Documentation = docProvider != null ? docProvider.GetDocumentation(actionDescriptor) : string.Empty
             };
 
-            api.ParameterDescriptions.Add(CreateParameterDescription(api, "id"));
-            api.ParameterDescriptions.Add(CreateParameterDescription(api, "version", string.Empty));
+            customize(api);
 
             apiDescriptions.Add(api);
+        }
+
+        private void AddIdAndVersionParameters(ApiDescription api)
+        {
+            api.ParameterDescriptions.Add(CreateParameterDescription(api, "id"));
+            api.ParameterDescriptions.Add(CreateParameterDescription(api, "version", string.Empty));
         }
 
         private static ApiParameterDescription CreateParameterDescription(ApiDescription api, string name, string defaultValue = null)
