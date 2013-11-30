@@ -36,6 +36,21 @@ namespace NuGet.Lucene.Tests
         }
 
         [Test]
+        public async void AddPackage_PreRelease_SetIsAbsoluteLatestVersion()
+        {
+            await indexer.AddPackage(MakeSamplePackage("Sample.Package", "1.0"));
+            await indexer.AddPackage(MakeSamplePackage("Sample.Package", "2.0-pre"));
+
+            var newest = datasource.Single(p => p.Version == new StrictSemanticVersion("2.0-pre"));
+            var latestNonPreRelease = datasource.Single(p => p.Version == new StrictSemanticVersion("1.0"));
+
+            Assert.False(newest.IsLatestVersion, "newest IsLatestVersion");
+            Assert.True(newest.IsAbsoluteLatestVersion, "newest IsAbsoluteLatestVersion");
+            Assert.True(latestNonPreRelease.IsLatestVersion, "latestNonPreRelease IsAbsoluteLatestVersion");
+            Assert.False(latestNonPreRelease.IsAbsoluteLatestVersion, "latestNonPreRelease IsAbsoluteLatestVersion");
+        }
+
+        [Test]
         public void AddPackage_MultipleVersions_UnsetIsLatestVersion()
         {
             var t1 = indexer.AddPackage(MakeSamplePackage("Sample.Package", "1.0"));

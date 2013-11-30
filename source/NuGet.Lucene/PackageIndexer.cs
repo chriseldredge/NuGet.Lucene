@@ -353,9 +353,20 @@ namespace NuGet.Lucene
         private void UpdatePackageVersionFlags(IEnumerable<LucenePackage> packages)
         {
             var first = true;
+            var firstNonPreRelease = true;
+
             foreach (var p in packages)
             {
-                p.IsLatestVersion = first;
+                if (!p.IsPrerelease && firstNonPreRelease)
+                {
+                    p.IsLatestVersion = true;
+                    firstNonPreRelease = false;
+                }
+                else
+                {
+                    p.IsLatestVersion = false;
+                }
+
                 p.IsAbsoluteLatestVersion = first;
 
                 if (first)
