@@ -26,7 +26,10 @@ namespace NuGet.Lucene.Web.Models
         public PackageSpec(string id, string version)
         {
             Id = id;
-            Version = new SemanticVersion(version);
+            if (!string.IsNullOrEmpty(version))
+            {
+                Version = new SemanticVersion(version);
+            }
         }
 
         public override Stream GetStream()

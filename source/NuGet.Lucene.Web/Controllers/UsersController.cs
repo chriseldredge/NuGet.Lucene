@@ -23,6 +23,9 @@ namespace NuGet.Lucene.Web.Controllers
     {
         public LuceneDataProvider Provider { get; set; }
 
+        /// <summary>
+        /// Retrieves a list of all users.
+        /// </summary>
         public IEnumerable<dynamic> GetAllUsers()
         {
             return Provider.AsQueryable<ApiUser>()
@@ -52,23 +55,21 @@ namespace NuGet.Lucene.Web.Controllers
         /// Creates or replaces a user.
         /// </summary>
         /// <param name="username"></param>
-        /// <param name="user"></param>
+        /// <param name="key">API key to set for user (optional). If not specified, a GUID will be generated and used as the key.</param>
         /// <returns></returns>
         [Authorize(Roles = RoleNames.UserAdmin)]
-        public HttpResponseMessage Put(string username, [FromBody]ApiUser user)
+        public HttpResponseMessage Put(string username, [FromBody]string key="")
         {
             username = username.Replace('/', '\\');
 
-            user.Username = username;
-
-            if (string.IsNullOrWhiteSpace(user.Key))
+            if (string.IsNullOrWhiteSpace(key))
             {
-                user.Key = Guid.NewGuid().ToString();
+                key = Guid.NewGuid().ToString();
             }
 
             using (var session = Provider.OpenSession<ApiUser>())
             {
-                session.Add(user);
+                session.Add(new ApiUser{Username = username, Key = key});
             }
 
             return Request.CreateResponse(HttpStatusCode.Created);

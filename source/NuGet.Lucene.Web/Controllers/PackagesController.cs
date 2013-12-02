@@ -25,8 +25,9 @@ namespace NuGet.Lucene.Web.Controllers
         /// Gets metadata about a package from the <c>nuspec</c> files and other
         /// metadata such as package size, date published, download counts, etc.
         /// </summary>
-        public object GetPackageInfo([FromUri]PackageSpec packageSpec)
+        public object GetPackageInfo(string id, string version="")
         {
+            var packageSpec = new PackageSpec(id, version);
             var packages = LuceneRepository
                             .LucenePackages
                             .Where(p => p.Id == packageSpec.Id)
@@ -68,8 +69,9 @@ namespace NuGet.Lucene.Web.Controllers
         /// package content.
         /// </summary>
         [HttpGet, HttpHead]
-        public HttpResponseMessage DownloadPackage([FromUri]PackageSpec packageSpec)
+        public HttpResponseMessage DownloadPackage(string id, string version="")
         {
+            var packageSpec = new PackageSpec(id, version);
             var package = FindPackage(packageSpec);
 
             var result = EvaluateCacheHeaders(packageSpec, package);
@@ -156,18 +158,18 @@ namespace NuGet.Lucene.Web.Controllers
         /// <summary>
         /// Permanently delete a package from the repository.
         /// </summary>
-        public async Task<HttpResponseMessage> DeletePackage([FromUri]PackageSpec packageSpec)
+        public async Task<HttpResponseMessage> DeletePackage(string id, string version="")
         {
-            if (packageSpec == null || string.IsNullOrWhiteSpace(packageSpec.Id) || packageSpec.Version == null)
+            if (string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(version))
             {
                 return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "Must specify package id and version.");
             }
-
-            var package = LuceneRepository.FindPackage(packageSpec.Id, packageSpec.Version);
+            
+            var package = LuceneRepository.FindPackage(id, new SemanticVersion(version));
 
             if (package == null)
             {
-                var message = string.Format("Package {0} version {1} not found.", packageSpec.Id, packageSpec.Version);
+                var message = string.Format("Package {0} version {1} not found.", id, version);
                 return Request.CreateErrorResponse(HttpStatusCode.NotFound, message);
             }
 
