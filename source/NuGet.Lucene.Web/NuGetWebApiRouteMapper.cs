@@ -7,7 +7,6 @@ using System.Web.Http.Description;
 using System.Web.Http.Routing;
 using System.Web.Routing;
 using AspNet.WebApi.HtmlMicrodataFormatter;
-using Microsoft.AspNet.SignalR;
 using Ninject.Extensions.Wcf;
 using NuGet.Lucene.Web.Controllers;
 using NuGet.Lucene.Web.DataServices;
@@ -109,17 +108,6 @@ namespace NuGet.Lucene.Web
             AddApiDescription(config, route, "Packages", typeof(PackagesController), "DeletePackage", HttpMethod.Delete, AddIdAndVersionParameters);
 
             AddApiDescription(config, save, "Users", typeof(UsersController), "GetAllUsers", HttpMethod.Get, _ => { });
-        }
-
-        public void MapHubs(RouteCollection routes)
-        {
-            var hubConfiguration = new HubConfiguration
-            {
-                EnableDetailedErrors = NuGetWebApiModule.ShowExceptionDetails,
-                EnableCrossDomain = NuGetWebApiModule.EnableCrossDomainRequests,
-            };
-
-            routes.MapHubs(SignalrRoutePath, hubConfiguration);
         }
 
         public void MapDataServiceRoutes(RouteCollection routes)

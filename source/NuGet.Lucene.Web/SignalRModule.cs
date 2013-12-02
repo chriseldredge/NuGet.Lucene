@@ -3,16 +3,36 @@ using System.Reactive.Linq;
 using System.Reflection;
 using Microsoft.AspNet.SignalR;
 using Microsoft.AspNet.SignalR.Infrastructure;
-using Microsoft.AspNet.SignalR.Json;
+using Microsoft.Owin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using Ninject;
 using Ninject.Modules;
+using NuGet.Lucene.Web;
 using NuGet.Lucene.Web.Hubs;
+using Owin;
+
+
+[assembly: OwinStartup(typeof(SignalRStartup))]
 
 namespace NuGet.Lucene.Web
 {
+
+    public class SignalRStartup
+    {
+        public void Configuration(IAppBuilder app)
+        {
+            var hubConfiguration = new HubConfiguration
+            {
+                EnableDetailedErrors = NuGetWebApiModule.ShowExceptionDetails,
+                EnableJSONP = NuGetWebApiModule.EnableCrossDomainRequests,
+            };
+
+            app.MapSignalR("/api/signalr", hubConfiguration);
+        }
+    }
+
     public class SignalRModule : NinjectModule
     {
         public override void Load()
@@ -23,10 +43,10 @@ namespace NuGet.Lucene.Web
                     Converters = { new StringEnumConverter() }
                 };
 
-            var jsonNetSerializer = new JsonNetSerializer(settings);
+            var jsonNetSerializer = JsonSerializer.Create(settings);
             
             GlobalHost.DependencyResolver = new NinjectSignalRDependencyResolver(Kernel);
-            GlobalHost.DependencyResolver.Register(typeof(IJsonSerializer), () => jsonNetSerializer);
+            GlobalHost.DependencyResolver.Register(typeof(JsonSerializer), () => jsonNetSerializer);
 
             var hub = GlobalHost.ConnectionManager.GetHubContext<StatusHub>();
 
