@@ -11,7 +11,8 @@ namespace NuGet.Lucene.Web
         public static class Users
         {
             public const string All = "Users.All";
-            public const string ForUser = "Users.ForUser";
+            public const string GetUser = "Users.GetUser";
+            public const string ChangeUser = "Users.ChangeUser";
             public const string GetAuthenticationInfo = "Users.GetAuthenticationInfo";
             public const string GetRequiredAuthenticationInfo = "Users.GetRequiredAuthenticationInfo";
         }
