@@ -177,6 +177,8 @@
     <Compile Include="Models\DelegatingPackageRepository.cs" />
     <Compile Include="Models\MirroringPackageRepository.cs" />
     <Compile Include="Models\PackageVersionSummary.cs" />
+    <Compile Include="Models\UserAttributes.cs" />
+    <Compile Include="Modules\LocalRequstAuthenticationModule.cs" />
     <Compile Include="NuGetWebApiModule.cs" />
     <Compile Include="Authentication\IApiKeyAuthentication.cs" />
     <Compile Include="Authentication\LuceneApiKeyAuthentication.cs" />

@@ -19,7 +19,7 @@ namespace NuGet.Lucene.Web.Authentication
             var user = Users.FirstOrDefault(u => u.Key == clientKey);
 
             return user != null
-                ? new GenericPrincipal(new GenericIdentity(user.Username, "NuGet Api Key Authentication"), new[] { "ApiUser" })
+                ? new GenericPrincipal(new GenericIdentity(user.Username, "NuGet Api Key Authentication"), user.Roles.ToArray())
                 : null;
         }
         

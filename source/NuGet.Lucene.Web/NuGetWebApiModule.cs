@@ -46,6 +46,7 @@ namespace NuGet.Lucene.Web
             Bind<IApiKeyAuthentication>().To<LuceneApiKeyAuthentication>();
 
             Bind<IHttpModule>().To<ApiKeyAuthenticationModule>();
+            Bind<IHttpModule>().To<LocalRequstAuthenticationModule>();
 
             var tokenSource = new ReusableCancellationTokenSource();
             Bind<ReusableCancellationTokenSource>().ToConstant(tokenSource);

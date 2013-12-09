@@ -4,9 +4,13 @@ using System.Dynamic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Security.Principal;
 using System.Web.Http;
+using Lucene.Net.Index;
 using Lucene.Net.Linq;
+using Lucene.Net.Search;
 using NuGet.Lucene.Web.Authentication;
+using NuGet.Lucene.Web.Models;
 
 namespace NuGet.Lucene.Web.Controllers
 {
@@ -26,7 +30,7 @@ namespace NuGet.Lucene.Web.Controllers
         /// <summary>
         /// Retrieves a list of all users.
         /// </summary>
-        public IEnumerable<dynamic> GetAllUsers()
+        public IEnumerable<ApiUser> GetAllUsers()
         {
             return Provider.AsQueryable<ApiUser>()
                 .Select(DescribeUser)
@@ -36,9 +40,9 @@ namespace NuGet.Lucene.Web.Controllers
         /// <summary>
         /// Retrieve information about a user.
         /// </summary>
-        public dynamic Get(string username)
+        public object Get(string username)
         {
-            username = username.Replace('/', '\\');
+            username = ScrubUsername(username);
 
             var user = Provider.AsQueryable<ApiUser>()
                 .SingleOrDefault(u => u.Username == username);
@@ -50,35 +54,36 @@ namespace NuGet.Lucene.Web.Controllers
 
             return DescribeUser(user);
         }
-
+        
         /// <summary>
         /// Creates or replaces a user.
         /// </summary>
         /// <param name="username"></param>
         /// <param name="key">API key to set for user (optional). If not specified, a GUID will be generated and used as the key.</param>
+        /// <param name="roles">Roles to grant user.</param>
         /// <returns></returns>
-        [Authorize(Roles = RoleNames.UserAdmin)]
-        public HttpResponseMessage Put(string username, [FromBody]string key="")
+        [Authorize(Roles = RoleNames.AccountAdministrator)]
+        public HttpResponseMessage Put(string username, [FromBody]UserAttributes attributes)
         {
-            username = username.Replace('/', '\\');
+            username = ScrubUsername(username);
 
-            if (string.IsNullOrWhiteSpace(key))
+            if (string.IsNullOrWhiteSpace(attributes.Key))
             {
-                key = Guid.NewGuid().ToString();
+                attributes.Key = Guid.NewGuid().ToString();
             }
 
             using (var session = Provider.OpenSession<ApiUser>())
             {
-                session.Add(new ApiUser{Username = username, Key = key});
+                session.Add(new ApiUser{Username = username, Key = attributes.Key, Roles = attributes.Roles});
             }
 
             return Request.CreateResponse(HttpStatusCode.Created);
         }
 
-        [Authorize(Roles = RoleNames.UserAdmin)]
+        [Authorize(Roles = RoleNames.AccountAdministrator)]
         public HttpResponseMessage Delete(string username)
         {
-            username = username.Replace('/', '\\');
+            username = ScrubUsername(username);
 
             using (var session = Provider.OpenSession<ApiUser>())
             {
@@ -91,7 +96,19 @@ namespace NuGet.Lucene.Web.Controllers
                 session.Delete(user);
             }
 
-            return Request.CreateResponse(HttpStatusCode.OK);
+            return Request.CreateResponse(HttpStatusCode.NoContent);
+        }
+
+        [Authorize(Roles = RoleNames.AccountAdministrator)]
+        public HttpResponseMessage DeleteAllUsers()
+        {
+            using (var session = Provider.OpenSession<ApiUser>())
+            {
+                // faster than retrieving each user and deleting by ID.
+                session.Delete(new WildcardQuery(new Term("Username", "*")));
+            }
+
+            return Request.CreateResponse(HttpStatusCode.NoContent);
         }
 
         /// <summary>
@@ -120,7 +137,7 @@ namespace NuGet.Lucene.Web.Controllers
         [Authorize]
         public ApiUser GetRequiredAuthenticationInfo()
         {
-            var name = User.Identity.Name;
+            var name = ScrubUsername(User.Identity.Name);
 
             var apiUser = Provider.AsQueryable<ApiUser>().SingleOrDefault(u => u.Username == name);
 
@@ -128,25 +145,37 @@ namespace NuGet.Lucene.Web.Controllers
 
             using (var session = Provider.OpenSession<ApiUser>())
             {
-                apiUser = new ApiUser { Username = name, Key = Guid.NewGuid().ToString() };
+                apiUser = new ApiUser { Username = name, Key = Guid.NewGuid().ToString(), Roles = GetUserRoles(User) };
                 session.Add(apiUser);
             }
 
             return apiUser;
         }
-
-        private dynamic DescribeUser(ApiUser user)
+        
+        private static string ScrubUsername(string username)
         {
-            dynamic d = new ExpandoObject();
-            
-            d.Username = user.Username;
+            return username.Replace('\\', '/');
+        }
 
-            if (User.IsInRole(RoleNames.UserAdmin) || string.Equals(User.Identity.Name, user.Username, StringComparison.InvariantCultureIgnoreCase))
+        private IEnumerable<string> GetUserRoles(IPrincipal user)
+        {
+            return RoleNames.All.Where(user.IsInRole);
+        }
+
+        private ApiUser DescribeUser(ApiUser user)
+        {
+            if (User.IsInRole(RoleNames.AccountAdministrator) || IsSelf(user))
             {
-                d.ApiKey = user.Key;
+                return user;
             }
 
-            return d;
+            // Hide details that non-admins should not see.
+            return new ApiUser {Username = user.Username};
+        }
+
+        private bool IsSelf(ApiUser user)
+        {
+            return string.Equals(User.Identity.Name, user.Username, StringComparison.InvariantCultureIgnoreCase);
         }
     }
 }

@@ -158,6 +158,7 @@ namespace NuGet.Lucene.Web.Controllers
         /// <summary>
         /// Permanently delete a package from the repository.
         /// </summary>
+        [Authorize(Roles=RoleNames.PackageManager)]
         public async Task<HttpResponseMessage> DeletePackage(string id, string version="")
         {
             if (string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(version))
@@ -184,6 +185,7 @@ namespace NuGet.Lucene.Web.Controllers
         /// </summary>
         [HttpPut]
         [HttpPost]
+        [Authorize(Roles = RoleNames.PackageManager)]
         public async Task<HttpResponseMessage> PutPackage([FromBody]IPackage package)
         {
             if (package == null || string.IsNullOrWhiteSpace(package.Id) || package.Version == null)

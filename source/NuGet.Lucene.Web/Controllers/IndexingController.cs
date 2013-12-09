@@ -52,6 +52,7 @@ namespace NuGet.Lucene.Web.Controllers
         /// <c>409 Conflict</c> when a process is already running.
         /// </returns>
         [HttpPost]
+        [Authorize(Roles = RoleNames.PackageManager)]
         public HttpResponseMessage Synchronize()
         {
             if (Repository.GetStatus().SynchronizationState != SynchronizationState.Idle)
@@ -75,6 +76,7 @@ namespace NuGet.Lucene.Web.Controllers
         /// </summary>
         /// <returns><c>200 OK</c></returns>
         [HttpPost]
+        [Authorize(Roles = RoleNames.PackageManager)]
         public HttpResponseMessage Cancel()
         {
             CancellationTokenSource.Cancel();

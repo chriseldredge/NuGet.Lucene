@@ -88,7 +88,7 @@ namespace NuGet.Lucene.Web.Tests
             {
                 var methods = GetSupportedMethods("api/users");
 
-                Assert.That(methods, Is.EquivalentTo(new[] { HttpMethod.Get }));
+                Assert.That(methods, Is.EquivalentTo(new[] { HttpMethod.Get, HttpMethod.Delete }));
             }
 
             [Test]
