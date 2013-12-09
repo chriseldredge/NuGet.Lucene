@@ -4,6 +4,7 @@ using System.Reactive.Linq;
 using System.Reflection;
 using Microsoft.AspNet.SignalR;
 using Microsoft.AspNet.SignalR.Infrastructure;
+using Microsoft.Owin.Cors;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
@@ -43,7 +44,14 @@ namespace NuGet.Lucene.Web
                 Resolver = resolver
             };
 
-            app.MapSignalR("/api/signalr", hubConfiguration);
+            app.Map("/api/signalr", map =>
+            {
+                if (NuGetWebApiModule.EnableCrossDomainRequests)
+                {
+                    map.UseCors(CorsOptions.AllowAll);
+                }
+                map.RunSignalR(hubConfiguration);
+            });
 
             var connectionManager = resolver.Resolve<IConnectionManager>();
 
