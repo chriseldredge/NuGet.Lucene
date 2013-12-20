@@ -23,6 +23,7 @@
 		<AssemblyInformationalVersion>$(PackageVersion) $(VersionControlInfo)</AssemblyInformationalVersion>
 
 		<TestsEnabled>true</TestsEnabled>
+		<NunitConsoleCommand>nunit-console</NunitConsoleCommand>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -57,7 +58,7 @@
 			<TestAssembly Include="$(SolutionDir)NuGet.Lucene.Tests/bin/Debug/NuGet.Lucene.Tests.dll"/>
 			<TestAssembly Include="$(SolutionDir)NuGet.Lucene.Web.Tests/bin/Debug/NuGet.Lucene.Web.Tests.dll"/>
 		</ItemGroup>
-		<Exec Command="nunit-console @(TestAssembly -> '&quot;%(FullPath)&quot;', ' ') -noshadow"/>
+		<Exec Command="&quot;$(NunitConsoleCommand)&quot; @(TestAssembly -> '&quot;%(FullPath)&quot;', ' ') -noshadow"/>
 	</Target>
 
 	<Target Name="Package">
