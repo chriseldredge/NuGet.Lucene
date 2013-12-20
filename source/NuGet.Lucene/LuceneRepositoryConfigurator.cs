@@ -1,10 +1,7 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using Common.Logging;
-using Lucene.Net.Index;
 using Lucene.Net.Linq;
-using Lucene.Net.Linq.Abstractions;
 using Lucene.Net.Store;
 using Directory = System.IO.Directory;
 using LuceneDirectory = Lucene.Net.Store.Directory;
@@ -161,6 +158,7 @@ namespace NuGet.Lucene
             LuceneDirectory = OpenLuceneDirectory(LuceneIndexPath);
 
             Provider = new LuceneDataProvider(LuceneDirectory, Version.LUCENE_30);
+            Provider.Settings.EnableMultipleEntities = false;
         }
         
         private IPackagePathResolver CreatePackagePathResolver()

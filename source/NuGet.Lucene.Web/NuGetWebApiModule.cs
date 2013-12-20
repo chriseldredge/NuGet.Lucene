@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
-using System.Linq;
+using System.IO;
 using System.Reflection;
 using System.Web;
 using System.Web.Hosting;
 using Lucene.Net.Linq;
+using Lucene.Net.Store;
 using Ninject;
 using Ninject.Components;
 using Ninject.Modules;
@@ -13,6 +14,7 @@ using Ninject.Selection.Heuristics;
 using NuGet.Lucene.Web.Authentication;
 using NuGet.Lucene.Web.Models;
 using NuGet.Lucene.Web.Modules;
+using Version = Lucene.Net.Util.Version;
 
 namespace NuGet.Lucene.Web
 {
@@ -37,12 +39,13 @@ namespace NuGet.Lucene.Web
 
             var routeMapper = new NuGetWebApiRouteMapper(RoutePathPrefix);
             var mirroringPackageRepository = MirroringPackageRepositoryFactory.Create(cfg.Repository, PackageMirrorTargetUrl, PackageMirrorTimeout);
+            var usersDataProvider = InitializeUsersDataProvider();
 
             Bind<NuGetWebApiRouteMapper>().ToConstant(routeMapper);
             Bind<ILucenePackageRepository>().ToConstant(cfg.Repository).OnDeactivation(_ => cfg.Dispose());
             Bind<IMirroringPackageRepository>().ToConstant(mirroringPackageRepository);
             Bind<LuceneDataProvider>().ToConstant(cfg.Provider);
-            Bind<IQueryable<ApiUser>>().ToConstant(cfg.Provider.AsQueryable<ApiUser>());
+            Bind<UserStore>().ToConstant(new UserStore(usersDataProvider));
             Bind<IApiKeyAuthentication>().To<LuceneApiKeyAuthentication>();
 
             Bind<IHttpModule>().To<ApiKeyAuthenticationModule>();
@@ -57,6 +60,16 @@ namespace NuGet.Lucene.Web
             {
                 repository.SynchronizeWithFileSystem(tokenSource.Token);    
             }
+        }
+
+        private LuceneDataProvider InitializeUsersDataProvider()
+        {
+            var usersIndexPath = Path.Combine(MapPathFromAppSetting("lucenePath", "~/App_Data/Lucene"), "Users");
+            var directoryInfo = new DirectoryInfo(usersIndexPath);
+            var dir = FSDirectory.Open(directoryInfo, new NativeFSLockFactory(directoryInfo));
+            var provider = new LuceneDataProvider(dir, Version.LUCENE_30);
+            provider.Settings.EnableMultipleEntities = false;
+            return provider;
         }
 
         public static bool ShowExceptionDetails

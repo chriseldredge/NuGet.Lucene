@@ -8,7 +8,7 @@ namespace NuGet.Lucene.Web.Authentication
     {
         public const string ApiKeyHeader = "X-NuGet-ApiKey";
 
-        public IQueryable<ApiUser> Users { get; set; }
+        public UserStore Store { get; set; }
 
         public IPrincipal AuthenticateRequest(HttpRequestBase request)
         {
@@ -16,7 +16,7 @@ namespace NuGet.Lucene.Web.Authentication
 
             if (!AuthenticationRequired || string.IsNullOrWhiteSpace(clientKey)) return null;
 
-            var user = Users.FirstOrDefault(u => u.Key == clientKey);
+            var user = Store.Users.FirstOrDefault(u => u.Key == clientKey);
 
             return user != null
                 ? new GenericPrincipal(new GenericIdentity(user.Username, "NuGet Api Key Authentication"), user.Roles.ToArray())

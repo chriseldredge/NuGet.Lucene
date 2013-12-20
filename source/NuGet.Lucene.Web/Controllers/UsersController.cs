@@ -1,14 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Dynamic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Security.Principal;
 using System.Web.Http;
-using Lucene.Net.Index;
-using Lucene.Net.Linq;
-using Lucene.Net.Search;
 using NuGet.Lucene.Web.Authentication;
 using NuGet.Lucene.Web.Models;
 
@@ -25,16 +21,14 @@ namespace NuGet.Lucene.Web.Controllers
     /// </summary>
     public class UsersController : ApiController
     {
-        public LuceneDataProvider Provider { get; set; }
+        public UserStore Store { get; set; }
 
         /// <summary>
         /// Retrieves a list of all users.
         /// </summary>
         public IEnumerable<ApiUser> GetAllUsers()
         {
-            return Provider.AsQueryable<ApiUser>()
-                .Select(DescribeUser)
-                .ToList();
+            return Store.Users.Select(DescribeUser).ToList();
         }
 
         /// <summary>
@@ -44,8 +38,7 @@ namespace NuGet.Lucene.Web.Controllers
         {
             username = ScrubUsername(username);
 
-            var user = Provider.AsQueryable<ApiUser>()
-                .SingleOrDefault(u => u.Username == username);
+            var user = Store.Users.SingleOrDefault(u => u.Username == username);
 
             if (user == null)
             {
@@ -72,7 +65,7 @@ namespace NuGet.Lucene.Web.Controllers
                 attributes.Key = Guid.NewGuid().ToString();
             }
 
-            using (var session = Provider.OpenSession<ApiUser>())
+            using (var session = Store.OpenSession())
             {
                 session.Add(new ApiUser{Username = username, Key = attributes.Key, Roles = attributes.Roles});
             }
@@ -85,7 +78,7 @@ namespace NuGet.Lucene.Web.Controllers
         {
             username = ScrubUsername(username);
 
-            using (var session = Provider.OpenSession<ApiUser>())
+            using (var session = Store.OpenSession())
             {
                 var user = session.Query().SingleOrDefault(u => u.Username == username);
 
@@ -102,10 +95,9 @@ namespace NuGet.Lucene.Web.Controllers
         [Authorize(Roles = RoleNames.AccountAdministrator)]
         public HttpResponseMessage DeleteAllUsers()
         {
-            using (var session = Provider.OpenSession<ApiUser>())
+            using (var session = Store.OpenSession())
             {
-                // faster than retrieving each user and deleting by ID.
-                session.Delete(new WildcardQuery(new Term("Username", "*")));
+                session.DeleteAll();
             }
 
             return Request.CreateResponse(HttpStatusCode.NoContent);
@@ -139,11 +131,11 @@ namespace NuGet.Lucene.Web.Controllers
         {
             var name = ScrubUsername(User.Identity.Name);
 
-            var apiUser = Provider.AsQueryable<ApiUser>().SingleOrDefault(u => u.Username == name);
+            var apiUser = Store.Users.SingleOrDefault(u => u.Username == name);
 
             if (apiUser != null) return apiUser;
 
-            using (var session = Provider.OpenSession<ApiUser>())
+            using (var session = Store.OpenSession())
             {
                 apiUser = new ApiUser { Username = name, Key = Guid.NewGuid().ToString(), Roles = GetUserRoles(User) };
                 session.Add(apiUser);
