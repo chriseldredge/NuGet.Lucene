@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Linq;
-using Lucene.Net.Index;
 using Lucene.Net.Linq;
 using Lucene.Net.Linq.Abstractions;
 using Lucene.Net.Store;

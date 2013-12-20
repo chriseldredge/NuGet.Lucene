@@ -165,12 +165,7 @@ namespace NuGet.Lucene
         
         private IPackagePathResolver CreatePackagePathResolver()
         {
-            if (GroupPackageFilesById)
-            {
-                return new OneFolderPerPackageIdPathResolver(PackagePath);
-            }
-
-            return new DefaultPackagePathResolver(PackagePath);
+            return new GroupingPackagePathResolver(PackagePath, GroupPackageFilesById);
         }
 
         private static LuceneDirectory OpenLuceneDirectory(string luceneIndexPath)

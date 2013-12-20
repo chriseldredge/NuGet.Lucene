@@ -82,6 +82,7 @@
       <Link>Properties\VersionInfo.cs</Link>
     </Compile>
     <Compile Include="AssertEx.cs" />
+    <Compile Include="GroupingPackagePathResolverTests.cs" />
     <Compile Include="IndexDifferenceCalculatorTests.cs" />
     <Compile Include="LucenePackageRepositoryTests.cs" />
     <Compile Include="Mapping\PackageDependencySetConverterTests.cs" />

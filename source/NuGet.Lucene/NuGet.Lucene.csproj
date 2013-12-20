@@ -89,7 +89,7 @@
     <Compile Include="FastZipPackage.cs" />
     <Compile Include="LuceneRepositoryConfigurator.cs" />
     <Compile Include="Mapping\CachingVersionConverter.cs" />
-    <Compile Include="OneFolderPerPackageIdPathResolver.cs" />
+    <Compile Include="GroupingPackagePathResolver.cs" />
     <Compile Include="PorterStemAnalyzer.cs" />
     <Compile Include="Util\CollectionExtensions.cs" />
     <Compile Include="Util\DateTimeUtils.cs" />
