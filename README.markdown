@@ -23,3 +23,11 @@ See [NuGet.Lucene's readme](source/NuGet.Lucene/readme.markdown) for information
 
 The reference usage of these libraries is [Klondike](https://github.com/themotleyfool/Klondike), a fully integrated web
 application for hosting a NuGet package feed.
+
+## Building From Source
+
+NuGet packages need to be restored before loading the solution in Visual Studio.
+
+You can do this by running this command from the top level directory:
+
+    msbuild /t:RestoreSolutionPackages
