@@ -44,7 +44,7 @@ namespace NuGet.Lucene.Web
                 Resolver = resolver
             };
 
-            app.Map("/api/signalr", map =>
+            app.Map("/" + NuGetWebApiModule.RoutePathPrefix + "signalr", map =>
             {
                 if (NuGetWebApiModule.EnableCrossDomainRequests)
                 {
