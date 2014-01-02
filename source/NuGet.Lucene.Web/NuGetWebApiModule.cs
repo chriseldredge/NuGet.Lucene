@@ -46,10 +46,8 @@ namespace NuGet.Lucene.Web
             Bind<IMirroringPackageRepository>().ToConstant(mirroringPackageRepository);
             Bind<LuceneDataProvider>().ToConstant(cfg.Provider);
             Bind<UserStore>().ToConstant(new UserStore(usersDataProvider));
-            Bind<IApiKeyAuthentication>().To<LuceneApiKeyAuthentication>();
-
-            Bind<IHttpModule>().To<ApiKeyAuthenticationModule>();
-            Bind<IHttpModule>().To<LocalRequstAuthenticationModule>();
+            
+            LoadAuthentication();
 
             var tokenSource = new ReusableCancellationTokenSource();
             Bind<ReusableCancellationTokenSource>().ToConstant(tokenSource);
@@ -62,7 +60,24 @@ namespace NuGet.Lucene.Web
             }
         }
 
-        private LuceneDataProvider InitializeUsersDataProvider()
+        public virtual void LoadAuthentication()
+        {
+            Bind<IApiKeyAuthentication>().To<LuceneApiKeyAuthentication>();
+
+            Bind<IHttpModule>().To<ApiKeyAuthenticationModule>();
+
+            if (AllowAnonymousPackageChanges)
+            {
+                Bind<IHttpModule>().To<AnonymousPackageManagerModule>();
+            }
+
+            if (HandleLocalRequestsAsAdmin)
+            {
+                Bind<IHttpModule>().To<LocalRequestAuthenticationModule>();
+            }
+        }
+
+        public virtual LuceneDataProvider InitializeUsersDataProvider()
         {
             var usersIndexPath = Path.Combine(MapPathFromAppSetting("lucenePath", "~/App_Data/Lucene"), "Users");
             var directoryInfo = new DirectoryInfo(usersIndexPath);
@@ -80,6 +95,16 @@ namespace NuGet.Lucene.Web
         public static bool EnableCrossDomainRequests
         {
             get { return GetFlagFromAppSetting("enableCrossDomainRequests", false); }
+        }
+
+        public static bool HandleLocalRequestsAsAdmin
+        {
+            get { return GetFlagFromAppSetting("handleLocalRequestsAsAdmin", false); }
+        }
+
+        public static bool AllowAnonymousPackageChanges
+        {
+            get { return GetFlagFromAppSetting("allowAnonymousPackageChanges", false); }
         }
 
         public static string RoutePathPrefix

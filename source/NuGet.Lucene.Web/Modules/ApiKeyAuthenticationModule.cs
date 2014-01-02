@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Net;
+using System.Security.Authentication;
+using System.Web;
 using NuGet.Lucene.Web.Authentication;
 
 namespace NuGet.Lucene.Web.Modules
@@ -14,10 +17,19 @@ namespace NuGet.Lucene.Web.Modules
 
         private void AuthenticateRequest(object sender, EventArgs e)
         {
-            var apiUser = Service.AuthenticateRequest(Request);
-            if (apiUser != null)
+            try
             {
-                Context.User = apiUser;
+                var apiUser = Service.AuthenticateRequest(Request);
+                if (apiUser != null)
+                {
+                    Context.User = apiUser;
+                }
+            }
+            catch (AuthenticationException ex)
+            {
+                Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                Response.StatusDescription = ex.Message;
+                Response.End();
             }
         }
     }
