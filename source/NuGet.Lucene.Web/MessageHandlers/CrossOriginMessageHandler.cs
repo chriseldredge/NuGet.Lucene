@@ -43,7 +43,7 @@ namespace NuGet.Lucene.Web.MessageHandlers
             if (enableCrossDomainRequests)
             {
                 response.Headers.Add("Access-Control-Allow-Origin", "*");
-                response.Headers.Add("Access-Control-Allow-Headers", "Accept, Origin, X-NuGet-ApiKey");
+                response.Headers.Add("Access-Control-Allow-Headers", "Authorization, Accept, Origin, X-NuGet-ApiKey");
             }
 
             return response;
