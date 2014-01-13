@@ -182,7 +182,9 @@ namespace NuGet.Lucene
         public IEnumerable<string> SupportedFrameworks { get; set; }
 
         public IEnumerable<string> Files { get; set; }
-
+        
+        [Field(IndexMode.NotIndexed)]
+        public Uri OriginUrl { get; set; }
         #endregion
     }
 

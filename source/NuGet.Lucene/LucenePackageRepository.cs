@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reactive.Linq;
 using System.Runtime.Versioning;
 using System.Threading;
@@ -54,11 +55,53 @@ namespace NuGet.Lucene
         {
             Log.Info(m => m("Adding package {0} {1} to file system", package.Id, package.Version));
 
-            base.AddPackage(package);
+            var lucenePackage = await AddPackageToFileSystemAsync(package);
 
             Log.Info(m => m("Indexing package {0} {1}", package.Id, package.Version));
 
-            await Indexer.AddPackage(Convert(package));
+            await Indexer.AddPackage(lucenePackage);
+        }
+
+        private async Task<LucenePackage> AddPackageToFileSystemAsync(IPackage package)
+        {
+            var dataPackage = package as DataServicePackage;
+
+            if (dataPackage == null)
+            {
+                base.AddPackage(package);
+                return Convert(package);
+            }
+
+            var parent = PathResolver.GetInstallPath(package);
+            var path = Path.Combine(parent, PathResolver.GetPackageFileName(package));
+            var tcs = new TaskCompletionSource<object>();
+
+            if (!Directory.Exists(parent))
+            {
+                Directory.CreateDirectory(parent);
+            }
+
+            var client = new WebClient();
+            client.DownloadFileCompleted += (s, e) =>
+            {
+                if (e.Error != null)
+                {
+                    tcs.SetException(e.Error);
+                }
+                else
+                {
+                    tcs.SetResult(e);
+                }
+            };
+
+            client.Headers.Add(RepositoryOperationNames.OperationHeaderName, RepositoryOperationNames.Mirror);
+            client.DownloadFileAsync(dataPackage.DownloadUrl, path);
+
+            await (tcs.Task.ContinueWith(_ => client.Dispose()));
+
+            var lucenePackage = LoadFromFileSystem(path);
+            lucenePackage.OriginUrl = dataPackage.DownloadUrl;
+            return lucenePackage;
         }
 
         public override void AddPackage(IPackage package)
