@@ -250,7 +250,7 @@ namespace NuGet.Lucene
             var path = GetPackageFilePath(lucenePackage);
             lucenePackage.Path = path;
 
-            CalculateDerivedData(package, lucenePackage, path, lucenePackage.GetStream());
+            CalculateDerivedData(package, lucenePackage, path, () => lucenePackage.GetStream());
 
             return lucenePackage;
         }
@@ -295,12 +295,12 @@ namespace NuGet.Lucene
             return uri;
         }
 
-        protected virtual void CalculateDerivedData(IPackage sourcePackage, LucenePackage package, string path, Stream stream)
+        protected virtual void CalculateDerivedData(IPackage sourcePackage, LucenePackage package, string path, Func<Stream> openStream)
         {
             var fastPackage = sourcePackage as FastZipPackage;
             if (fastPackage == null)
             {
-                CalculateDerivedDataSlowlyConsumingLotsOfMemory(package, stream);
+                CalculateDerivedDataSlowlyConsumingLotsOfMemory(package, openStream);
             }
             else
             {
@@ -333,10 +333,10 @@ namespace NuGet.Lucene
             return lastModified;
         }
 
-        private void CalculateDerivedDataSlowlyConsumingLotsOfMemory(LucenePackage package, Stream stream)
+        private void CalculateDerivedDataSlowlyConsumingLotsOfMemory(LucenePackage package, Func<Stream> openStream)
         {
             byte[] fileBytes;
-            using (stream)
+            using (var stream = openStream())
             {
                 fileBytes = stream.ReadAllBytes();
             }
