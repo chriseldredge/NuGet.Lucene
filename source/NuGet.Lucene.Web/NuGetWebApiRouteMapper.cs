@@ -41,17 +41,17 @@ namespace NuGet.Lucene.Web
             routes.MapHttpRoute(RouteNames.Users.GetUser,
                                 pathPrefix + "users/{*username}",
                                 new { controller = "Users", action = "Get" },
-                                new { username = ".+", method = new HttpMethodConstraint(HttpMethod.Get) });
+                                new { username = ".+", method = new HttpMethodConstraint(HttpMethod.Get, HttpMethod.Options) });
 
             routes.MapHttpRoute(RouteNames.Users.PutUser,
                                 pathPrefix + "users/{*username}",
                                 new { controller = "Users", action = "Put" },
-                                new { username = ".+" });
+                                new { username = ".+", method = new HttpMethodConstraint(HttpMethod.Put, HttpMethod.Options) });
 
             routes.MapHttpRoute(RouteNames.Users.DeleteUser,
                                 pathPrefix + "users/{*username}",
                                 new { controller = "Users", action = "Delete" },
-                                new { username = ".+" });
+                                new { username = ".+", method = new HttpMethodConstraint(HttpMethod.Delete, HttpMethod.Options) });
 
             routes.MapHttpRoute(RouteNames.Users.DeleteAll,
                                 pathPrefix + "users",
