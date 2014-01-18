@@ -123,6 +123,7 @@
     <Compile Include="Controllers\PackagesControllerTests.cs" />
     <Compile Include="Controllers\TabCompletionControllerTests.cs" />
     <Compile Include="Controllers\ApiControllerTests.cs" />
+    <Compile Include="Controllers\UsersControllerTests.cs" />
     <Compile Include="DataServices\DataServicePackageTests.cs" />
     <Compile Include="DataServices\PackageDataServiceFindPackagesByIdTests.cs" />
     <Compile Include="DataServices\PackageDataServiceGetUpdatesTests.cs" />
@@ -142,6 +143,7 @@
     <Compile Include="TabCompletionRouteTests.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

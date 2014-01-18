@@ -13,10 +13,12 @@ namespace NuGet.Lucene.Web
             public const string All = "Users.GetAll";
             public const string GetUser = "Users.GetUser";
             public const string PutUser = "Users.PutUser";
+            public const string PostUser = "Users.PostUser";
             public const string DeleteAll = "Users.DeleteAll";
             public const string DeleteUser = "Users.DeleteUser";
             public const string GetAuthenticationInfo = "Users.GetAuthenticationInfo";
             public const string GetRequiredAuthenticationInfo = "Users.GetRequiredAuthenticationInfo";
+            public const string ChangeApiKey = "Users.ChangeApiKey";
         }
 
         public static class Packages

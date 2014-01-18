@@ -181,8 +181,10 @@
     <Compile Include="Formatters\PackageHtmlSerializer.cs" />
     <Compile Include="Formatters\PackageSummaryListSerializer.cs" />
     <Compile Include="Models\DelegatingPackageRepository.cs" />
+    <Compile Include="Models\KeyChangeRequest.cs" />
     <Compile Include="Models\MirroringPackageRepository.cs" />
     <Compile Include="Models\PackageVersionSummary.cs" />
+    <Compile Include="Models\UpdateUserAttributes.cs" />
     <Compile Include="Models\UserAttributes.cs" />
     <Compile Include="Modules\AnonymousPackageManagerModule.cs" />
     <Compile Include="Modules\LocalRequestAuthenticationModule.cs" />

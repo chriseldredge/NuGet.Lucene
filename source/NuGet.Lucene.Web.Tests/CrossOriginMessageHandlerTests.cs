@@ -96,7 +96,7 @@ namespace NuGet.Lucene.Web.Tests
             {
                 var methods = GetSupportedMethods("api/users/example");
 
-                Assert.That(methods, Is.EquivalentTo(new[] { HttpMethod.Get, HttpMethod.Put, HttpMethod.Delete }));
+                Assert.That(methods, Is.EquivalentTo(new[] { HttpMethod.Get, HttpMethod.Put, HttpMethod.Delete, HttpMethod.Post }));
             }
 
             [Test]
@@ -104,7 +104,7 @@ namespace NuGet.Lucene.Web.Tests
             {
                 var methods = GetSupportedMethods("api/users/domain/user");
 
-                Assert.That(methods, Is.EquivalentTo(new[] { HttpMethod.Get, HttpMethod.Put, HttpMethod.Delete }));
+                Assert.That(methods, Is.EquivalentTo(new[] { HttpMethod.Get, HttpMethod.Put, HttpMethod.Delete, HttpMethod.Post }));
             }
         }
 

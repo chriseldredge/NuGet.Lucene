@@ -1,0 +1,198 @@
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Security.Principal;
+using Lucene.Net.Linq;
+using Lucene.Net.Store;
+using Lucene.Net.Util;
+using NuGet.Lucene.Web.Authentication;
+using NuGet.Lucene.Web.Controllers;
+using NuGet.Lucene.Web.Models;
+using NUnit.Framework;
+
+namespace NuGet.Lucene.Web.Tests.Controllers
+{
+    [TestFixture]
+    public class UsersControllerTests : ApiControllerTests<UsersController>
+    {
+        private UserStore store;
+
+        protected override UsersController CreateController()
+        {
+            var provider = new LuceneDataProvider(new RAMDirectory(), Version.LUCENE_30);
+            store = new UserStore(provider);
+            return new UsersController { Store = store };
+        }
+
+        public class ChangeApiKeyTests : UsersControllerTests
+        {
+            [SetUp]
+            public void SetUp()
+            {
+                SetUpRequest(RouteNames.Users.ChangeApiKey, HttpMethod.Post, "api/session/changeApiKey");
+                controller.User = new GenericPrincipal(new GenericIdentity("A"), new string[0]);
+            }
+
+            [Test]
+            public void SetsKey()
+            {
+                using (var session = store.OpenSession())
+                {
+                    session.Add(new ApiUser { Username = "A", Key = "old key" });
+                }
+
+                var result = controller.ChangeApiKey(new KeyChangeRequest("new key"));
+
+                Assert.That(store.Users.Single().Key, Is.EqualTo("new key"));
+                Assert.That(result.Key, Is.EqualTo("new key"));
+            }
+
+            [Test]
+            public void Generates()
+            {
+                using (var session = store.OpenSession())
+                {
+                    session.Add(new ApiUser { Username = "A", Key = "old key" });
+                }
+
+                var result = controller.ChangeApiKey(new KeyChangeRequest());
+
+                Assert.That(result.Key, Is.Not.Empty);
+                Assert.That(store.Users.Single().Key, Is.EqualTo(result.Key));
+            }
+        }
+
+        public class PostTests : UsersControllerTests
+        {
+            [SetUp]
+            public void SetUp()
+            {
+                SetUpRequest(RouteNames.Users.PostUser, HttpMethod.Post, "api/users/A");
+            }
+
+            [Test]
+            public void NotFound()
+            {
+                var result = controller.Post("A", new UpdateUserAttributes { RenameTo = "B" });
+
+                Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
+            }
+
+            [Test]
+            public void RenameUser()
+            {
+                const string key = "key";
+                var roles = new[] { "role1" };
+
+                using (var session = store.OpenSession())
+                {
+                    session.Add(new ApiUser {Username = "A", Key = key, Roles = roles});
+                }
+
+                controller.Post("A", new UpdateUserAttributes { RenameTo = "B" });
+
+                Assert.That(store.Users.Select(u => u.Username).ToArray(), Is.EquivalentTo(new[] {"B"}));
+                Assert.That(store.Users.Single().Key, Is.EqualTo(key));
+                Assert.That(store.Users.Single().Roles, Is.EquivalentTo(roles));
+            }
+
+            [Test]
+            public void RenameUserOverwrite()
+            {
+                const string key = "key";
+                var roles = new[] { "role1" };
+
+                using (var session = store.OpenSession())
+                {
+                    session.Add(new ApiUser { Username = "A", Key = key, Roles = roles });
+                    session.Add(new ApiUser { Username = "B", Key = key, Roles = roles });
+                }
+
+                controller.Post("A", new UpdateUserAttributes { RenameTo = "B" });
+
+                Assert.That(store.Users.Select(u => u.Username).ToArray(), Is.EquivalentTo(new[] { "B" }));
+                Assert.That(store.Users.Single().Key, Is.EqualTo(key));
+                Assert.That(store.Users.Single().Roles, Is.EquivalentTo(roles));
+            }
+
+            [Test]
+            public void RenameUserDoesNotOverwrite()
+            {
+                const string key = "key";
+                var roles = new[] { "role1" };
+
+                using (var session = store.OpenSession())
+                {
+                    session.Add(new ApiUser { Username = "A", Key = key, Roles = roles });
+                    session.Add(new ApiUser { Username = "B", Key = key, Roles = roles });
+                }
+
+                var result = controller.Post("A", new UpdateUserAttributes { RenameTo = "B", Overwrite = false});
+
+                Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.Conflict));
+                Assert.That(store.Users.Select(u => u.Username).ToArray(), Is.EquivalentTo(new[] { "A", "B" }));
+            }
+
+            [Test]
+            public void RenameUserOverwritesOnCaseChange()
+            {
+                const string key = "key";
+                var roles = new[] { "role1" };
+
+                using (var session = store.OpenSession())
+                {
+                    session.Add(new ApiUser { Username = "b", Key = key, Roles = roles });
+                }
+
+                controller.Post("b", new UpdateUserAttributes { RenameTo = "B", Overwrite = false });
+
+                Assert.That(store.Users.Select(u => u.Username).ToArray(), Is.EquivalentTo(new[] { "B" }));
+            }
+        }
+
+        public class PutTests : UsersControllerTests
+        {
+            [SetUp]
+            public void SetUp()
+            {
+                SetUpRequest(RouteNames.Users.PutUser, HttpMethod.Put, "api/users/A");
+            }
+
+            [Test]
+            public void Overwrite()
+            {
+                const string key = "key";
+                var roles = new[] { "role1" };
+
+                using (var session = store.OpenSession())
+                {
+                    session.Add(new ApiUser { Username = "A", Key = key, Roles = roles });
+                }
+
+                var result = controller.Put("A", new UserAttributes { Key = "new key", Roles = new []{"role2"} });
+
+                Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.Created));
+                Assert.That(store.Users.Single().Key, Is.EqualTo("new key"));
+                Assert.That(store.Users.Single().Roles, Is.EquivalentTo(new[] {"role2"}));
+            }
+
+            [Test]
+            public void DoesNotOverwrite()
+            {
+                const string key = "key";
+                var roles = new[] { "role1" };
+
+                using (var session = store.OpenSession())
+                {
+                    session.Add(new ApiUser { Username = "A", Key = key, Roles = roles });
+                }
+
+                var result = controller.Put("A", new UserAttributes { Overwrite = false });
+
+                Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.Conflict));
+                Assert.That(store.Users.Single().Key, Is.EqualTo(key));
+                Assert.That(store.Users.Single().Roles, Is.EquivalentTo(roles));
+            }
+        }
+    }
+}

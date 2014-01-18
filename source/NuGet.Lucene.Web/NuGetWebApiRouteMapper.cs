@@ -48,6 +48,11 @@ namespace NuGet.Lucene.Web
                                 new { controller = "Users", action = "Put" },
                                 new { username = ".+", method = new HttpMethodConstraint(HttpMethod.Put, HttpMethod.Options) });
 
+            routes.MapHttpRoute(RouteNames.Users.PostUser,
+                                pathPrefix + "users/{*username}",
+                                new { controller = "Users", action = "Post" },
+                                new { username = ".+", method = new HttpMethodConstraint(HttpMethod.Post, HttpMethod.Options) });
+
             routes.MapHttpRoute(RouteNames.Users.DeleteUser,
                                 pathPrefix + "users/{*username}",
                                 new { controller = "Users", action = "Delete" },
@@ -61,6 +66,10 @@ namespace NuGet.Lucene.Web
             routes.MapHttpRoute(RouteNames.Users.GetAuthenticationInfo,
                                 pathPrefix + "session",
                                 new { controller = "Users", action = "GetAuthenticationInfo" });
+
+            routes.MapHttpRoute(RouteNames.Users.ChangeApiKey,
+                                pathPrefix + "session/changeApiKey",
+                                new { controller = "Users", action = "ChangeApiKey" });
 
             routes.MapHttpRoute(RouteNames.Users.GetRequiredAuthenticationInfo,
                                 pathPrefix + "authenticate",
