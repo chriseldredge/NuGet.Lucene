@@ -15,8 +15,7 @@ namespace NuGet.Lucene.Web.DataServices
     /// </summary>
     public class PackageDataService : DataService<PackageDataSource>, IServiceProvider, IOperationContext
     {
-        public static PackageServiceStreamProvider PackageServiceStreamProvider { get; private set; }
-
+        public PackageServiceStreamProvider PackageServiceStreamProvider { get; set; }
         public IMirroringPackageRepository PackageRepository { get; set; }
 
         public static void InitializeService(DataServiceConfiguration config)
@@ -30,7 +29,6 @@ namespace NuGet.Lucene.Web.DataServices
 
         internal static void RegisterServices(IDataServiceConfiguration config)
         {
-            PackageServiceStreamProvider = new PackageServiceStreamProvider();
             config.SetServiceOperationAccessRule("Search", ServiceOperationRights.AllRead);
             config.SetServiceOperationAccessRule("FindPackagesById", ServiceOperationRights.AllRead);
             config.SetServiceOperationAccessRule("GetUpdates", ServiceOperationRights.AllRead);

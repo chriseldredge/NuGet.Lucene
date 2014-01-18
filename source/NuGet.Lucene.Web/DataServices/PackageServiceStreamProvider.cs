@@ -22,7 +22,7 @@ namespace NuGet.Lucene.Web.DataServices
             return new Uri(operationContext.AbsoluteRequestUri, vpath);
         }
 
-        public string GetPackageDownloadPath(DataServicePackage package)
+        public virtual string GetPackageDownloadPath(DataServicePackage package)
         {
             var route = RouteTable.Routes[RouteNames.Packages.Download];
 
@@ -32,7 +32,7 @@ namespace NuGet.Lucene.Web.DataServices
             return VirtualPathUtility.ToAbsolute("~/" + path);
         }
 
-        private static RequestContext RequestContext
+        public static RequestContext RequestContext
         {
             get
             {
