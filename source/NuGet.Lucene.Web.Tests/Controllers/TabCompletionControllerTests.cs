@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Moq;
+using NuGet.Lucene.Web.Models;
 using NUnit.Framework;
 using NuGet.Lucene.Web.Controllers;
 
@@ -12,6 +14,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
     {
         private  TabCompletionController controller;
         private  Mock<ILucenePackageRepository> repository;
+        private  Mock<IMirroringPackageRepository> mirroringRepository;
         private  List<LucenePackage> packages;
 
         [SetUp]
@@ -19,9 +22,13 @@ namespace NuGet.Lucene.Web.Tests.Controllers
         {
             packages = new List<LucenePackage>();
             repository = new Mock<ILucenePackageRepository>();
-            controller = new TabCompletionController { Repository = repository.Object };
+            mirroringRepository = new Mock<IMirroringPackageRepository>();
+            controller = new TabCompletionController { Repository = repository.Object, MirroringRepository = mirroringRepository.Object };
 
             repository.Setup(repo => repo.LucenePackages).Returns(packages.AsQueryable());
+
+            mirroringRepository.Setup(repo => repo.FindPackagesById(It.IsAny<string>()))
+                .Returns((string id) => packages.Where(p => p.Id.Equals(id, StringComparison.InvariantCultureIgnoreCase)));
         }
 
         [Test]

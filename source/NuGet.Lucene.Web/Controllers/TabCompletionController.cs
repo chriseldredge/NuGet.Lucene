@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web.Http;
+using NuGet.Lucene.Util;
+using NuGet.Lucene.Web.Models;
 
 namespace NuGet.Lucene.Web.Controllers
 {
@@ -11,6 +13,7 @@ namespace NuGet.Lucene.Web.Controllers
     public class TabCompletionController : ApiController
     {
         public ILucenePackageRepository Repository { get; set; }
+        public IMirroringPackageRepository MirroringRepository { get; set; }
 
         /// <summary>
         /// Find packages that start with <paramref name="partialId"/>.
@@ -27,9 +30,7 @@ namespace NuGet.Lucene.Web.Controllers
                 packages = packages.Where(p => p.Id.StartsWith(partialId));
             }
 
-            packages = packages
-                .Where(p => p.IsLatestVersion)
-                .OrderBy(p => p.Id);
+            packages = packages.LatestOnly(includePrerelease).OrderBy(p => p.Id);
 
             return packages.Select(p => p.Id).Take(maxResults).ToArray();
         }
@@ -42,7 +43,12 @@ namespace NuGet.Lucene.Web.Controllers
         /// <returns>Set of available versions that match</returns>
         public IEnumerable<string> GetPackageVersions(string packageId, bool includePrerelease = false)
         {
-            var packages = GetPackages(includePrerelease).Where(p => p.Id == packageId);
+            var packages = MirroringRepository.FindPackagesById(packageId);
+
+            if (!includePrerelease)
+            {
+                packages = packages.Where(p => p.IsReleaseVersion());
+            }
 
             return packages.OrderBy(p => p.Version).Select(p => p.Version.ToString()).ToArray();
         }
