@@ -8,6 +8,7 @@ using System.Net.Mime;
 using System.Threading.Tasks;
 using System.Web.Http;
 using AspNet.WebApi.HtmlMicrodataFormatter;
+using NuGet.Lucene.Util;
 using NuGet.Lucene.Web.Models;
 using NuGet.Lucene.Web.Util;
 
@@ -139,10 +140,22 @@ namespace NuGet.Lucene.Web.Controllers
         /// <param name="includePrerelease">Specify <c>true</c> to look for pre-release packages.</param>
         /// <param name="offset">Number of results to skip, for pagination.</param>
         /// <param name="count">Number of results to return, for pagination.</param>
+        /// <param name="originFilter">Limit result to mirrored or local packages, or both.</param>
+        /// <param name="sort">Specify field to sort results on. Score (relevance) is default.</param>
+        /// <param name="order">Sort order (default:ascending or descending)</param>
         [HttpGet]
-        public dynamic Search(string query = "", bool includePrerelease = false, int offset = 0, int count = 20)
+        public dynamic Search(string query = "", bool includePrerelease = false, int offset = 0, int count = 20, PackageOriginFilter originFilter = PackageOriginFilter.Any, SearchSortField sort = SearchSortField.Score, SearchSortDirection order = SearchSortDirection.Ascending)
         {
-            var queryable = LuceneRepository.Search(query, new string[0], includePrerelease).Where(p => p.IsLatestVersion);
+            var criteria = new SearchCriteria(query)
+            {
+                AllowPrereleaseVersions = includePrerelease,
+                PackageOriginFilter = originFilter,
+                SortField = sort,
+                SortDirection = order
+            };
+
+            var queryable = LuceneRepository.Search(criteria).LatestOnly(includePrerelease);
+
             var totalHits = queryable.Count();
             var hits = queryable.Skip(offset).Take(count).ToList();
 
@@ -152,6 +165,9 @@ namespace NuGet.Lucene.Web.Controllers
             result.TotalHits = totalHits;
             result.Hits = hits;
             result.Offset = offset;
+            result.OriginFilter = originFilter;
+            result.Sort = sort;
+            result.Order = order;
             return result;
         }
 

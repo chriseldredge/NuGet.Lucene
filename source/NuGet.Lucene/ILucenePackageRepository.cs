@@ -62,5 +62,11 @@ namespace NuGet.Lucene
         /// all packages with the same <see cref="LucenePackage.Id"/>.
         /// </summary>
         Task IncrementDownloadCount(IPackage package);
+
+        /// <summary>
+        /// Overload of <see cref="IServiceBasedRepository.Search"/>
+        /// using parameter object for better flexibility.
+        /// </summary>
+        IQueryable<IPackage> Search(SearchCriteria criteria);
     }
 }

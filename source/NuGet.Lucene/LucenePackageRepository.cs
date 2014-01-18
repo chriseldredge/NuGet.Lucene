@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Packaging;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Net;
 using System.Reactive.Linq;
 using System.Runtime.Versioning;
@@ -101,6 +103,7 @@ namespace NuGet.Lucene
 
             var lucenePackage = LoadFromFileSystem(path);
             lucenePackage.OriginUrl = dataPackage.DownloadUrl;
+            lucenePackage.IsMirrored = true;
             return lucenePackage;
         }
 
@@ -159,27 +162,74 @@ namespace NuGet.Lucene
 
         public IQueryable<IPackage> Search(string searchTerm, IEnumerable<string> targetFrameworks, bool allowPrereleaseVersions)
         {
+            return Search(new SearchCriteria(searchTerm)
+                {
+                    TargetFrameworks = targetFrameworks,
+                    AllowPrereleaseVersions = allowPrereleaseVersions
+                });
+        }
+
+        public IQueryable<IPackage> Search(SearchCriteria criteria)
+        {
             var packages = LucenePackages;
 
-            if (!string.IsNullOrEmpty(searchTerm))
+            if (!string.IsNullOrEmpty(criteria.SearchTerm))
             {
                 packages = from
                                 pkg in packages
                            where
-                                ((pkg.Id == searchTerm || pkg.Title == searchTerm).Boost(3) ||
-                                (pkg.Tags == searchTerm).Boost(2) ||
-                                (pkg.Authors.Contains(searchTerm) || pkg.Owners.Contains(searchTerm)).Boost(2) ||
-                                (pkg.Summary == searchTerm || pkg.Description == searchTerm)).AllowSpecialCharacters()
+                                ((pkg.Id == criteria.SearchTerm || pkg.Title == criteria.SearchTerm).Boost(3) ||
+                                (pkg.Tags == criteria.SearchTerm).Boost(2) ||
+                                (pkg.Authors.Contains(criteria.SearchTerm) || pkg.Owners.Contains(criteria.SearchTerm)).Boost(2) ||
+                                (pkg.Summary == criteria.SearchTerm || pkg.Description == criteria.SearchTerm)).AllowSpecialCharacters()
                            select
                                pkg;
             }
 
-            if (!allowPrereleaseVersions)
+            if (!criteria.AllowPrereleaseVersions)
             {
                 packages = packages.Where(p => !p.IsPrerelease);
             }
-            
+
+            if (criteria.PackageOriginFilter != PackageOriginFilter.Any)
+            {
+                var flag = criteria.PackageOriginFilter == PackageOriginFilter.Mirror;
+                packages = packages.Where(p => p.IsMirrored == flag);
+            }
+
+            packages = ApplySort(criteria, packages);
+
             return packages;
+        }
+
+        private static IQueryable<LucenePackage> ApplySort(SearchCriteria criteria, IQueryable<LucenePackage> packages)
+        {
+            Expression<Func<LucenePackage, object>> sortSelector = null;
+
+            switch (criteria.SortField)
+            {
+                case SearchSortField.Id:
+                    sortSelector = p => p.Id;
+                    break;
+                case SearchSortField.Title:
+                    sortSelector = p => p.Title;
+                    break;
+                case SearchSortField.Published:
+                    sortSelector = p => p.Published;
+                    break;
+                case SearchSortField.Score:
+                    sortSelector = p => p.Score();
+                    break;
+            }
+
+            if (sortSelector == null)
+            {
+                return packages;
+            }
+
+            return criteria.SortDirection == SearchSortDirection.Ascending
+                    ? packages.OrderBy(sortSelector)
+                    : packages.OrderByDescending(sortSelector);
         }
 
         public IEnumerable<IPackage> GetUpdates(IEnumerable<IPackage> packages, bool includePrerelease, bool includeAllVersions,

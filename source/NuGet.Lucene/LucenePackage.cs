@@ -185,6 +185,8 @@ namespace NuGet.Lucene
         
         [Field(IndexMode.NotIndexed)]
         public Uri OriginUrl { get; set; }
+
+        public bool IsMirrored { get; set; }
         #endregion
     }
 
