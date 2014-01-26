@@ -28,7 +28,7 @@ namespace NuGet.Lucene.Web.Controllers
         /// </summary>
         public IEnumerable<ApiUser> GetAllUsers()
         {
-            return Store.Users.OrderBy(u => u.Username).Select(DescribeUser).ToList();
+            return Store.All.OrderBy(u => u.Username).Select(DescribeUser).ToList();
         }
 
         /// <summary>
@@ -36,9 +36,7 @@ namespace NuGet.Lucene.Web.Controllers
         /// </summary>
         public object Get(string username)
         {
-            username = ScrubUsername(username);
-
-            var user = Store.Users.SingleOrDefault(u => u.Username == username);
+            var user = Store.FindByUsername(username);
 
             if (user == null)
             {
@@ -51,29 +49,23 @@ namespace NuGet.Lucene.Web.Controllers
         /// <summary>
         /// Creates or replaces a user.
         /// </summary>
-        /// <param name="username"></param>
-        /// <param name="key">API key to set for user (optional). If not specified, a GUID will be generated and used as the key.</param>
-        /// <param name="roles">Roles to grant user.</param>
-        /// <returns></returns>
         [Authorize(Roles = RoleNames.AccountAdministrator)]
         public HttpResponseMessage Put(string username, [FromBody]UserAttributes attributes)
         {
-            username = ScrubUsername(username);
+            var user = new ApiUser {Username = username, Key = attributes.Key, Roles = attributes.Roles};
 
-            if (string.IsNullOrWhiteSpace(attributes.Key))
+            try
             {
-                attributes.Key = Guid.NewGuid().ToString();
+                Store.Add(user, GetUserUpdateMode(attributes));
             }
-
-            using (var session = Store.OpenSession())
+            catch (UserOverwriteException)
             {
-                if (!attributes.Overwrite && session.Query().Any(u => u.Username == username))
-                {
-                    return Request.CreateErrorResponse(HttpStatusCode.Conflict,
-                        "User " + username + " already exists.");
-                }
-
-                session.Add(new ApiUser{Username = username, Key = attributes.Key, Roles = attributes.Roles});
+                return Request.CreateErrorResponse(HttpStatusCode.Conflict,
+                    "User " + username + " already exists.");
+            }
+            catch (UserPermissionException ex)
+            {
+                return Request.CreateErrorResponse(HttpStatusCode.Forbidden, ex.Message);
             }
 
             return Request.CreateResponse(HttpStatusCode.Created);
@@ -88,75 +80,51 @@ namespace NuGet.Lucene.Web.Controllers
         [Authorize(Roles = RoleNames.AccountAdministrator)]
         public HttpResponseMessage Post(string username, [FromBody]UpdateUserAttributes attributes)
         {
-            username = ScrubUsername(username);
-            var renameTo = ScrubUsername(attributes.RenameTo);
-
-            using (var session = Store.OpenSession())
+            try
             {
-                var user = session.Query().SingleOrDefault(u => u.Username == username);
-
-                if (user == null)
-                {
-                    return Request.CreateErrorResponse(HttpStatusCode.NotFound, "User" + username + " not found.");
-                }
-
-                if (attributes.Key != null)
-                {
-                    user.Key = attributes.Key;
-                }
-
-                if (attributes.Roles != null)
-                {
-                    user.Roles = attributes.Roles;
-                }
-
-                if (attributes.RenameTo == null)
-                {
-                    return Request.CreateResponse(HttpStatusCode.Created);
-                }
-
-                var isRenamingToDifferentName = !renameTo.Equals(username, StringComparison.InvariantCultureIgnoreCase);
-
-                if (isRenamingToDifferentName && !attributes.Overwrite && session.Query().Any(u => u.Username == renameTo))
-                {
-                    return Request.CreateErrorResponse(HttpStatusCode.Conflict,
-                        "User " + attributes.RenameTo + " already exists.");
-                }
-
-                user.Username = attributes.RenameTo;
+                Store.Update(username, attributes.RenameTo, attributes.Key, attributes.Roles, GetUserUpdateMode(attributes));
+            }
+            catch (UserNotFoundException)
+            {
+                return Request.CreateErrorResponse(HttpStatusCode.NotFound, "User " + username + " not found.");
+            }
+            catch (UserOverwriteException)
+            {
+                return Request.CreateErrorResponse(HttpStatusCode.Conflict, "User " + attributes.RenameTo + " already exists.");
+            }
+            catch (UserPermissionException ex)
+            {
+                return Request.CreateErrorResponse(HttpStatusCode.Forbidden, ex.Message);
             }
 
-            return Request.CreateResponse(HttpStatusCode.Created);
+            return Request.CreateResponse(HttpStatusCode.OK);
         }
 
         [Authorize(Roles = RoleNames.AccountAdministrator)]
         public HttpResponseMessage Delete(string username)
         {
-            username = ScrubUsername(username);
-
-            using (var session = Store.OpenSession())
+            try
             {
-                var user = session.Query().SingleOrDefault(u => u.Username == username);
-
-                if (user == null)
-                {
-                    return Request.CreateErrorResponse(HttpStatusCode.NotFound, "User " + username + " not found.");
-                }
-                session.Delete(user);
+                Store.Delete(username);
+            }
+            catch (UserNotFoundException)
+            {
+                return Request.CreateErrorResponse(HttpStatusCode.NotFound, "User " + username + " not found.");
+            }
+            catch (UserPermissionException ex)
+            {
+                return Request.CreateErrorResponse(HttpStatusCode.Forbidden, ex.Message);
             }
 
-            return Request.CreateResponse(HttpStatusCode.NoContent);
+            return Request.CreateResponse(HttpStatusCode.OK);
         }
 
         [Authorize(Roles = RoleNames.AccountAdministrator)]
         public HttpResponseMessage DeleteAllUsers()
         {
-            using (var session = Store.OpenSession())
-            {
-                session.DeleteAll();
-            }
+            Store.DeleteAll();
 
-            return Request.CreateResponse(HttpStatusCode.NoContent);
+            return Request.CreateResponse(HttpStatusCode.OK);
         }
 
         /// <summary>
@@ -185,17 +153,13 @@ namespace NuGet.Lucene.Web.Controllers
         [Authorize]
         public ApiUser GetRequiredAuthenticationInfo()
         {
-            var name = ScrubUsername(User.Identity.Name);
-
-            var apiUser = Store.Users.SingleOrDefault(u => u.Username == name);
+            var apiUser = Store.FindByUsername(User.Identity.Name);
 
             if (apiUser != null) return apiUser;
 
-            using (var session = Store.OpenSession())
-            {
-                apiUser = new ApiUser { Username = name, Key = Guid.NewGuid().ToString(), Roles = GetUserRoles(User) };
-                session.Add(apiUser);
-            }
+            apiUser = new ApiUser { Username = User.Identity.Name, Roles = GetUserRoles(User) };
+
+            Store.Add(apiUser, UserUpdateMode.Overwrite);
 
             return apiUser;
         }
@@ -205,26 +169,23 @@ namespace NuGet.Lucene.Web.Controllers
         /// </summary>
         [Authorize]
         [HttpPost]
-        public KeyChangeRequest ChangeApiKey([FromBody]KeyChangeRequest req)
+        public object ChangeApiKey([FromBody]KeyChangeRequest req)
         {
-            if (string.IsNullOrWhiteSpace(req.Key))
+            var username = User.Identity.Name;
+
+            try
             {
-                req.Key = Guid.NewGuid().ToString();
+                req.Key = Store.ChangeApiKey(username, req.Key);
+                return req;
             }
-
-            using (var session = Store.OpenSession())
+            catch (UserNotFoundException)
             {
-                var apiUser = session.Query().Single(u => u.Username == ScrubUsername(User.Identity.Name));
-                apiUser.Key = req.Key;
+                return Request.CreateErrorResponse(HttpStatusCode.NotFound, "User " + username + " not found.");
             }
-
-            return req;
-        }
-
-        private static string ScrubUsername(string username)
-        {
-            if (string.IsNullOrWhiteSpace(username)) return "";
-            return username.Replace('\\', '/');
+            catch (UserPermissionException ex)
+            {
+                return Request.CreateErrorResponse(HttpStatusCode.Forbidden, ex.Message);
+            }
         }
 
         private IEnumerable<string> GetUserRoles(IPrincipal user)
@@ -246,6 +207,11 @@ namespace NuGet.Lucene.Web.Controllers
         private bool IsSelf(ApiUser user)
         {
             return string.Equals(User.Identity.Name, user.Username, StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        private static UserUpdateMode GetUserUpdateMode(UserAttributes attributes)
+        {
+            return attributes.Overwrite ? UserUpdateMode.Overwrite : UserUpdateMode.NoClobber;
         }
     }
 }

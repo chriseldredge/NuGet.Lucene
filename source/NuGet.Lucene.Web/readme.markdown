@@ -61,3 +61,6 @@ information when enabled. Default: false.
 * NuGet.Lucene.Web:enablePackageFileWatcher flag indicating if a file system watcher should monitor the packages path for changes to keep the index in sync. Use this setting if any external process adds or removes package files. Default: true
 * NuGet.Lucene.Web:synchronizeOnStart when true, scans the packagesPath and compares nupkg files with the Lucene index and updates the Lucene index to match the file system. This setting enables the Lucene index to be kept in sync when package files change while the web app isn't running. Default: true
 * NuGet.Lucene.Web:groupPackageFilesById when true, package files are stored into subdirectories by package ID. When false, all packages are stored in the top-level packages path. Default: true
+* NuGet.Lucene.Web:handleLocalRequestsAsAdmin when true, requests on local interfaces (127.0.0.1, ::1) are automatically granted administrative permissions
+* NuGet.Lucene.Web:localAdministratorApiKey when non-blank, sets the api key on the LocalAdministrator account to a specific value instead of generating one
+* NuGet.Lucene.Web:allowAnonymousPackageChanges when true, does not require an api key or other authentication to push and delete packages

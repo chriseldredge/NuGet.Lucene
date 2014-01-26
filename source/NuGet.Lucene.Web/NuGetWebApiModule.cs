@@ -39,13 +39,13 @@ namespace NuGet.Lucene.Web
 
             var routeMapper = new NuGetWebApiRouteMapper(RoutePathPrefix);
             var mirroringPackageRepository = MirroringPackageRepositoryFactory.Create(cfg.Repository, PackageMirrorTargetUrl, PackageMirrorTimeout);
-            var usersDataProvider = InitializeUsersDataProvider();
+            var userStore = InitializeUserStore();
 
             Bind<NuGetWebApiRouteMapper>().ToConstant(routeMapper);
             Bind<ILucenePackageRepository>().ToConstant(cfg.Repository).OnDeactivation(_ => cfg.Dispose());
             Bind<IMirroringPackageRepository>().ToConstant(mirroringPackageRepository);
             Bind<LuceneDataProvider>().ToConstant(cfg.Provider);
-            Bind<UserStore>().ToConstant(new UserStore(usersDataProvider));
+            Bind<UserStore>().ToConstant(userStore);
             
             LoadAuthentication();
 
@@ -75,6 +75,17 @@ namespace NuGet.Lucene.Web
             {
                 Bind<IHttpModule>().To<LocalRequestAuthenticationModule>();
             }
+
+        public virtual UserStore InitializeUserStore()
+        {
+            var usersDataProvider = InitializeUsersDataProvider();
+            var userStore = new UserStore(usersDataProvider)
+            {
+                LocalAdministratorApiKey = GetAppSetting("localAdministratorApiKey", string.Empty),
+                HandleLocalRequestsAsAdmin = HandleLocalRequestsAsAdmin
+            };
+            userStore.Initialize();
+            return userStore;
         }
 
         public virtual LuceneDataProvider InitializeUsersDataProvider()

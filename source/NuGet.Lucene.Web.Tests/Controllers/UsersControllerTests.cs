@@ -36,29 +36,30 @@ namespace NuGet.Lucene.Web.Tests.Controllers
             [Test]
             public void SetsKey()
             {
-                using (var session = store.OpenSession())
-                {
-                    session.Add(new ApiUser { Username = "A", Key = "old key" });
-                }
+                store.Add(new ApiUser { Username = "A", Key = "old key" });
 
-                var result = controller.ChangeApiKey(new KeyChangeRequest("new key"));
+                var result = controller.ChangeApiKey(new KeyChangeRequest("new key")) as KeyChangeRequest;
 
-                Assert.That(store.Users.Single().Key, Is.EqualTo("new key"));
+                Assert.That(store.All.Single().Key, Is.EqualTo("new key"));
                 Assert.That(result.Key, Is.EqualTo("new key"));
             }
 
             [Test]
             public void Generates()
             {
-                using (var session = store.OpenSession())
-                {
-                    session.Add(new ApiUser { Username = "A", Key = "old key" });
-                }
+                store.Add(new ApiUser {Username = "A", Key = "old key"});
 
-                var result = controller.ChangeApiKey(new KeyChangeRequest());
+                var result = controller.ChangeApiKey(new KeyChangeRequest()) as KeyChangeRequest;
 
                 Assert.That(result.Key, Is.Not.Empty);
-                Assert.That(store.Users.Single().Key, Is.EqualTo(result.Key));
+                Assert.That(store.All.Single().Key, Is.EqualTo(result.Key));
+            }
+
+            [Test]
+            public void NotFound()
+            {
+                var result = controller.ChangeApiKey(new KeyChangeRequest("new key")) as HttpResponseMessage;
+                Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
             }
         }
 
@@ -84,16 +85,13 @@ namespace NuGet.Lucene.Web.Tests.Controllers
                 const string key = "key";
                 var roles = new[] { "role1" };
 
-                using (var session = store.OpenSession())
-                {
-                    session.Add(new ApiUser {Username = "A", Key = key, Roles = roles});
-                }
+                store.Add(new ApiUser {Username = "A", Key = key, Roles = roles});
 
                 controller.Post("A", new UpdateUserAttributes { RenameTo = "B" });
 
-                Assert.That(store.Users.Select(u => u.Username).ToArray(), Is.EquivalentTo(new[] {"B"}));
-                Assert.That(store.Users.Single().Key, Is.EqualTo(key));
-                Assert.That(store.Users.Single().Roles, Is.EquivalentTo(roles));
+                Assert.That(store.All.Select(u => u.Username).ToArray(), Is.EquivalentTo(new[] {"B"}));
+                Assert.That(store.All.Single().Key, Is.EqualTo(key));
+                Assert.That(store.All.Single().Roles, Is.EquivalentTo(roles));
             }
 
             [Test]
@@ -102,17 +100,14 @@ namespace NuGet.Lucene.Web.Tests.Controllers
                 const string key = "key";
                 var roles = new[] { "role1" };
 
-                using (var session = store.OpenSession())
-                {
-                    session.Add(new ApiUser { Username = "A", Key = key, Roles = roles });
-                    session.Add(new ApiUser { Username = "B", Key = key, Roles = roles });
-                }
+                store.Add(new ApiUser { Username = "A", Key = key, Roles = roles });
+                store.Add(new ApiUser { Username = "B", Key = key, Roles = roles });
 
                 controller.Post("A", new UpdateUserAttributes { RenameTo = "B" });
 
-                Assert.That(store.Users.Select(u => u.Username).ToArray(), Is.EquivalentTo(new[] { "B" }));
-                Assert.That(store.Users.Single().Key, Is.EqualTo(key));
-                Assert.That(store.Users.Single().Roles, Is.EquivalentTo(roles));
+                Assert.That(store.All.Select(u => u.Username).ToArray(), Is.EquivalentTo(new[] { "B" }));
+                Assert.That(store.All.Single().Key, Is.EqualTo(key));
+                Assert.That(store.All.Single().Roles, Is.EquivalentTo(roles));
             }
 
             [Test]
@@ -121,16 +116,13 @@ namespace NuGet.Lucene.Web.Tests.Controllers
                 const string key = "key";
                 var roles = new[] { "role1" };
 
-                using (var session = store.OpenSession())
-                {
-                    session.Add(new ApiUser { Username = "A", Key = key, Roles = roles });
-                    session.Add(new ApiUser { Username = "B", Key = key, Roles = roles });
-                }
+                store.Add(new ApiUser { Username = "A", Key = key, Roles = roles });
+                store.Add(new ApiUser { Username = "B", Key = key, Roles = roles });
 
                 var result = controller.Post("A", new UpdateUserAttributes { RenameTo = "B", Overwrite = false});
 
                 Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.Conflict));
-                Assert.That(store.Users.Select(u => u.Username).ToArray(), Is.EquivalentTo(new[] { "A", "B" }));
+                Assert.That(store.All.Select(u => u.Username).ToArray(), Is.EquivalentTo(new[] { "A", "B" }));
             }
 
             [Test]
@@ -139,14 +131,11 @@ namespace NuGet.Lucene.Web.Tests.Controllers
                 const string key = "key";
                 var roles = new[] { "role1" };
 
-                using (var session = store.OpenSession())
-                {
-                    session.Add(new ApiUser { Username = "b", Key = key, Roles = roles });
-                }
+                store.Add(new ApiUser { Username = "b", Key = key, Roles = roles });
 
                 controller.Post("b", new UpdateUserAttributes { RenameTo = "B", Overwrite = false });
 
-                Assert.That(store.Users.Select(u => u.Username).ToArray(), Is.EquivalentTo(new[] { "B" }));
+                Assert.That(store.All.Select(u => u.Username).ToArray(), Is.EquivalentTo(new[] { "B" }));
             }
         }
 
@@ -164,16 +153,13 @@ namespace NuGet.Lucene.Web.Tests.Controllers
                 const string key = "key";
                 var roles = new[] { "role1" };
 
-                using (var session = store.OpenSession())
-                {
-                    session.Add(new ApiUser { Username = "A", Key = key, Roles = roles });
-                }
+                store.Add(new ApiUser { Username = "A", Key = key, Roles = roles });
 
                 var result = controller.Put("A", new UserAttributes { Key = "new key", Roles = new []{"role2"} });
 
                 Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.Created));
-                Assert.That(store.Users.Single().Key, Is.EqualTo("new key"));
-                Assert.That(store.Users.Single().Roles, Is.EquivalentTo(new[] {"role2"}));
+                Assert.That(store.All.Single().Key, Is.EqualTo("new key"));
+                Assert.That(store.All.Single().Roles, Is.EquivalentTo(new[] {"role2"}));
             }
 
             [Test]
@@ -182,16 +168,13 @@ namespace NuGet.Lucene.Web.Tests.Controllers
                 const string key = "key";
                 var roles = new[] { "role1" };
 
-                using (var session = store.OpenSession())
-                {
-                    session.Add(new ApiUser { Username = "A", Key = key, Roles = roles });
-                }
+                store.Add(new ApiUser { Username = "A", Key = key, Roles = roles });
 
                 var result = controller.Put("A", new UserAttributes { Overwrite = false });
 
                 Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.Conflict));
-                Assert.That(store.Users.Single().Key, Is.EqualTo(key));
-                Assert.That(store.Users.Single().Roles, Is.EquivalentTo(roles));
+                Assert.That(store.All.Single().Key, Is.EqualTo(key));
+                Assert.That(store.All.Single().Roles, Is.EquivalentTo(roles));
             }
         }
     }

@@ -17,7 +17,7 @@ namespace NuGet.Lucene.Web.Authentication
 
             if (string.IsNullOrWhiteSpace(clientKey)) return null;
 
-            var user = Store.Users.FirstOrDefault(u => u.Key == clientKey);
+            var user = Store.FindByKey(clientKey);
 
             if (user == null)
             {
