@@ -17,6 +17,47 @@ namespace NuGet.Lucene.Web
             this.pathPrefix = pathPrefix;
         }
 
+        /// <summary>
+        /// See <see cref="MapNuGetClientRedirectRoutes(System.Web.Http.HttpConfiguration, string)"/>
+        /// </summary>
+        public void MapNuGetClientRedirectRoutes(HttpConfiguration config)
+        {
+            MapNuGetClientRedirectRoutes(config, string.Empty);
+        }
+
+        /// <summary>
+        /// Adds route handlers that will redirect NuGet User Agents so that
+        /// a single source URL can be used in the client.
+        /// </summary>
+        /// <param name="config">
+        /// The configuration in which to register routes
+        /// </param>
+        /// <param name="routeTemplate">
+        /// Where the primary redirect should take place.
+        /// The empty string should be used in most cases, but if you want to
+        /// point your clients to http://foo/api you could use <c>"api"</c> instead.
+        /// </param>
+        public void MapNuGetClientRedirectRoutes(HttpConfiguration config, string routeTemplate)
+        {
+            config.Routes.MapHttpRoute(RouteNames.Redirect.Feed,
+                                routeTemplate,
+                                new { },
+                                new { userAgent = new NuGetUserAgentConstraint() },
+                                new RedirectHandler(RouteNames.Packages.Feed, RouteNames.PackageFeedRouteValues) { AppendTrailingSlash = true });
+
+            config.Routes.MapHttpRoute(RouteNames.Redirect.Upload,
+                                ODataRoutePath,
+                                new { },
+                                new { method = new HttpMethodConstraint(HttpMethod.Put) },
+                                new RedirectHandler(RouteNames.Packages.Upload));
+
+            config.Routes.MapHttpRoute(RouteNames.Redirect.Delete,
+                                ODataRoutePath + "/{id}/{version}",
+                                new { },
+                                new { method = new HttpMethodConstraint(HttpMethod.Delete) },
+                                new DeletePackageRedirectHandler());
+        }
+
         public void MapApiRoutes(HttpConfiguration config)
         {
             var routes = config.Routes;

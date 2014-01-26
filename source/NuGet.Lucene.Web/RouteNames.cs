@@ -31,7 +31,14 @@ namespace NuGet.Lucene.Web
             public const string DownloadLatestVersion = "Packages.Download.Latest";
             public const string Feed = "OData Package Feed";
         }
-        
+
+        public static class Redirect
+        {
+            public const string Feed = "NuGetClient.Redirect.Feed";
+            public const string Upload = "NuGetClient.Redirect.Upload";
+            public const string Delete = "NuGetClient.Redirect.Delete";
+        }
+
         public const string TabCompletionPackageIds = "Package Manager Console Tab Completion - Package IDs";
         public const string TabCompletionPackageVersions = "Package Manager Console Tab Completion - Package Versions";
     }

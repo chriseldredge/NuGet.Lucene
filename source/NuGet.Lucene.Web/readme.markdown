@@ -21,6 +21,10 @@ as follows:
     protected void Application_Start(object sender, EventArgs e)
     {
         var routeMapper = kernel.Get<NuGetWebApiRouteMapper>();
+
+		// Optional: redirect NuGet client / Visual Studio from ~/ to ~/api/odata:
+        routeMapper.MapNuGetClientRedirectRoutes(GlobalConfiguration.Configuration);
+
         routeMapper.MapApiRoutes(GlobalConfiguration.Configuration);
         routeMapper.MapDataServiceRoutes(RouteTable.Routes);
 
