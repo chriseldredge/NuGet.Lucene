@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Security.Principal;
 using System.Web;
+using NuGet.Lucene.Web.Authentication;
 
 namespace NuGet.Lucene.Web.Modules
 {
@@ -13,6 +14,8 @@ namespace NuGet.Lucene.Web.Modules
     /// </summary>
     public class LocalRequestAuthenticationModule : HttpModule
     {
+        public UserStore Store { get; set; }
+
         protected override void Init()
         {
             Application.AuthenticateRequest += AuthenticateRequest;
@@ -22,8 +25,8 @@ namespace NuGet.Lucene.Web.Modules
         {
             if (Request.IsAuthenticated || !Request.IsLocal) return;
 
-            var identity = new GenericIdentity("LocalAdministrator", typeof(LocalRequestAuthenticationModule).Name);
-            Context.User = new GenericPrincipal(identity, RoleNames.All.ToArray());
+            var identity = new GenericIdentity(Store.LocalAdministratorUsername, typeof(LocalRequestAuthenticationModule).Name);
+            Context.User = new ApiUserPrincipal(identity, RoleNames.All.ToArray());
         }
     }
 }

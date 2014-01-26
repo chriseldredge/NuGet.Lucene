@@ -176,6 +176,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Authentication\ApiUser.cs" />
+    <Compile Include="Authentication\ApiUserPrincipal.cs" />
     <Compile Include="DataServices\IOperationContext.cs" />
     <Compile Include="Formatters\NuGetHtmlMicrodataFormatter.cs" />
     <Compile Include="Formatters\PackageHtmlSerializer.cs" />
@@ -188,6 +189,7 @@
     <Compile Include="Models\UserAttributes.cs" />
     <Compile Include="Modules\AnonymousPackageManagerModule.cs" />
     <Compile Include="Modules\LocalRequestAuthenticationModule.cs" />
+    <Compile Include="Modules\RoleMappingAuthenticationModule.cs" />
     <Compile Include="NuGetWebApiModule.cs" />
     <Compile Include="Authentication\IApiKeyAuthentication.cs" />
     <Compile Include="Authentication\LuceneApiKeyAuthentication.cs" />

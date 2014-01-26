@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Security.Principal;
+using NuGet.Lucene.Web.Authentication;
 
 namespace NuGet.Lucene.Web.Modules
 {
@@ -21,7 +22,7 @@ namespace NuGet.Lucene.Web.Modules
 
             var identity = new GenericIdentity("AnonymousPackageManager", typeof(AnonymousPackageManagerModule).Name);
             var roles = new[] {RoleNames.PackageManager};
-            Context.User = new GenericPrincipal(identity, roles);
+            Context.User = new ApiUserPrincipal(identity, roles);
         }
     }
 }
