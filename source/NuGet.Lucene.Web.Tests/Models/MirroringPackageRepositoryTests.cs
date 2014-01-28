@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Moq;
 using NUnit.Framework;
 using NuGet.Lucene.Web.Models;
@@ -41,6 +43,24 @@ namespace NuGet.Lucene.Web.Tests.Models
 
             Assert.That(result.ToList(), Is.EqualTo(new[] {package1, package2}));
         }
+
+		[Test]
+		public void FindPackagesHandlesOriginException()
+		{
+			var copyOfPackage1 = new PackageSpec(package1.Id, package1.Version.ToString());
+
+			mirror.Setup(r => r.FindPackagesById("FuTools")).Returns(new[] { package1 }).Verifiable();
+			origin.Setup(r => r.FindPackagesById("FuTools")).Throws<Exception>().Verifiable();
+
+			IEnumerable<IPackage> result = null;
+			TestDelegate call = () => result = repo.FindPackagesById("FuTools");
+
+			Assert.That(call, Throws.Nothing);
+			Assert.That(result.ToList(), Is.EqualTo(new[] { package1 }));
+
+			mirror.VerifyAll();
+			origin.VerifyAll();
+		}
 
         [Test]
         public void FindPackageInMirror()
@@ -85,6 +105,19 @@ namespace NuGet.Lucene.Web.Tests.Models
             mirror.VerifyAll();
             origin.VerifyAll();
         }
+
+		[Test]
+		public void FindPackageInOriginHandlesExceptions()
+		{
+			origin.Setup(r => r.FindPackage(package1.Id, package1.Version)).Throws<Exception>();
+
+			IPackage result = null;
+
+			TestDelegate call = () => result = repo.FindPackage(package1.Id, package1.Version);
+
+			Assert.That(call, Throws.Nothing);
+			Assert.That(result, Is.Null);
+		}
 
         [Test]
         public void OverridesHttpClientSettings()

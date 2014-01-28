@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Common.Logging;
@@ -51,13 +52,6 @@ namespace NuGet.Lucene.Web.Models
             return result.Union(remotePackages, PackageEqualityComparer.IdAndVersion);
         }
 
-        public virtual IEnumerable<IPackage> FindPackagesByIdInOrigin(string id)
-        {
-            if (origin == null) return Enumerable.Empty<IPackage>();
-
-            return origin.FindPackagesById(id).ToList();
-        }
-
         public override IPackage FindPackage(string packageId, SemanticVersion version)
         {
             var package = base.FindPackage(packageId, version);
@@ -75,9 +69,30 @@ namespace NuGet.Lucene.Web.Models
             return base.FindPackage(package.Id, package.Version);
         }
 
+		public virtual IEnumerable<IPackage> FindPackagesByIdInOrigin(string id)
+		{
+			try
+			{
+				return origin.FindPackagesById(id).ToList();
+			}
+			catch (Exception ex)
+			{
+				Log.Error(m => m("Exception on FindPackagesById('{0}') for package origin {1}: {2}", id, origin.Source, ex.Message), ex);
+				return Enumerable.Empty<IPackage>();
+			}
+		}
+
         public virtual IPackage FindPackageInOrigin(string packageId, SemanticVersion version)
         {
-            return origin.FindPackage(packageId, version);
+	        try
+	        {
+		        return origin.FindPackage(packageId, version);
+	        }
+	        catch (Exception ex)
+	        {
+		        Log.Error(m => m("Exception on FindPackage('{0}', '{1}') for package origin {2}: {3}", packageId, version, origin.Source, ex.Message), ex);
+		        return null;
+	        }
         }
     }
 }
