@@ -227,6 +227,7 @@
     <Compile Include="UnhandledExceptionLogger.cs" />
     <Compile Include="UserStore.cs" />
     <Compile Include="Util\DynamicUtils.cs" />
+    <Compile Include="Util\ICache.cs" />
     <Compile Include="Util\TaskUtils.cs" />
     <None Include="readme.markdown" />
   </ItemGroup>

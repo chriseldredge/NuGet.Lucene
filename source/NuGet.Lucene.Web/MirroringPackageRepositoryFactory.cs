@@ -1,6 +1,7 @@
 using System;
 using System.Net;
 using NuGet.Lucene.Web.Models;
+using NuGet.Lucene.Web.Util;
 
 namespace NuGet.Lucene.Web
 {
@@ -17,7 +18,7 @@ namespace NuGet.Lucene.Web
 
             var remoteRepository = CreateDataServicePackageRepository(new HttpClient(new Uri(remotePackageUrl)), timeout);
 
-            return new MirroringPackageRepository(localRepository, remoteRepository);
+            return new MirroringPackageRepository(localRepository, remoteRepository, new WebCache());
         }
 
         public static DataServicePackageRepository CreateDataServicePackageRepository(IHttpClient httpClient, TimeSpan timeout)
