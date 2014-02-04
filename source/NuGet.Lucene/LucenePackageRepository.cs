@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Packaging;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
@@ -14,6 +13,10 @@ using ICSharpCode.SharpZipLib.Zip;
 using Lucene.Net.Linq;
 using NuGet.Lucene.Util;
 using LuceneDirectory = Lucene.Net.Store.Directory;
+
+#if NET_4_5
+using TaskEx=System.Threading.Tasks.Task;
+#endif
 
 namespace NuGet.Lucene
 {
@@ -109,7 +112,7 @@ namespace NuGet.Lucene
 
         public override void AddPackage(IPackage package)
         {
-            var task = Task.Run(() => AddPackageAsync(package));
+            var task = TaskEx.Run(() => AddPackageAsync(package));
             task.Wait();
         }
 
@@ -134,7 +137,7 @@ namespace NuGet.Lucene
 
         public override void RemovePackage(IPackage package)
         {
-            var task = Task.Run(() => RemovePackageAsync(package));
+            var task = TaskEx.Run(() => RemovePackageAsync(package));
             
             task.Wait();
         }

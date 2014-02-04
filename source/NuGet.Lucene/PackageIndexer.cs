@@ -13,11 +13,21 @@ using Lucene.Net.Linq.Abstractions;
 using Lucene.Net.Search;
 using NuGet.Lucene.Util;
 
+#if NET_4_5
+using TaskEx=System.Threading.Tasks.Task;
+#endif
+
 namespace NuGet.Lucene
 {
     public class PackageIndexer : IPackageIndexer, IDisposable
     {
         public static ILog Log = LogManager.GetLogger<PackageIndexer>();
+
+#if NET_4_5
+        private static readonly TimeSpan InfiniteTimeSpan = Timeout.InfiniteTimeSpan;
+#else
+        private static readonly TimeSpan InfiniteTimeSpan = TimeSpan.FromMilliseconds(-1);
+#endif
 
         private enum UpdateType { Add, Remove, RemoveByPath, Increment }
         private class Update
@@ -136,10 +146,10 @@ namespace NuGet.Lucene
             {
                 IndexDifferences differences = null;
 
-                await Task.Run(() => differences = IndexDifferenceCalculator.FindDifferences(
+                await TaskEx.Run(() => differences = IndexDifferenceCalculator.FindDifferences(
                     FileSystem, PackageRepository.LucenePackages, cancellationToken, UpdateSynchronizationStatus), cancellationToken);
 
-                await Task.Run(() => SynchronizeIndexWithFileSystem(differences, cancellationToken));
+                await TaskEx.Run(() => SynchronizeIndexWithFileSystem(differences, cancellationToken));
             }
             finally
             {
@@ -223,7 +233,7 @@ namespace NuGet.Lucene
             catch (Exception ex)
             {
                 Log.Error("Failed to index package path: " + path, ex);
-                return Task.FromResult(ex);
+                return TaskEx.FromResult(ex);
             }
         }
         
@@ -237,7 +247,7 @@ namespace NuGet.Lucene
 
                 try
                 {
-                    pendingUpdates.TakeAvailable(items, Timeout.InfiniteTimeSpan);
+                    pendingUpdates.TakeAvailable(items, InfiniteTimeSpan);
                 }
                 catch (OperationCanceledException)
                 {
