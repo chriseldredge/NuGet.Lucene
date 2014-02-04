@@ -43,9 +43,8 @@
 		<Delete Files="@(Trash)"/>
 	</Target>
 
-    <Target Name="RestoreSolutionPackages" DependsOnTargets="CheckPrerequisites">
-        <Exec Command="$(NuGetCommand) restore NuGet.Lucene.sln -NonInteractive -Source http://www.nuget.org/api/v2/"
-              WorkingDirectory="$(SolutionDir)" />
+    <Target Name="RestoreSolutionPackages" DependsOnTargets="DownloadNuGetCommandLineClient">
+        <Exec Command="$(NuGetCommand) restore source -NonInteractive -Source http://www.nuget.org/api/v2/"/>
     </Target>
 
 	<Target Name="Compile">
@@ -63,7 +62,7 @@
 
 	<Target Name="Package">
 		<MakeDir Directories="build/artifacts"/>
-		<Exec Command="$(NuGetCommand) pack -o $(MSBuildProjectDirectory)/build/artifacts -Properties Configuration=Release -Version &quot;$(PackageVersion)&quot; -Symbols"
+		<Exec Command="$(NuGetCommand) pack NuGet.Lucene.nuspec -o $(MSBuildProjectDirectory)/build/artifacts -Properties Configuration=Release -Version &quot;$(PackageVersion)&quot; -Symbols"
 			WorkingDirectory="source/NuGet.Lucene"/>
 		<Exec Command="$(NuGetCommand) pack -o $(MSBuildProjectDirectory)/build/artifacts -Properties Configuration=Release -Version &quot;$(PackageVersion)&quot; -Symbols"
 			WorkingDirectory="source/NuGet.Lucene.Web"/>
@@ -79,5 +78,5 @@
 		<Message Text="To repeat this build: git checkout $(TRAVIS_COMMIT); msbuild /p:TRAVIS=true,TRAVIS_COMMIT=$(TRAVIS_COMMIT),TRAVIS_BRANCH=$(TRAVIS_BRANCH),TRAVIS_BUILD_NUMBER=$(TRAVIS_BUILD_NUMBER)"/>
 	</Target>
 
-	<Import Project="$(SolutionDir).nuget/nuget.targets"/>
+	<Import Project="NuGet.targets"/>
 </Project>

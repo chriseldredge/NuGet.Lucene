@@ -10,3 +10,4 @@ bin/
 obj/
 _ReSharper.*
 TestResult.xml
+NuGet.exe
