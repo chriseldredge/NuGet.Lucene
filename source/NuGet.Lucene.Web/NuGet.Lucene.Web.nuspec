@@ -13,14 +13,8 @@
     <tags>nuget</tags>
     <summary>asp.net mvc 4 api controllers and WCF Data Services for NuGet.Lucene.</summary>
     <description>Provides controllers and WCF Data Services classes that can be exposed in an asp.net application to expose a NuGet.Lucene repository over the web.</description>
-    <releaseNotes>
-      Include xml docs in nuget packages.
-    </releaseNotes>
     <dependencies>
-      <dependency id="NuGet.Lucene" version="[$version$,3.0)" />
+      <dependency id="NuGet.Lucene" version="[$PackageVersion$,3.0)" />
     </dependencies>
   </metadata>
-  <files>
-    <file src="readme.markdown" target="readme.txt"/>
-  </files>
 </package>

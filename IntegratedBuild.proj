@@ -69,7 +69,7 @@
 		<MakeDir Directories="build/artifacts"/>
 		<Exec Command="$(NuGetCommand) pack NuGet.Lucene.nuspec -o $(MSBuildProjectDirectory)/build/artifacts -Properties Configuration=Release -Version &quot;$(PackageVersion)&quot; -Symbols"
 			WorkingDirectory="source/NuGet.Lucene"/>
-		<Exec Command="$(NuGetCommand) pack -o $(MSBuildProjectDirectory)/build/artifacts -Properties Configuration=Release -Version &quot;$(PackageVersion)&quot; -Symbols"
+		<Exec Command="$(NuGetCommand) pack -o $(MSBuildProjectDirectory)/build/artifacts -Properties Configuration=Release;PackageVersion=$(PackageVersion) -Version &quot;$(PackageVersion)&quot; -Symbols"
 			WorkingDirectory="source/NuGet.Lucene.Web"/>
 	</Target>
 
