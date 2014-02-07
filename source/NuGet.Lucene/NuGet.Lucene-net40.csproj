@@ -23,6 +23,7 @@
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>bin\Debug40\NuGet.Lucene.xml</DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
+    <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -33,6 +34,7 @@
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>bin\Release40\NuGet.Lucene.xml</DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
+    <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\..\build\VersionInfo.cs" Condition="Exists('..\..\build\VersionInfo.cs')">
