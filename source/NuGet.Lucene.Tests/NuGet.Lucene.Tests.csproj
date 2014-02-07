@@ -92,6 +92,7 @@
     <Compile Include="StrictSemanticVersionTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestBase.cs" />
+    <Compile Include="TestPackage.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

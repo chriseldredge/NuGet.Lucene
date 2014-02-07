@@ -12,13 +12,13 @@ namespace NuGet.Lucene.Tests
     public class LucenePackageRepositoryTests : TestBase
     {
         private Mock<IPackageIndexer> indexer;
-        private LucenePackageRepository repository;
+        private TestableLucenePackageRepository repository;
 
         [SetUp]
         public void SetUp()
         {
             indexer = new Mock<IPackageIndexer>();
-            repository = new LucenePackageRepository(packagePathResolver.Object, fileSystem.Object)
+            repository = new TestableLucenePackageRepository(packagePathResolver.Object, fileSystem.Object)
                              {
                                  Indexer = indexer.Object,
                                  LucenePackages = datasource,
@@ -175,6 +175,23 @@ namespace NuGet.Lucene.Tests
             Assert.That(result.Select(p => p.Version.ToString()).ToArray(), Is.EqualTo(new[] {a2.Version.ToString(), a3.Version.ToString()}));
         }
 
+        [Test]
+        public void LoadFromFileSystem()
+        {
+            const string expectedPath = @"a\non\standard\package\location.nupkg";
+            var date = new DateTime(2001, 5, 27, 0, 0, 0, DateTimeKind.Utc);
+
+            fileSystem.SetupGet(fs => fs.Root).Returns(@"c:\packages");
+            fileSystem.Setup(fs => fs.GetFullPath(It.IsAny<string>())).Returns<string>(p => Path.Combine(@"c:\packages", p));
+            fileSystem.Setup(fs => fs.OpenFile(It.IsAny<string>())).Returns(new MemoryStream());
+            fileSystem.Setup(fs => fs.GetLastModified(expectedPath)).Returns(date).Verifiable();
+
+            var result = repository.LoadFromFileSystem(expectedPath);
+
+            Assert.That(result.Published.GetValueOrDefault().DateTime, Is.EqualTo(date));
+            fileSystem.VerifyAll();
+        }
+
         private Mock<PackageWithFiles> SetUpConvertPackage()
         {
             var package = new Mock<PackageWithFiles>();
@@ -195,6 +212,19 @@ namespace NuGet.Lucene.Tests
             protected sealed override IEnumerable<IPackageFile> GetFilesBase()
             {
                 return Files ?? new IPackageFile[0];
+            }
+        }
+
+        public class TestableLucenePackageRepository : LucenePackageRepository
+        {
+            public TestableLucenePackageRepository(IPackagePathResolver packageResolver, IFileSystem fileSystem)
+                : base(packageResolver, fileSystem)
+            {
+            }
+
+            protected override IPackage OpenPackage(string path)
+            {
+                return new TestPackage(Path.GetFileNameWithoutExtension(path));
             }
         }
     }
