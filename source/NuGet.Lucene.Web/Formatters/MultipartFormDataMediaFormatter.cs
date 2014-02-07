@@ -61,7 +61,7 @@ namespace NuGet.Lucene.Web.Formatters
 
         /// <summary>
         /// The NuGet client does not include a new line after the final boundary marker
-        /// which causes <see cref="HttpContentMultipartExtensions.ReadAsMultipartAsync"/>
+        /// which causes <see cref="HttpContentMultipartExtensions.ReadAsMultipartAsync(HttpContent)"/>
         /// to throw <see cref="IOException"/> "Unexpected end of MIME multipart stream.
         /// MIME multipart message is not complete."
         /// 

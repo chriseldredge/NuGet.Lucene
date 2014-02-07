@@ -14,7 +14,7 @@ namespace NuGet.Lucene.Web.MessageHandlers
     /// <summary>
     /// Adds support for OPTIONS requests and adds Cross-Origin Resource Sharing (CORS)
     /// response headers.
-    /// TODO: evaluate replacement with http://aspnetwebstack.codeplex.com/wikipage?title=CORS%20support%20for%20ASP.NET%20Web%20API&referringTitle=Specs when it ships.
+    /// TODO: evaluate replacement with http://aspnetwebstack.codeplex.com/wikipage?title=CORS%20support%20for%20ASP.NET%20Web%20API when it ships.
     /// </summary>
     public class CrossOriginMessageHandler : DelegatingHandler
     {
