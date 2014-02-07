@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 
@@ -67,10 +68,12 @@ namespace NuGet.Lucene.Tests
         public async void AddPackage_Replaces()
         {
             InsertPackage("Sample.Package", "1.0");
+            var replacement = MakeSamplePackage("Sample.Package", "1.0");
+            replacement.Published = new DateTimeOffset(DateTime.UtcNow);
 
-            await indexer.AddPackage(MakeSamplePackage("Sample.Package", "1.0"));
+            await indexer.AddPackage(replacement);
 
-            Assert.AreEqual(1, datasource.Count());
+            Assert.AreEqual(datasource.Single().Published, replacement.Published);
         }
 
         [Test]

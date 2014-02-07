@@ -39,7 +39,7 @@ namespace NuGet.Lucene.Tests
 
         protected LucenePackage MakeSamplePackage(string id, string version)
         {
-            var p = new LucenePackage(path => new MemoryStream())
+            var p = new TestPackage
                         {
                             Id = id,
                             Version = version != null ? new StrictSemanticVersion(version) : null,
