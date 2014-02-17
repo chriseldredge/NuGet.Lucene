@@ -24,7 +24,7 @@
       <group targetFramework="net45">
         <dependency id="Common.Logging" version="[2.1.2,3.0)"/>
         <dependency id="Lucene.Net" version="[3.0,3.6)"/>
-        <dependency id="Lucene.Net.Linq" version="[3.2,4.0)"/>
+        <dependency id="Lucene.Net.Linq" version="[3.2.55,4.0)"/>
         <dependency id="NuGet.Core" version="[2.7,2.8)"/>
         <dependency id="Rx-Core" version="[2.2,3.0)"/>
         <dependency id="Rx-Interfaces" version="[2.2,3.0)"/>
@@ -36,7 +36,7 @@
       <group targetFramework="net40">
         <dependency id="Common.Logging" version="[2.1.2,3.0)"/>
         <dependency id="Lucene.Net" version="[3.0,3.6)"/>
-        <dependency id="Lucene.Net.Linq" version="[3.2,4.0)"/>
+        <dependency id="Lucene.Net.Linq" version="[3.2.55,4.0)"/>
         <dependency id="NuGet.Core" version="[2.7,2.8)"/>
         <dependency id="Rx-Core" version="[2.2,3.0)"/>
         <dependency id="Rx-Interfaces" version="[2.2,3.0)"/>
