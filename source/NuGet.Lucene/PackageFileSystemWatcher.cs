@@ -45,6 +45,7 @@ namespace NuGet.Lucene
                 {
                     NotifyFilter = NotifyFilters.DirectoryName | NotifyFilters.FileName | NotifyFilters.LastWrite,
                     IncludeSubdirectories = true,
+                    InternalBufferSize = 65536 //This is the max value (64KB) default 4096 (4KB)
                 };
 
             var modifiedFilesThrottledByPath = ModifiedFiles
@@ -182,7 +183,8 @@ namespace NuGet.Lucene
                     {
                         NotifyFilter = NotifyFilters.DirectoryName,
                         IncludeSubdirectories = true,
-                        EnableRaisingEvents = true
+                        EnableRaisingEvents = true,
+                        InternalBufferSize = 65536 //This is the max value (64KB) default 4096 (4KB)
                     };
 
                 Func<FileSystemWatcher, IObservable<EventPattern<FileSystemEventArgs>>> createObservable = dirWatcher =>
