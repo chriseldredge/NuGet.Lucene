@@ -13,6 +13,7 @@ namespace NuGet.Lucene.Web.Tests.Models
     {
         private IPackage package1;
         private IPackage package2;
+        private IPackage package3;
         private Mock<ICache> cache;
         private Mock<IPackageLookup> mirror;
         private Mock<IPackageLookup> origin;
@@ -29,6 +30,7 @@ namespace NuGet.Lucene.Web.Tests.Models
 
             package1 = new LucenePackage(_ => null) { Id = "FuTools", Version = new StrictSemanticVersion("1.0"), IsMirrored = true };
             package2 = new LucenePackage(_ => null) { Id = "FuTools", Version = new StrictSemanticVersion("2.0") };
+            package3 = new LucenePackage(_ => null) { Id = "FuTools", Version = new StrictSemanticVersion("3.0") };
         }
 
         [Test]
@@ -72,6 +74,21 @@ namespace NuGet.Lucene.Web.Tests.Models
             mirror.VerifyAll();
 
             Assert.That(result.ToList(), Is.EqualTo(new[] { package1 }));
+
+            origin.Verify(r => r.FindPackagesById("FuTools"), Times.Never);
+        }
+
+        [Test]
+        public void FindPackagesSkipsOriginWhenANonMirroredPackageIsPresent()
+        {
+            mirror.Setup(r => r.FindPackagesById("FuTools")).Returns(new[] { package1, package2 }).Verifiable();
+            origin.Setup(r => r.FindPackagesById("FuTools")).Returns(new[] { package3 }).Verifiable();
+
+            var result = repo.FindPackagesById("FuTools");
+
+            mirror.VerifyAll();
+
+            Assert.That(result.ToList(), Is.EqualTo(new[] { package1, package2 }));
 
             origin.Verify(r => r.FindPackagesById("FuTools"), Times.Never);
         }

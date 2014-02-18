@@ -74,7 +74,7 @@ namespace NuGet.Lucene.Web.Models
         /// <returns></returns>
         protected virtual bool ShouldLookInOrigin(string id, List<IPackage> localPackages)
         {
-            return localPackages.IsEmpty() || localPackages.OfType<LucenePackage>().Any(p => p.IsMirrored);
+            return localPackages.IsEmpty() || localPackages.OfType<LucenePackage>().All(p => p.IsMirrored);
         }
 
         public override IPackage FindPackage(string packageId, SemanticVersion version)
