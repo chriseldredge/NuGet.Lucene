@@ -44,9 +44,10 @@ namespace NuGet.Lucene
             fileWatcher = new FileSystemWatcher(FileSystem.Root, "*.nupkg")
                 {
                     NotifyFilter = NotifyFilters.DirectoryName | NotifyFilters.FileName | NotifyFilters.LastWrite,
-                    IncludeSubdirectories = true,
-                    InternalBufferSize = 65536 //This is the max value (64KB) default 4096 (4KB)
+                    IncludeSubdirectories = true
                 };
+
+            fileWatcher.Error += OnFileWatcherError;
 
             var modifiedFilesThrottledByPath = ModifiedFiles
                 .Select(args => args.EventArgs.FullPath)
@@ -157,6 +158,16 @@ namespace NuGet.Lucene
             }
         }
 
+        private void OnFileWatcherError(object source, ErrorEventArgs e)
+        {
+            Log.Error(m => m("File Watcher error occured", e));
+            if (e.GetException().GetType() == typeof (InternalBufferOverflowException))
+            {
+                Log.Debug(m => m("Error was a 'InternalBufferOverflowException' will trigger index with file system"));
+                Indexer.SynchronizeIndexWithFileSystem(CancellationToken.None);
+            }
+        }
+
         private IObservable<EventPattern<FileSystemEventArgs>> ModifiedFiles
         {
             get
@@ -179,12 +190,16 @@ namespace NuGet.Lucene
             get
             {
                 Func<FileSystemWatcher> createDirWatcher = () =>
-                    new FileSystemWatcher(FileSystem.Root)
                     {
-                        NotifyFilter = NotifyFilters.DirectoryName,
-                        IncludeSubdirectories = true,
-                        EnableRaisingEvents = true,
-                        InternalBufferSize = 65536 //This is the max value (64KB) default 4096 (4KB)
+                        var fileWatcher = new FileSystemWatcher(FileSystem.Root)
+                                                        {
+                                                            NotifyFilter = NotifyFilters.DirectoryName,
+                                                            IncludeSubdirectories = true,
+                                                            EnableRaisingEvents = true,
+                                                        };
+
+                        fileWatcher.Error += OnFileWatcherError;
+                        return fileWatcher;
                     };
 
                 Func<FileSystemWatcher, IObservable<EventPattern<FileSystemEventArgs>>> createObservable = dirWatcher =>
