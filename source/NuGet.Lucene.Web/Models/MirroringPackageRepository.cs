@@ -12,6 +12,7 @@ namespace NuGet.Lucene.Web.Models
     public interface IMirroringPackageRepository : IPackageLookup, IServiceBasedRepository
     {
         bool MirroringEnabled { get; }
+        bool AlwaysCheckMirrorOveride { get; }
     }
 
     public class NonMirroringPackageRepository : DelegatingPackageRepository, IMirroringPackageRepository
@@ -21,6 +22,7 @@ namespace NuGet.Lucene.Web.Models
         }
 
         public bool MirroringEnabled { get { return false; } }
+        public bool AlwaysCheckMirrorOveride { get { return false; } }
     }
 
     public class MirroringPackageRepository : DelegatingPackageRepository, IMirroringPackageRepository
@@ -30,15 +32,20 @@ namespace NuGet.Lucene.Web.Models
         private readonly IPackageRepository origin;
 
         private readonly ICache cache;
+        private readonly bool localMirror;
+        private readonly bool alwaysCheckMirror;
 
-        public MirroringPackageRepository(IPackageRepository mirror, IPackageRepository origin, ICache cache)
+        public MirroringPackageRepository(IPackageRepository mirror, IPackageRepository origin, ICache cache, bool localMirror, bool alwaysCheckMirror)
             : base(mirror)
         {
             this.origin = origin;
             this.cache = cache;
+            this.localMirror = localMirror;
+            this.alwaysCheckMirror = alwaysCheckMirror;
         }
 
         public bool MirroringEnabled { get { return true; } }
+        public bool AlwaysCheckMirrorOveride { get { return localMirror || alwaysCheckMirror; } }
 
         public override string Source
         {
@@ -74,7 +81,7 @@ namespace NuGet.Lucene.Web.Models
         /// <returns></returns>
         protected virtual bool ShouldLookInOrigin(string id, List<IPackage> localPackages)
         {
-            return localPackages.IsEmpty() || localPackages.OfType<LucenePackage>().All(p => p.IsMirrored);
+            return AlwaysCheckMirrorOveride || localPackages.IsEmpty() || localPackages.OfType<LucenePackage>().All(p => p.IsMirrored);
         }
 
         public override IPackage FindPackage(string packageId, SemanticVersion version)

@@ -26,7 +26,7 @@ namespace NuGet.Lucene.Web.Tests.Models
             origin = new Mock<IPackageLookup>();
             cache = new Mock<ICache>();
 
-            repo = new MirroringPackageRepository(mirror.Object, origin.Object, cache.Object);
+            repo = new MirroringPackageRepository(mirror.Object, origin.Object, cache.Object, false, false);
 
             package1 = new LucenePackage(_ => null) { Id = "FuTools", Version = new StrictSemanticVersion("1.0"), IsMirrored = true };
             package2 = new LucenePackage(_ => null) { Id = "FuTools", Version = new StrictSemanticVersion("2.0") };
@@ -91,6 +91,57 @@ namespace NuGet.Lucene.Web.Tests.Models
             Assert.That(result.ToList(), Is.EqualTo(new[] { package1, package2 }));
 
             origin.Verify(r => r.FindPackagesById("FuTools"), Times.Never);
+        }
+
+        [Test]
+        public void FindPackagesAlwaysGoesToOriginIfItsLocal()
+        {
+            repo = new MirroringPackageRepository(mirror.Object, origin.Object, cache.Object, true, false);
+
+            mirror.Setup(r => r.FindPackagesById("FuTools")).Returns(new[] { package1, package2 }).Verifiable();
+            origin.Setup(r => r.FindPackagesById("FuTools")).Returns(new[] { package3 }).Verifiable();
+
+            var result = repo.FindPackagesById("FuTools");
+
+            mirror.VerifyAll();
+
+            Assert.That(result.ToList(), Is.EqualTo(new[] { package1, package2, package3 }));
+
+            origin.Verify(r => r.FindPackagesById("FuTools"), Times.Once);
+        }
+
+        [Test]
+        public void FindPackagesAlwaysGoesToOriginIfOverideToAlwaysCheckOrigin()
+        {
+            repo = new MirroringPackageRepository(mirror.Object, origin.Object, cache.Object, false, true);
+
+            mirror.Setup(r => r.FindPackagesById("FuTools")).Returns(new[] { package1, package2 }).Verifiable();
+            origin.Setup(r => r.FindPackagesById("FuTools")).Returns(new[] { package3 }).Verifiable();
+
+            var result = repo.FindPackagesById("FuTools");
+
+            mirror.VerifyAll();
+
+            Assert.That(result.ToList(), Is.EqualTo(new[] { package1, package2, package3 }));
+
+            origin.Verify(r => r.FindPackagesById("FuTools"), Times.Once);
+        }
+
+        [Test]
+        public void FindPackagesAlwaysGoesToOriginIfIsLocalAndOverideCheckSet()
+        {
+            repo = new MirroringPackageRepository(mirror.Object, origin.Object, cache.Object, true, true);
+
+            mirror.Setup(r => r.FindPackagesById("FuTools")).Returns(new[] { package1, package2 }).Verifiable();
+            origin.Setup(r => r.FindPackagesById("FuTools")).Returns(new[] { package3 }).Verifiable();
+
+            var result = repo.FindPackagesById("FuTools");
+
+            mirror.VerifyAll();
+
+            Assert.That(result.ToList(), Is.EqualTo(new[] { package1, package2, package3 }));
+
+            origin.Verify(r => r.FindPackagesById("FuTools"), Times.Once);
         }
 
         [Test]
