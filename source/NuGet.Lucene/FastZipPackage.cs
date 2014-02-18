@@ -37,6 +37,7 @@ namespace NuGet.Lucene
         public int DownloadCount { get; private set; }
         public byte[] Hash { get; private set; }
         public Version MinClientVersion { get; private set; }
+        public bool DevelopmentDependency { get; private set; }
 
         public IEnumerable<IPackageFile> GetFiles()
         {
@@ -111,7 +112,8 @@ namespace NuGet.Lucene
             FrameworkAssemblies = packageMetadata.FrameworkAssemblies;
             Copyright = packageMetadata.Copyright;
             PackageAssemblyReferences = packageMetadata.PackageAssemblyReferences;
-            
+            DevelopmentDependency = packageMetadata.DevelopmentDependency;
+
             if (string.IsNullOrEmpty(Tags))
                 return;
             Tags = " " + Tags + " ";

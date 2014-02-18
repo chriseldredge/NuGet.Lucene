@@ -47,7 +47,7 @@ namespace NuGet.Lucene
         public string Id { get; set; }
 
         [IgnoreField]
-        SemanticVersion IPackageMetadata.Version
+        SemanticVersion IPackageName.Version
         {
             get { return Version != null ? Version.SemanticVersion : null; }
         }
@@ -104,6 +104,9 @@ namespace NuGet.Lucene
 
         [NumericField(Converter = typeof(BoolToIntConverter))]
         public bool IsLatestVersion { get; set; }
+
+        [NumericField(Converter = typeof(BoolToIntConverter))]
+        public bool DevelopmentDependency { get; set; }
 
         [IgnoreField]
         public bool Listed { get; set; }

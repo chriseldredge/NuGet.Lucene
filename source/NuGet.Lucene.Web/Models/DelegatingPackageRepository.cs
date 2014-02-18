@@ -51,7 +51,7 @@ namespace NuGet.Lucene.Web.Models
             return target.Search(searchTerm, targetFrameworks, allowPrereleaseVersions);
         }
 
-        IEnumerable<IPackage> IServiceBasedRepository.GetUpdates(IEnumerable<IPackage> packages, bool includePrerelease, bool includeAllVersions,
+        IEnumerable<IPackage> IServiceBasedRepository.GetUpdates(IEnumerable<IPackageName> packages, bool includePrerelease, bool includeAllVersions,
             IEnumerable<FrameworkName> targetFrameworks, IEnumerable<IVersionSpec> versionConstraints)
         {
             return target.GetUpdates(packages, includePrerelease, includeAllVersions, targetFrameworks, versionConstraints);

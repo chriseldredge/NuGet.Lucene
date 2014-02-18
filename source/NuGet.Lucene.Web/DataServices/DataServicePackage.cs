@@ -43,6 +43,7 @@ namespace NuGet.Lucene.Web.DataServices
             Listed = package.Listed;
             DownloadCount = package.DownloadCount;
             VersionDownloadCount = package.VersionDownloadCount;
+            DevelopmentDependency = package.DevelopmentDependency;
             #endregion
         }
 
@@ -143,6 +144,8 @@ namespace NuGet.Lucene.Web.DataServices
         public bool IsPrerelease { get; set; }
 
         public bool Listed { get; set; }
+
+        public bool DevelopmentDependency { get; set; }
 
         public int VersionDownloadCount { get; set; }
 

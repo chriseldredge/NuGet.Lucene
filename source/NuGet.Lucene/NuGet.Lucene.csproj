@@ -54,9 +54,9 @@
     <Reference Include="Microsoft.Web.XmlTransform">
       <HintPath>..\packages\Microsoft.Web.Xdt.1.0.0\lib\net40\Microsoft.Web.XmlTransform.dll</HintPath>
     </Reference>
-    <Reference Include="NuGet.Core, Version=2.7.41101.299, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+    <Reference Include="NuGet.Core, Version=2.8.50126.400, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\NuGet.Core.2.7.2\lib\net40-Client\NuGet.Core.dll</HintPath>
+      <HintPath>..\packages\Nuget.Core.2.8.0\lib\net40-Client\NuGet.Core.dll</HintPath>
     </Reference>
     <Reference Include="Remotion.Linq">
       <HintPath>..\packages\Remotion.Linq.1.15.9.0\lib\net45\Remotion.Linq.dll</HintPath>
@@ -118,6 +118,7 @@
     <Compile Include="Util\PackageQueryableExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="NuGet.Lucene.nuspec" />
     <None Include="packages.NuGet.Lucene.config" />
     <None Include="readme.markdown" />

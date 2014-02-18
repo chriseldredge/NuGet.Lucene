@@ -235,7 +235,7 @@ namespace NuGet.Lucene
                     : packages.OrderByDescending(sortSelector);
         }
 
-        public IEnumerable<IPackage> GetUpdates(IEnumerable<IPackage> packages, bool includePrerelease, bool includeAllVersions,
+        public IEnumerable<IPackage> GetUpdates(IEnumerable<IPackageName> packages, bool includePrerelease, bool includeAllVersions,
             IEnumerable<FrameworkName> targetFrameworks, IEnumerable<IVersionSpec> versionConstraints)
         {
             var baseQuery = LucenePackages;
@@ -380,6 +380,7 @@ namespace NuGet.Lucene
             lucenePackage.Published = package.Published;
             lucenePackage.AssemblyReferences = package.AssemblyReferences;
             lucenePackage.PackageAssemblyReferences = package.PackageAssemblyReferences;
+            lucenePackage.DevelopmentDependency = package.DevelopmentDependency;
         }
 
         private Uri FilterPlaceholderUri(Uri uri)

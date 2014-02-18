@@ -1,9 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web.Caching;
-using System.Web.Hosting;
-using System.Windows.Input;
 using Common.Logging;
 using NuGet.Lucene.Web.Util;
 
@@ -57,8 +54,9 @@ namespace NuGet.Lucene.Web.Models
             if (ShouldLookInOrigin(id, result))
             {
                 var remotePackages = FindPackagesByIdInOrigin(id);
-
-                return result.Union(remotePackages, PackageEqualityComparer.IdAndVersion);
+                return result
+                    .Union(remotePackages, PackageEqualityComparer.IdAndVersion)
+                    .Cast<IPackage>();
             }
 
             return result;

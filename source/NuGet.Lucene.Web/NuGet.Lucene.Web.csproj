@@ -109,9 +109,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Ninject.Web.WebApi-RC.3.0.0.22\lib\net45-full\Ninject.Web.WebApi.dll</HintPath>
     </Reference>
-    <Reference Include="NuGet.Core, Version=2.7.41101.299, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+    <Reference Include="NuGet.Core, Version=2.8.50126.400, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\NuGet.Core.2.7.2\lib\net40-Client\NuGet.Core.dll</HintPath>
+      <HintPath>..\packages\NuGet.Core.2.8.0\lib\net40-Client\NuGet.Core.dll</HintPath>
     </Reference>
     <Reference Include="Owin">
       <HintPath>..\packages\Owin.1.0\lib\net40\Owin.dll</HintPath>
@@ -229,6 +229,7 @@
     <Compile Include="Util\DynamicUtils.cs" />
     <Compile Include="Util\ICache.cs" />
     <Compile Include="Util\TaskUtils.cs" />
+    <None Include="app.config" />
     <None Include="readme.markdown" />
   </ItemGroup>
   <ItemGroup>
