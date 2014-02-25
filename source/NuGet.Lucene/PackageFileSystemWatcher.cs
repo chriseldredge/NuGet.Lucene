@@ -47,8 +47,6 @@ namespace NuGet.Lucene
                     IncludeSubdirectories = true
                 };
 
-            fileWatcher.Error += OnFileWatcherError;
-
             var modifiedFilesThrottledByPath = ModifiedFiles
                 .Select(args => args.EventArgs.FullPath)
                 .GroupBy(path => path)
@@ -60,6 +58,7 @@ namespace NuGet.Lucene
             fileWatcher.Deleted += (s, e) => OnPackageDeleted(e.FullPath);
             fileWatcher.Renamed += (s, e) => OnPackageRenamed(e.OldFullPath, e.FullPath);
 #pragma warning restore 4014
+            fileWatcher.Error += OnFileWatcherError;
 
             fileWatcher.EnableRaisingEvents = true;
 
@@ -160,11 +159,14 @@ namespace NuGet.Lucene
 
         private void OnFileWatcherError(object source, ErrorEventArgs e)
         {
-            Log.Error(m => m("File Watcher error occured", e));
-            if (e.GetException().GetType() == typeof (InternalBufferOverflowException))
+            if (e.GetException() is InternalBufferOverflowException)
             {
-                Log.Debug(m => m("Error was a 'InternalBufferOverflowException' will trigger index with file system"));
+                Log.Warn(m => m("InternalBufferOverflowException in FileSystemWatcher; forcing full synchronization."));
                 Indexer.SynchronizeIndexWithFileSystem(CancellationToken.None);
+            }
+            else
+            {
+                Log.Error(m => m("Unhandled error in FileSystemWatcher"), e.GetException());
             }
         }
 
@@ -191,15 +193,15 @@ namespace NuGet.Lucene
             {
                 Func<FileSystemWatcher> createDirWatcher = () =>
                     {
-                        var fileWatcher = new FileSystemWatcher(FileSystem.Root)
+                        var dirWatcher = new FileSystemWatcher(FileSystem.Root)
                                                         {
                                                             NotifyFilter = NotifyFilters.DirectoryName,
                                                             IncludeSubdirectories = true,
                                                             EnableRaisingEvents = true,
                                                         };
 
-                        fileWatcher.Error += OnFileWatcherError;
-                        return fileWatcher;
+                        dirWatcher.Error += OnFileWatcherError;
+                        return dirWatcher;
                     };
 
                 Func<FileSystemWatcher, IObservable<EventPattern<FileSystemEventArgs>>> createObservable = dirWatcher =>
