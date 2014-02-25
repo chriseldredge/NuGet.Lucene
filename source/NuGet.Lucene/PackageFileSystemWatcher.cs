@@ -44,8 +44,7 @@ namespace NuGet.Lucene
             fileWatcher = new FileSystemWatcher(FileSystem.Root, "*.nupkg")
                 {
                     NotifyFilter = NotifyFilters.DirectoryName | NotifyFilters.FileName | NotifyFilters.LastWrite,
-                    IncludeSubdirectories = true,
-                    InternalBufferSize = 65536 //This is the max value (64KB) default 4096 (4KB)
+                    IncludeSubdirectories = true
                 };
 
             var modifiedFilesThrottledByPath = ModifiedFiles
@@ -59,6 +58,7 @@ namespace NuGet.Lucene
             fileWatcher.Deleted += (s, e) => OnPackageDeleted(e.FullPath);
             fileWatcher.Renamed += (s, e) => OnPackageRenamed(e.OldFullPath, e.FullPath);
 #pragma warning restore 4014
+            fileWatcher.Error += OnFileWatcherError;
 
             fileWatcher.EnableRaisingEvents = true;
 
@@ -157,6 +157,19 @@ namespace NuGet.Lucene
             }
         }
 
+        private void OnFileWatcherError(object source, ErrorEventArgs e)
+        {
+            if (e.GetException() is InternalBufferOverflowException)
+            {
+                Log.Warn(m => m("InternalBufferOverflowException in FileSystemWatcher; forcing full synchronization."));
+                Indexer.SynchronizeIndexWithFileSystem(CancellationToken.None);
+            }
+            else
+            {
+                Log.Error(m => m("Unhandled error in FileSystemWatcher"), e.GetException());
+            }
+        }
+
         private IObservable<EventPattern<FileSystemEventArgs>> ModifiedFiles
         {
             get
@@ -179,12 +192,16 @@ namespace NuGet.Lucene
             get
             {
                 Func<FileSystemWatcher> createDirWatcher = () =>
-                    new FileSystemWatcher(FileSystem.Root)
                     {
-                        NotifyFilter = NotifyFilters.DirectoryName,
-                        IncludeSubdirectories = true,
-                        EnableRaisingEvents = true,
-                        InternalBufferSize = 65536 //This is the max value (64KB) default 4096 (4KB)
+                        var dirWatcher = new FileSystemWatcher(FileSystem.Root)
+                                                        {
+                                                            NotifyFilter = NotifyFilters.DirectoryName,
+                                                            IncludeSubdirectories = true,
+                                                            EnableRaisingEvents = true,
+                                                        };
+
+                        dirWatcher.Error += OnFileWatcherError;
+                        return dirWatcher;
                     };
 
                 Func<FileSystemWatcher, IObservable<EventPattern<FileSystemEventArgs>>> createObservable = dirWatcher =>

@@ -9,14 +9,20 @@ namespace NuGet.Lucene.Web
     {
         private const string UserAgent = "NuGet.Lucene.Web";
 
-        public static IMirroringPackageRepository Create(IPackageRepository localRepository, string remotePackageUrl, TimeSpan timeout)
+        public static IMirroringPackageRepository Create(IPackageRepository localRepository, string remotePackageUrl, TimeSpan timeout, bool alwaysCheckMirror)
         {
             if (string.IsNullOrWhiteSpace(remotePackageUrl))
             {
                 return new NonMirroringPackageRepository(localRepository);
             }
 
-            var remoteRepository = CreateDataServicePackageRepository(new HttpClient(new Uri(remotePackageUrl)), timeout);
+            var remotePackageUri = new Uri(remotePackageUrl);
+            var remoteRepository = CreateDataServicePackageRepository(new HttpClient(remotePackageUri), timeout);
+
+            if (alwaysCheckMirror)
+            {
+                return new EagerMirroringPackageRepository(localRepository, remoteRepository, new WebCache());
+            }
 
             return new MirroringPackageRepository(localRepository, remoteRepository, new WebCache());
         }

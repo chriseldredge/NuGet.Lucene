@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using Moq;
+using NuGet.Lucene.Web.Models;
 using NUnit.Framework;
 
 namespace NuGet.Lucene.Web.Tests
@@ -11,7 +12,7 @@ namespace NuGet.Lucene.Web.Tests
         [Test]
         public void CreateWithoutOrigin()
         {
-            var result = MirroringPackageRepositoryFactory.Create(new LocalPackageRepository("."), "", TimeSpan.Zero);
+            var result = MirroringPackageRepositoryFactory.Create(new LocalPackageRepository("."), "", TimeSpan.Zero, false);
 
             Assert.That(result.MirroringEnabled, Is.False, "MirroringEnabled");
         }
@@ -20,9 +21,18 @@ namespace NuGet.Lucene.Web.Tests
         public void CreateWithOrigin()
         {
             var result = MirroringPackageRepositoryFactory.Create(new LocalPackageRepository("."),
-                                                                  "http://example.com/packages/", TimeSpan.Zero);
+                                                                  "http://example.com/packages/", TimeSpan.Zero, false);
 
             Assert.That(result.MirroringEnabled, Is.True, "MirroringEnabled");
+        }
+
+        [Test]
+        public void CreateWithAlwaysCheckMirrorSet()
+        {
+            var result = MirroringPackageRepositoryFactory.Create(new LocalPackageRepository("."),
+                                                                  "http://example.com/packages/", TimeSpan.Zero, true);
+
+            Assert.That(result, Is.InstanceOf<EagerMirroringPackageRepository>());
         }
 
         [Test]

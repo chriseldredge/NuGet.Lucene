@@ -72,7 +72,7 @@ namespace NuGet.Lucene.Web.Models
         /// <returns></returns>
         protected virtual bool ShouldLookInOrigin(string id, List<IPackage> localPackages)
         {
-            return localPackages.IsEmpty() || localPackages.OfType<LucenePackage>().Any(p => p.IsMirrored);
+            return localPackages.IsEmpty() || localPackages.OfType<LucenePackage>().All(p => p.IsMirrored);
         }
 
         public override IPackage FindPackage(string packageId, SemanticVersion version)
@@ -123,6 +123,19 @@ namespace NuGet.Lucene.Web.Models
                 Log.Error(m => m("Exception on FindPackage('{0}', '{1}') for package origin {2}: {3}", packageId, version, origin.Source, ex.Message), ex);
                 return null;
             }
+        }
+    }
+
+    public class EagerMirroringPackageRepository : MirroringPackageRepository
+    {
+        public EagerMirroringPackageRepository(IPackageRepository mirror, IPackageRepository origin, ICache cache)
+            : base(mirror, origin, cache)
+        {
+        }
+
+        protected override bool ShouldLookInOrigin(string id, List<IPackage> localPackages)
+        {
+            return true;
         }
     }
 }

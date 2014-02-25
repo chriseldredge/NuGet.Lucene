@@ -68,6 +68,7 @@ information when enabled. Default: false.
 * NuGet.Lucene.Web:handleLocalRequestsAsAdmin when true, requests on local interfaces (127.0.0.1, ::1) are automatically granted administrative permissions
 * NuGet.Lucene.Web:localAdministratorApiKey when non-blank, sets the api key on the LocalAdministrator account to a specific value instead of generating one
 * NuGet.Lucene.Web:allowAnonymousPackageChanges when true, does not require an api key or other authentication to push and delete packages
+* NuGet.Lucene.Web:alwaysCheckMirror when true, always check mirror for packages when offering new versions. When false, only check mirror when package is not in local repository or local packages were all previously mirrored.
 
 ### Role mapping
 
