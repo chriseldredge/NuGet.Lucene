@@ -14,12 +14,13 @@ namespace NuGet.Lucene.Web.Tests.DataServices
         {
             var packages = new[] {new LucenePackage(path => null)  {Id = "id1", Version = new StrictSemanticVersion("2.0")}};
 
+            var constraint = new VersionSpec {MinVersion = new SemanticVersion("1.0"), IsMinInclusive = false};
             repo.Setup(r => r.GetUpdates(
                 It.Is<IEnumerable<IPackage>>(p => p.Count() == 1),
                 false,
                 false,
                 It.Is<IEnumerable<FrameworkName>>(p => !p.Any()),
-                It.Is<IEnumerable<IVersionSpec>>(p => p.Single().ToString() == new VersionSpec(new SemanticVersion("1.0")).ToString())))
+                It.Is<IEnumerable<IVersionSpec>>(p => p.Single().ToString() == constraint.ToString())))
                 .Returns(packages);
 
             var result = service.GetUpdates("id1", "1.0", false, false, "", "");

@@ -113,10 +113,22 @@ namespace NuGet.Lucene.Web.DataServices
                 .Select(VersionUtility.ParseFrameworkName)
                 .ToList();
 
-            var versionSpecs = versionConstraintValues.Select((v,i) => string.IsNullOrWhiteSpace(v) ? new VersionSpec(packages[i].Version) : VersionUtility.ParseVersionSpec(v)).ToList();
+            var versionSpecs = versionConstraintValues
+                .Select((v,i) => CreateVersionSpec(v, packages[i].Version))
+                .ToList();
 
             var updates = PackageRepository.GetUpdates(packages, includePrerelease, includeAllVersions, targetFrameworkValues, versionSpecs);
             return updates.Select(AsDataServicePackage).AsQueryable();
+        }
+
+        private IVersionSpec CreateVersionSpec(string constraint, SemanticVersion currentVersion)
+        {
+            if (!string.IsNullOrWhiteSpace(constraint))
+            {
+                return VersionUtility.ParseVersionSpec(constraint);
+            }
+
+            return new VersionSpec { MinVersion = currentVersion, IsMinInclusive = false };
         }
 
         public static DataServicePackage AsDataServicePackage(IPackage package)
