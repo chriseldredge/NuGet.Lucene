@@ -1,9 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web.Caching;
-using System.Web.Hosting;
-using System.Windows.Input;
 using Common.Logging;
 using NuGet.Lucene.Web.Util;
 
@@ -12,7 +9,6 @@ namespace NuGet.Lucene.Web.Models
     public interface IMirroringPackageRepository : IPackageLookup, IServiceBasedRepository
     {
         bool MirroringEnabled { get; }
-        bool AlwaysCheckMirrorOveride { get; }
     }
 
     public class NonMirroringPackageRepository : DelegatingPackageRepository, IMirroringPackageRepository
@@ -22,7 +18,6 @@ namespace NuGet.Lucene.Web.Models
         }
 
         public bool MirroringEnabled { get { return false; } }
-        public bool AlwaysCheckMirrorOveride { get { return false; } }
     }
 
     public class MirroringPackageRepository : DelegatingPackageRepository, IMirroringPackageRepository
@@ -32,20 +27,15 @@ namespace NuGet.Lucene.Web.Models
         private readonly IPackageRepository origin;
 
         private readonly ICache cache;
-        private readonly bool localMirror;
-        private readonly bool alwaysCheckMirror;
 
-        public MirroringPackageRepository(IPackageRepository mirror, IPackageRepository origin, ICache cache, bool localMirror, bool alwaysCheckMirror)
+        public MirroringPackageRepository(IPackageRepository mirror, IPackageRepository origin, ICache cache)
             : base(mirror)
         {
             this.origin = origin;
             this.cache = cache;
-            this.localMirror = localMirror;
-            this.alwaysCheckMirror = alwaysCheckMirror;
         }
 
         public bool MirroringEnabled { get { return true; } }
-        public bool AlwaysCheckMirrorOveride { get { return localMirror || alwaysCheckMirror; } }
 
         public override string Source
         {
@@ -81,7 +71,7 @@ namespace NuGet.Lucene.Web.Models
         /// <returns></returns>
         protected virtual bool ShouldLookInOrigin(string id, List<IPackage> localPackages)
         {
-            return AlwaysCheckMirrorOveride || localPackages.IsEmpty() || localPackages.OfType<LucenePackage>().All(p => p.IsMirrored);
+            return localPackages.IsEmpty() || localPackages.OfType<LucenePackage>().All(p => p.IsMirrored);
         }
 
         public override IPackage FindPackage(string packageId, SemanticVersion version)
@@ -132,6 +122,19 @@ namespace NuGet.Lucene.Web.Models
                 Log.Error(m => m("Exception on FindPackage('{0}', '{1}') for package origin {2}: {3}", packageId, version, origin.Source, ex.Message), ex);
                 return null;
             }
+        }
+    }
+
+    public class EagerMirroringPackageRepository : MirroringPackageRepository
+    {
+        public EagerMirroringPackageRepository(IPackageRepository mirror, IPackageRepository origin, ICache cache)
+            : base(mirror, origin, cache)
+        {
+        }
+
+        protected override bool ShouldLookInOrigin(string id, List<IPackage> localPackages)
+        {
+            return true;
         }
     }
 }

@@ -40,7 +40,8 @@ namespace NuGet.Lucene.Web
             Kernel.Components.Add<IInjectionHeuristic, NonDecoratedPropertyInjectionHeuristic>();
 
             var routeMapper = new NuGetWebApiRouteMapper(RoutePathPrefix);
-            var mirroringPackageRepository = MirroringPackageRepositoryFactory.Create(cfg.Repository, PackageMirrorTargetUrl, PackageMirrorTimeout, AlwaysCheckMirror);
+            var mirroringPackageRepository = MirroringPackageRepositoryFactory.Create(
+                cfg.Repository, PackageMirrorTargetUrl, PackageMirrorTimeout, AlwaysCheckMirror);
             var userStore = InitializeUserStore();
 
             Bind<NuGetWebApiRouteMapper>().ToConstant(routeMapper);

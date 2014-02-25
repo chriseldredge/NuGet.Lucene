@@ -19,7 +19,12 @@ namespace NuGet.Lucene.Web
             var remotePackageUri = new Uri(remotePackageUrl);
             var remoteRepository = CreateDataServicePackageRepository(new HttpClient(remotePackageUri), timeout);
 
-            return new MirroringPackageRepository(localRepository, remoteRepository, new WebCache(), remotePackageUri.IsLoopback, alwaysCheckMirror);
+            if (alwaysCheckMirror)
+            {
+                return new EagerMirroringPackageRepository(localRepository, remoteRepository, new WebCache());
+            }
+
+            return new MirroringPackageRepository(localRepository, remoteRepository, new WebCache());
         }
 
         public static DataServicePackageRepository CreateDataServicePackageRepository(IHttpClient httpClient, TimeSpan timeout)

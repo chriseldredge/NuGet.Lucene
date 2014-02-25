@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using Moq;
+using NuGet.Lucene.Web.Models;
 using NUnit.Framework;
 
 namespace NuGet.Lucene.Web.Tests
@@ -26,21 +27,12 @@ namespace NuGet.Lucene.Web.Tests
         }
 
         [Test]
-        public void CreateWithOriginSetAsLocal()
-        {
-            var result = MirroringPackageRepositoryFactory.Create(new LocalPackageRepository("."),
-                                                                  "http://localhost/packages/", TimeSpan.Zero, false);
-
-            Assert.That(result.AlwaysCheckMirrorOveride, Is.True, "IsLocalMirror");
-        }
-
-        [Test]
         public void CreateWithAlwaysCheckMirrorSet()
         {
             var result = MirroringPackageRepositoryFactory.Create(new LocalPackageRepository("."),
                                                                   "http://example.com/packages/", TimeSpan.Zero, true);
 
-            Assert.That(result.AlwaysCheckMirrorOveride, Is.True, "IsLocalMirror");
+            Assert.That(result, Is.InstanceOf<EagerMirroringPackageRepository>());
         }
 
         [Test]
