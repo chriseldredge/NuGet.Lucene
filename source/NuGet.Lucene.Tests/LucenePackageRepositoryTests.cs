@@ -158,6 +158,28 @@ namespace NuGet.Lucene.Tests
         }
 
         [Test]
+        public void GetUpdatesFilterByTargetFrameworkVersion()
+        {
+            var b1 = MakeSamplePackage("b", "1.0");
+            var a1 = MakeSamplePackage("a", "1.0");
+            var a2 = MakeSamplePackage("a", "2.0");
+            var a3 = MakeSamplePackage("a", "3.0");
+
+            a2.SupportedFrameworks = new[] {"net20"};
+            a3.SupportedFrameworks = new[] {"net451"};
+            a3.IsLatestVersion = true;
+
+            InsertPackage(b1);
+            InsertPackage(a1);
+            InsertPackage(a2);
+            InsertPackage(a3);
+
+            var result = repository.GetUpdates(new[] { b1, a1 }, false, false, a2.GetSupportedFrameworks());
+
+            Assert.That(result.Single().Version.ToString(), Is.EqualTo(a2.Version.ToString()));
+        }
+
+        [Test]
         public void GetUpdatesIncludeAll()
         {
             var a1 = MakeSamplePackage("a", "1.0");
