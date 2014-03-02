@@ -260,7 +260,7 @@ namespace NuGet.Lucene
 
                 if (targetFrameworkList.Any())
                 {
-                    matchedPackages = matchedPackages.Where(pkg => pkg.GetSupportedFrameworks().Any(fwk => fwk == targetFrameworkList[ii]));
+                    matchedPackages = matchedPackages.Where(pkg => targetFrameworkList.Any(fwk => VersionUtility.IsCompatible(fwk, pkg.GetSupportedFrameworks())));
                 }
 
                 if (versionConstraintList.Any() && versionConstraintList[ii] != null)
