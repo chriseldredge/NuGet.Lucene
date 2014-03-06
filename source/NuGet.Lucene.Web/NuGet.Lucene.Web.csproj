@@ -177,6 +177,8 @@
   <ItemGroup>
     <Compile Include="Authentication\ApiUser.cs" />
     <Compile Include="Authentication\ApiUserPrincipal.cs" />
+    <Compile Include="Controllers\SourceFilesController.cs" />
+    <Compile Include="Controllers\SymbolsController.cs" />
     <Compile Include="DataServices\IOperationContext.cs" />
     <Compile Include="DeletePackageRedirectHandler.cs" />
     <Compile Include="Formatters\NuGetHtmlMicrodataFormatter.cs" />
@@ -224,6 +226,10 @@
     <Compile Include="SignalRModule.cs" />
     <Compile Include="ReusableCancellationTokenSource.cs" />
     <Compile Include="SimpleParameterInfo.cs" />
+    <Compile Include="Symbols\ISymbolSource.cs" />
+    <Compile Include="Symbols\SymbolSource.cs" />
+    <Compile Include="Symbols\SymbolSourceMapper.cs" />
+    <Compile Include="Symbols\SymbolTools.cs" />
     <Compile Include="UnhandledExceptionLogger.cs" />
     <Compile Include="UserStore.cs" />
     <Compile Include="Util\DynamicUtils.cs" />

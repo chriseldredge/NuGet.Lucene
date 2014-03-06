@@ -16,6 +16,7 @@ using Ninject.Selection.Heuristics;
 using NuGet.Lucene.Web.Authentication;
 using NuGet.Lucene.Web.Models;
 using NuGet.Lucene.Web.Modules;
+using NuGet.Lucene.Web.Symbols;
 using Version = Lucene.Net.Util.Version;
 
 namespace NuGet.Lucene.Web
@@ -49,7 +50,15 @@ namespace NuGet.Lucene.Web
             Bind<IMirroringPackageRepository>().ToConstant(mirroringPackageRepository);
             Bind<LuceneDataProvider>().ToConstant(cfg.Provider);
             Bind<UserStore>().ToConstant(userStore);
-            
+
+            var symbolsPath = MapPathFromAppSetting("symbolsPath", "~/App_Data/Symbols");
+            Bind<ISymbolSource>().ToConstant(new SymbolSource { SymbolsPath = symbolsPath });
+            Bind<SymbolTools>().ToConstant(new SymbolTools
+            {
+                SymbolPath = symbolsPath,
+                ToolPath = MapPathFromAppSetting("debuggingToolsPath", "")
+            });
+
             LoadAuthentication();
 
             var tokenSource = new ReusableCancellationTokenSource();

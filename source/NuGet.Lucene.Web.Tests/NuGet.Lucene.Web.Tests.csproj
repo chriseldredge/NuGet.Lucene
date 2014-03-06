@@ -138,6 +138,7 @@
     <Compile Include="ReusableCancellationTokenSourceTests.cs" />
     <Compile Include="RouteResolveContstraint.cs" />
     <Compile Include="RouteTests.cs" />
+    <Compile Include="Symbols\SymbolSourceMapperTests.cs" />
     <Compile Include="TabCompletionRouteTests.cs" />
     <Compile Include="UserStoreTests.cs" />
   </ItemGroup>

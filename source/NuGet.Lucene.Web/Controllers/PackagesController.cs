@@ -10,6 +10,7 @@ using System.Web.Http;
 using AspNet.WebApi.HtmlMicrodataFormatter;
 using NuGet.Lucene.Util;
 using NuGet.Lucene.Web.Models;
+using NuGet.Lucene.Web.Symbols;
 using NuGet.Lucene.Web.Util;
 
 namespace NuGet.Lucene.Web.Controllers
@@ -21,6 +22,7 @@ namespace NuGet.Lucene.Web.Controllers
     {
         public ILucenePackageRepository LuceneRepository { get; set; }
         public IMirroringPackageRepository MirroringRepository { get; set; }
+        public ISymbolSource SymbolSource { get; set; }
 
         /// <summary>
         /// Gets metadata about a package from the <c>nuspec</c> files and other
@@ -191,6 +193,7 @@ namespace NuGet.Lucene.Web.Controllers
             }
 
             await LuceneRepository.RemovePackageAsync(package);
+            await SymbolSource.RemoveSymbolsAsync(package);
 
             return Request.CreateResponse(HttpStatusCode.OK);
         }
@@ -209,13 +212,35 @@ namespace NuGet.Lucene.Web.Controllers
                 return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "Must provide package with valid id and version.");
             }
 
+            var result = Request.CreateResponse(HttpStatusCode.Created);
+
+            if (package.IsSymbolPackage())
+            {
+                var symbolSourceUri = GetSymbolSourceUri();
+                if (symbolSourceUri == null)
+                {
+                    return Request.CreateErrorResponse(HttpStatusCode.InternalServerError,
+                        "Failed to resolve URI for source files.");
+                }
+                await SymbolSource.AddSymbolsAsync(package, symbolSourceUri);
+                return result;
+            }
+
             await LuceneRepository.AddPackageAsync(package);
 
             var location = Url.Link(RouteNames.Packages.Info, new { id = package.Id, version = package.Version });
-
-            var result = Request.CreateResponse(HttpStatusCode.Created);
             result.Headers.Location = new Uri(location);
             return result;
+        }
+
+        private string GetSymbolSourceUri()
+        {
+            var symbolSourceUri = Url.Link(RouteNames.Sources, new {id = "DUMMY", version = "1.0", path = ""});
+        
+            if (string.IsNullOrEmpty(symbolSourceUri)) return null;
+
+            // Remove path components to get root URI
+            return symbolSourceUri.Substring(0, symbolSourceUri.IndexOf("/DUMMY"));
         }
 
         private LucenePackage FindPackage(PackageSpec packageSpec)

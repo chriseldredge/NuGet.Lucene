@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web.Http;
 using Moq;
+using NuGet.Lucene.Web.Symbols;
 using NUnit.Framework;
 using NuGet.Lucene.Web.Controllers;
 using NuGet.Lucene.Web.Models;
@@ -20,6 +21,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
     {
         private Mock<ILucenePackageRepository> luceneRepository;
         private Mock<IMirroringPackageRepository> mirroringRepository;
+        private Mock<ISymbolSource> symbolSource;
         private List<LucenePackage> packages;
         private Task completeTask;
         private static readonly StrictSemanticVersion SampleVersion = new StrictSemanticVersion("1.0");
@@ -42,8 +44,13 @@ namespace NuGet.Lucene.Web.Tests.Controllers
         {
             luceneRepository = new Mock<ILucenePackageRepository>();
             mirroringRepository = new Mock<IMirroringPackageRepository>();
-
-            return new PackagesController {LuceneRepository = luceneRepository.Object, MirroringRepository = mirroringRepository.Object};
+            symbolSource = new Mock<ISymbolSource>();
+            return new PackagesController
+            {
+                LuceneRepository = luceneRepository.Object,
+                MirroringRepository = mirroringRepository.Object,
+                SymbolSource = symbolSource.Object
+            };
         }
 
         [Test]
@@ -205,6 +212,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
         {
             luceneRepository.Setup(r => r.FindPackage(package.Id, package.Version.SemanticVersion)).Returns(package);
             luceneRepository.Setup(r => r.RemovePackageAsync(package)).Returns(Task.FromResult(""));
+            symbolSource.Setup(s => s.RemoveSymbolsAsync(package)).Returns(Task.FromResult(true));
 
             var result = await controller.DeletePackage(package.Id, package.Version.ToString());
             

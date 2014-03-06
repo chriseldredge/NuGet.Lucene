@@ -154,6 +154,20 @@ namespace NuGet.Lucene.Web
                                 new { version = new SemanticVersionConstraint() });
         }
 
+        public void MapSymbolSourceRoutes(HttpConfiguration config)
+        {
+            var routes = config.Routes;
+
+            routes.MapHttpRoute(RouteNames.Sources,
+                                pathPrefix + "source/{id}/{version}/{*path}",
+                                new { controller = "SourceFiles" },
+                                new { version = new SemanticVersionConstraint() });
+
+            routes.MapHttpRoute(RouteNames.Symbols,
+                        pathPrefix + "symbols/{*path}",
+                        new { controller = "Symbols" });
+        }
+
         public void MapDataServiceRoutes(RouteCollection routes)
         {
             var dataServiceHostFactory = new NinjectDataServiceHostFactory();
