@@ -7,7 +7,6 @@ using System.Runtime.Versioning;
 using Lucene.Net.Analysis.Standard;
 using Lucene.Net.Linq.Mapping;
 using NuGet.Lucene.Mapping;
-using DateTimeOffsetToTicksConverter = Lucene.Net.Linq.Converters.DateTimeOffsetToTicksConverter;
 
 namespace NuGet.Lucene
 {
