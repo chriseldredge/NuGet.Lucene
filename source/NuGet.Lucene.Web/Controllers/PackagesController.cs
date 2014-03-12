@@ -192,8 +192,10 @@ namespace NuGet.Lucene.Web.Controllers
                 return Request.CreateErrorResponse(HttpStatusCode.NotFound, message);
             }
 
-            await LuceneRepository.RemovePackageAsync(package);
-            await SymbolSource.RemoveSymbolsAsync(package);
+            var task1 = LuceneRepository.RemovePackageAsync(package);
+            var task2 = SymbolSource.RemoveSymbolsAsync(package);
+
+            await Task.WhenAll(task1, task2);
 
             return Request.CreateResponse(HttpStatusCode.OK);
         }
