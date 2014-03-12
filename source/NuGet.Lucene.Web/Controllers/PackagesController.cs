@@ -216,13 +216,7 @@ namespace NuGet.Lucene.Web.Controllers
 
             if (package.IsSymbolPackage())
             {
-                var symbolSourceUri = GetSymbolSourceUri();
-                if (symbolSourceUri == null)
-                {
-                    return Request.CreateErrorResponse(HttpStatusCode.InternalServerError,
-                        "Failed to resolve URI for source files.");
-                }
-                await SymbolSource.AddSymbolsAsync(package, symbolSourceUri);
+                await SymbolSource.AddSymbolsAsync(package, Url.GetSymbolSourceUri());
                 return result;
             }
 
@@ -231,16 +225,6 @@ namespace NuGet.Lucene.Web.Controllers
             var location = Url.Link(RouteNames.Packages.Info, new { id = package.Id, version = package.Version });
             result.Headers.Location = new Uri(location);
             return result;
-        }
-
-        private string GetSymbolSourceUri()
-        {
-            var symbolSourceUri = Url.Link(RouteNames.Sources, new {id = "DUMMY", version = "1.0", path = ""});
-        
-            if (string.IsNullOrEmpty(symbolSourceUri)) return null;
-
-            // Remove path components to get root URI
-            return symbolSourceUri.Substring(0, symbolSourceUri.IndexOf("/DUMMY"));
         }
 
         private LucenePackage FindPackage(PackageSpec packageSpec)

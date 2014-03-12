@@ -10,6 +10,16 @@ namespace NuGet.Lucene.Web.Symbols
         public string SymbolsPath { get; set; }
         public SymbolTools SymbolTools { get; set; }
 
+        public bool Enabled
+        {
+            get { return SymbolTools.ToolsAvailable; }
+        }
+
+        public bool SymbolsAvailable
+        {
+            get { return Directory.Exists(SymbolsPath) && Directory.EnumerateDirectories(SymbolsPath, "*.pdb", SearchOption.TopDirectoryOnly).Any(); }
+        }
+
         public async Task AddSymbolsAsync(IPackage package, string symbolSourceUri)
         {
             await UnzipPackageAsync(package);

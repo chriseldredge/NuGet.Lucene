@@ -16,6 +16,14 @@ namespace NuGet.Lucene.Web.Symbols
         public string SymbolPath { get; set; }
         public string ToolPath { get; set; }
 
+        public bool ToolsAvailable
+        {
+            get
+            {
+                return !string.IsNullOrWhiteSpace(ToolPath) && File.Exists(GetToolPath("srctool"));
+            }
+        }
+
         /// <summary>
         /// Get a list of source files referenced by a PDB symbol file using srctool.exe
         /// </summary>
@@ -69,16 +77,11 @@ namespace NuGet.Lucene.Web.Symbols
                 throw new InvalidOperationException("Cannot process symbol packages without setting path to Debugging Tools for Windows.");
             }
 
-            var exePath = Path.Combine(ToolPath, tool + ".exe");
+            var exePath = GetToolPath(tool);
 
             if (!File.Exists(exePath))
             {
-                exePath = Path.Combine(Path.Combine(ToolPath, "srcsrv"), tool + ".exe");
-
-                if (!File.Exists(exePath))
-                {
-                    throw new IOException("Cannot locate " + tool + " in " + ToolPath);
-                }
+                throw new IOException("Cannot locate " + tool + " in " + ToolPath);
             }
 
             var process = new Process
@@ -105,6 +108,17 @@ namespace NuGet.Lucene.Web.Symbols
 
                 return stdout.Result.Replace("\r\n", "\n").Split('\n');
             }
+        }
+
+        private string GetToolPath(string tool)
+        {
+            var exePath = Path.Combine(ToolPath, tool + ".exe");
+
+            if (!File.Exists(exePath))
+            {
+                exePath = Path.Combine(Path.Combine(ToolPath, "srcsrv"), tool + ".exe");
+            }
+            return exePath;
         }
     }
 }

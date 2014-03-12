@@ -235,6 +235,7 @@
     <Compile Include="Util\DynamicUtils.cs" />
     <Compile Include="Util\ICache.cs" />
     <Compile Include="Util\TaskUtils.cs" />
+    <Compile Include="Util\UrlHelperExtensions.cs" />
     <None Include="app.config" />
     <None Include="readme.markdown" />
   </ItemGroup>

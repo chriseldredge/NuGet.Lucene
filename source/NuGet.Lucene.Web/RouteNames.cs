@@ -1,10 +1,14 @@
-﻿using System.Web.Routing;
+﻿using System.Data;
+using System.Web.Routing;
 
 namespace NuGet.Lucene.Web
 {
     public static class RouteNames
     {
-        public static readonly RouteValueDictionary PackageFeedRouteValues = new RouteValueDictionary { { "serviceType", "odata" } };
+        public static readonly RouteValueDictionary PackageFeedRouteValues = new RouteValueDictionary
+        {
+            {"serviceType", "odata"}
+        };
 
         public const string Indexing = "Indexing";
 
@@ -40,7 +44,12 @@ namespace NuGet.Lucene.Web
         }
 
         public const string Sources = "Sources";
-        public const string Symbols = "Symbols";
+
+        public static class Symbols
+        {
+            public const string GetFile = "GetFile";
+            public const string Settings = "Settings";
+        }
 
         public const string TabCompletionPackageIds = "Package Manager Console Tab Completion - Package IDs";
         public const string TabCompletionPackageVersions = "Package Manager Console Tab Completion - Package Versions";

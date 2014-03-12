@@ -9,5 +9,7 @@ namespace NuGet.Lucene.Web.Symbols
         Task RemoveSymbolsAsync(IPackageName package);
         Stream OpenFile(string relativePath);
         Stream OpenPackageSourceFile(IPackageName package, string relativePath);
+        bool Enabled { get; }
+        bool SymbolsAvailable { get; }
     }
 }

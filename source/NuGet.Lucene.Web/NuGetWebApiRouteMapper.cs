@@ -163,9 +163,13 @@ namespace NuGet.Lucene.Web
                                 new { controller = "SourceFiles" },
                                 new { version = new SemanticVersionConstraint() });
 
-            routes.MapHttpRoute(RouteNames.Symbols,
+            routes.MapHttpRoute(RouteNames.Symbols.Settings,
+                        pathPrefix + "symbol-settings",
+                        new { controller = "Symbols", action = "GetSettings" });
+
+            routes.MapHttpRoute(RouteNames.Symbols.GetFile,
                         pathPrefix + "symbols/{*path}",
-                        new { controller = "Symbols" });
+                        new { controller = "Symbols", action = "GetFile" });
         }
 
         public void MapDataServiceRoutes(RouteCollection routes)
