@@ -30,7 +30,10 @@ namespace NuGet.Lucene.Web.Symbols
         {
             var path = GetPackageSymbolPath(package);
 
-            Directory.Delete(path, recursive:true);
+            if (Directory.Exists(path))
+            {
+                Directory.Delete(path, recursive: true);
+            }
 
             return Task.FromResult(true);
         }
