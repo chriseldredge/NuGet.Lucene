@@ -83,5 +83,19 @@ namespace NuGet.Lucene.Web.Controllers
 
             return Request.CreateResponse(HttpStatusCode.OK);
         }
+
+        /// <summary>
+        /// Requests that the Lucene index be optimized, forcing all segments
+        /// to be merged and expunging deleted documents.
+        /// </summary>
+        /// <returns><c>200 OK</c></returns>
+        [HttpPost]
+        [Authorize(Roles = RoleNames.PackageManager)]
+        public HttpResponseMessage Optimize()
+        {
+            Repository.Optimize();
+
+            return Request.CreateResponse(HttpStatusCode.OK);
+        }
     }
 }

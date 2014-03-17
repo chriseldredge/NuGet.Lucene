@@ -301,6 +301,11 @@ namespace NuGet.Lucene
             return new RepositoryInfo(packageCount, Indexer.GetIndexingStatus());
         }
 
+        public void Optimize()
+        {
+            Indexer.Optimize();
+        }
+
         public IObservable<RepositoryInfo> StatusChanged
         {
             get

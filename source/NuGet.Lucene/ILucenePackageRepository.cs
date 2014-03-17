@@ -68,5 +68,11 @@ namespace NuGet.Lucene
         /// using parameter object for better flexibility.
         /// </summary>
         IQueryable<IPackage> Search(SearchCriteria criteria);
+
+        /// <summary>
+        /// Requests that the Lucene index be optimized, forcing all segments
+        /// to be merged and expunging deleted documents.
+        /// </summary>
+        void Optimize();
     }
 }
