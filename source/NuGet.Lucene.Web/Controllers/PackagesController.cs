@@ -56,6 +56,7 @@ namespace NuGet.Lucene.Web.Controllers
 
             result.PackageDownloadLink = new Link(Url.Link(RouteNames.Packages.Download, new { id = result.Id, version = result.Version }), "attachment", "Download Package");
             result.VersionHistory = versionHistory.ToArray();
+            result.SymbolsAvailable = SymbolSource.AreSymbolsPresentFor(package);
 
             return result;
         }

@@ -20,6 +20,13 @@ namespace NuGet.Lucene.Web.Symbols
             get { return Directory.Exists(SymbolsPath) && Directory.EnumerateDirectories(SymbolsPath, "*.pdb", SearchOption.TopDirectoryOnly).Any(); }
         }
 
+        public bool AreSymbolsPresentFor(IPackageName package)
+        {
+            var path = GetPackageSymbolPath(package);
+
+            return Directory.Exists(path);
+        }
+
         public async Task AddSymbolsAsync(IPackage package, string symbolSourceUri)
         {
             await UnzipPackageAsync(package);

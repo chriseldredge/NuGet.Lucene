@@ -9,6 +9,7 @@ namespace NuGet.Lucene.Web.Models
     {
         public Link PackageDownloadLink { get; set; }
         public IEnumerable<PackageVersionSummary> VersionHistory { get; set; }
+        public bool SymbolsAvailable { get; set; }
 
         public PackageWithVersionHistory()
             :base(p => null)

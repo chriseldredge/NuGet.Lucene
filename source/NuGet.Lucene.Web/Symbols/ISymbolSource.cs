@@ -11,5 +11,6 @@ namespace NuGet.Lucene.Web.Symbols
         Stream OpenPackageSourceFile(IPackageName package, string relativePath);
         bool Enabled { get; }
         bool SymbolsAvailable { get; }
+        bool AreSymbolsPresentFor(IPackageName package);
     }
 }
