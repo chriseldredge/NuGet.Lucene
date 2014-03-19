@@ -5,10 +5,22 @@ namespace NuGet.Lucene.Web.Models
 {
     public class PackageVersionSummary
     {
+        private readonly string id;
+        private readonly string title;
         private readonly StrictSemanticVersion version;
         private readonly DateTimeOffset lastUpdated;
         private readonly int versionDownloadCount;
         private readonly Link link;
+
+        public string Id
+        {
+            get { return id; }
+        }
+
+        public string Title
+        {
+            get { return title; }
+        }
 
         public StrictSemanticVersion Version
         {
@@ -31,12 +43,15 @@ namespace NuGet.Lucene.Web.Models
         }
 
         public PackageVersionSummary(LucenePackage package, Link link)
-            : this(package.Version, package.LastUpdated, package.VersionDownloadCount, link)
+            : this(package.Id, package.Title, package.Version, package.LastUpdated, package.VersionDownloadCount, link)
         {
             
         }
-        public PackageVersionSummary(StrictSemanticVersion version, DateTimeOffset lastUpdated, int versionDownloadCount, Link link)
+
+        public PackageVersionSummary(string id, string title, StrictSemanticVersion version, DateTimeOffset lastUpdated, int versionDownloadCount, Link link)
         {
+            this.id = id;
+            this.title = title;
             this.version = version;
             this.lastUpdated = lastUpdated;
             this.versionDownloadCount = versionDownloadCount;
