@@ -181,7 +181,8 @@ namespace NuGet.Lucene
                 packages = from
                                 pkg in packages
                            where
-                                ((pkg.Id == criteria.SearchTerm || pkg.Title == criteria.SearchTerm).Boost(3) ||
+                                ((pkg.Id == criteria.SearchTerm || pkg.Title == criteria.SearchTerm).Boost(4) ||
+                                (pkg.SearchTitle == criteria.SearchTerm).Boost(3) ||
                                 (pkg.Tags == criteria.SearchTerm).Boost(2) ||
                                 (pkg.Authors.Contains(criteria.SearchTerm) || pkg.Owners.Contains(criteria.SearchTerm)).Boost(2) ||
                                 (pkg.Summary == criteria.SearchTerm || pkg.Description == criteria.SearchTerm)).AllowSpecialCharacters()

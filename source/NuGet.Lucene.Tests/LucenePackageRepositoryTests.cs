@@ -215,6 +215,41 @@ namespace NuGet.Lucene.Tests
             }
         }
 
+        public class SearchTests : LucenePackageRepositoryTests
+        {
+            [Test]
+            public void SearchById()
+            {
+                InsertPackage("Foo.Bar", "1.0");
+
+                var result = repository.Search(new SearchCriteria("Foo.Bar"));
+
+                Assert.That(result.Select(r => r.Id).ToArray(), Is.EqualTo(new[] {"Foo.Bar"}));
+            }
+
+            [Test]
+            public void TokenizeId()
+            {
+                InsertPackage("Foo.Bar", "1.0");
+                InsertPackage("Foo.Baz", "1.0");
+
+                var result = repository.Search(new SearchCriteria("Bar"));
+
+                Assert.That(result.Select(r => r.Id).ToArray(), Is.EqualTo(new[] { "Foo.Bar" }));
+            }
+
+            [Test]
+            public void TokenizePascalCase()
+            {
+                InsertPackage("Foo.BarThingUpdater", "1.0");
+                InsertPackage("Foo.Baz", "1.0");
+
+                var result = repository.Search(new SearchCriteria("thing"));
+
+                Assert.That(result.Select(r => r.Id).ToArray(), Is.EqualTo(new[] { "Foo.BarThingUpdater" }));
+            }
+        }
+
         public class LoadFromFileSystemTests : LucenePackageRepositoryTests
         {
             [Test]

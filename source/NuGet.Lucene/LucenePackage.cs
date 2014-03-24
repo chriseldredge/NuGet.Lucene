@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
+using System.Text.RegularExpressions;
 using Lucene.Net.Analysis.Standard;
 using Lucene.Net.Linq.Mapping;
 using NuGet.Lucene.Mapping;
@@ -73,6 +74,22 @@ namespace NuGet.Lucene
 
         [NumericField(Converter = typeof(BoolToIntConverter))]
         public bool RequireLicenseAcceptance { get; set; }
+
+        [Field(Store = StoreMode.No, Analyzer = typeof (PorterStemAnalyzer))]
+        public string SearchTitle
+        {
+            get
+            {
+                var text = string.IsNullOrWhiteSpace(Title)
+                    ? Id
+                    : Id + " " + Title;
+                text = text.Replace('.', ' ');
+
+                // Convert "PascalCase" or "camelCase" to "pascal case" or "camel case".
+                text = Regex.Replace(text, @"(?<a>(?<!^)((?:[A-Z][a-z])|(?:(?<!^[A-Z]+)[A-Z0-9]+(?:(?=[A-Z][a-z])|$))|(?:[0-9]+)))", @" ${a}");
+                return text;
+            }
+        }
 
         [Field(Analyzer = typeof(PorterStemAnalyzer))]
         public string Description { get; set; }
