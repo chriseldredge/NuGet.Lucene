@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
+using System.Threading.Tasks;
 using Moq;
 using NUnit.Framework;
 
@@ -27,191 +28,212 @@ namespace NuGet.Lucene.Tests
                              };
         }
 
-        [Test]
-        public void IncrementDownloadCount()
+        public class InitializeTests : LucenePackageRepositoryTests
         {
-            var pkg = MakeSamplePackage("sample", "2.1");
-            indexer.Setup(i => i.IncrementDownloadCount(pkg)).Verifiable();
+            [Test]
+            public void UpdatesTotalPackages()
+            {
+                var p = MakeSamplePackage("a", "1.0");
+                repository.LucenePackages = new EnumerableQuery<LucenePackage>(Enumerable.Repeat(p, 1234));
 
-            repository.IncrementDownloadCount(pkg);
+                repository.Initialize();
 
-            indexer.Verify();
+                Assert.That(repository.PackageCount, Is.EqualTo(repository.LucenePackages.Count()));
+            }
         }
 
-        [Test]
-        public void Initialize_UpdatesTotalPackages()
+        public class IncrementDownloadCountTests : LucenePackageRepositoryTests
         {
-            var p = MakeSamplePackage("a", "1.0");
-            repository.LucenePackages = new EnumerableQuery<LucenePackage>(Enumerable.Repeat(p, 1234));
+            [Test]
+            public async Task IncrementDownloadCount()
+            {
+                var pkg = MakeSamplePackage("sample", "2.1");
+                indexer.Setup(i => i.IncrementDownloadCount(pkg)).Returns(Task.FromResult(true)).Verifiable();
 
-            repository.Initialize();
+                await repository.IncrementDownloadCount(pkg);
 
-            Assert.That(repository.PackageCount, Is.EqualTo(repository.LucenePackages.Count()));
+                indexer.Verify();
+            }
         }
 
-        [Test]
-        public void FindPackage()
+        public class FindPackageTests : LucenePackageRepositoryTests
         {
-            InsertPackage("a", "1.0");
-            InsertPackage("a", "2.0");
-            InsertPackage("b", "2.0");
+            [Test]
+            public void FindPackage()
+            {
+                InsertPackage("a", "1.0");
+                InsertPackage("a", "2.0");
+                InsertPackage("b", "2.0");
 
-            var result = repository.FindPackage("a", new SemanticVersion("2.0"));
+                var result = repository.FindPackage("a", new SemanticVersion("2.0"));
 
-            Assert.That(result.Id, Is.EqualTo("a"));
-            Assert.That(result.Version.ToString(), Is.EqualTo("2.0"));
+                Assert.That(result.Id, Is.EqualTo("a"));
+                Assert.That(result.Version.ToString(), Is.EqualTo("2.0"));
+            }
+
+            [Test]
+            public void FindPackage_ExactMatch()
+            {
+                InsertPackage("a", "1.0");
+                InsertPackage("a", "1.0.0.0");
+
+                var result = repository.FindPackage("a", new SemanticVersion("1.0.0.0"));
+
+                Assert.That(result.Id, Is.EqualTo("a"));
+                Assert.That(result.Version.ToString(), Is.EqualTo("1.0.0.0"));
+            }
         }
 
-        [Test]
-        public void FindPackage_ExactMatch()
+        public class ConvertPackageTests : LucenePackageRepositoryTests
         {
-            InsertPackage("a", "1.0");
-            InsertPackage("a", "1.0.0.0");
+            [Test]
+            public void TrimsAuthors()
+            {
+                var package = SetUpConvertPackage();
 
-            var result = repository.FindPackage("a", new SemanticVersion("1.0.0.0"));
+                package.Object.Authors = new[] {"a", " b"};
+                package.Object.Owners = new[] {"c", " d"};
 
-            Assert.That(result.Id, Is.EqualTo("a"));
-            Assert.That(result.Version.ToString(), Is.EqualTo("1.0.0.0"));
+                var result = repository.Convert(package.Object);
+
+                Assert.That(result.Authors.ToArray(), Is.EqualTo(new[] {"a", "b"}));
+                Assert.That(result.Owners.ToArray(), Is.EqualTo(new[] {"c", "d"}));
+            }
+
+            [Test]
+            public void SupportedFrameworks()
+            {
+                var package = SetUpConvertPackage();
+
+                var result = repository.Convert(package.Object);
+
+                Assert.That(result.SupportedFrameworks, Is.Not.Null, "SupportedFrameworks");
+                Assert.That(result.SupportedFrameworks.ToArray(), Is.EquivalentTo(new[] {"net40"}));
+            }
+
+            [Test]
+            public void DetectsInvalidModifiedTime()
+            {
+                var package = SetUpConvertPackage();
+                fileSystem.Setup(fs => fs.GetLastModified(It.IsAny<string>()))
+                    .Returns(new DateTime(1601, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc));
+                var result = repository.Convert(package.Object);
+
+                Assert.That(result.Published, Is.EqualTo(result.Created));
+            }
+
+            [Test]
+            public void Files()
+            {
+                var package = SetUpConvertPackage();
+                var file1 = new Mock<IPackageFile>();
+                file1.Setup(f => f.Path).Returns("path1");
+                package.Object.Files = new[] {file1.Object};
+
+                var result = repository.Convert(package.Object);
+
+                Assert.That(result.Files, Is.Not.Null, "Files");
+                Assert.That(result.Files.ToArray(), Is.EquivalentTo(new[] {"path1"}));
+            }
+
+            [Test]
+            public void RemovesPlaceholderUrls()
+            {
+                var package = SetUpConvertPackage();
+
+                package.Object.IconUrl = new Uri("http://ICON_URL_HERE_OR_DELETE_THIS_LINE");
+                package.Object.LicenseUrl = new Uri("http://LICENSE_URL_HERE_OR_DELETE_THIS_LINE");
+                package.Object.ProjectUrl = new Uri("http://PROJECT_URL_HERE_OR_DELETE_THIS_LINE");
+
+                var result = repository.Convert(package.Object);
+
+                Assert.That(result.IconUrl, Is.Null, "IconUrl");
+                Assert.That(result.LicenseUrl, Is.Null, "LicenseUrl");
+                Assert.That(result.ProjectUrl, Is.Null, "ProjectUrl");
+            }
         }
 
-        [Test]
-        public void ConvertPackage_TrimsAuthors()
+        public class GetUpdatesTests : LucenePackageRepositoryTests
         {
-            var package = SetUpConvertPackage();
+            [Test]
+            public void GetUpdates()
+            {
+                var a1 = MakeSamplePackage("a", "1.0");
+                var a2 = MakeSamplePackage("a", "2.0");
+                var a3 = MakeSamplePackage("a", "3.0");
 
-            package.Object.Authors = new[] {"a", " b"};
-            package.Object.Owners = new[] {"c", " d"};
+                a3.IsLatestVersion = true;
 
-            var result = repository.Convert(package.Object);
+                InsertPackage(a1);
+                InsertPackage(a2);
+                InsertPackage(a3);
 
-            Assert.That(result.Authors.ToArray(), Is.EqualTo(new[] {"a", "b"}));
-            Assert.That(result.Owners.ToArray(), Is.EqualTo(new[] { "c", "d" }));
+                var result = repository.GetUpdates(new[] {a1}, false, false, new FrameworkName[0]);
+
+                Assert.That(result.Single().Version.ToString(), Is.EqualTo(a3.Version.ToString()));
+            }
+
+            [Test]
+            public void FilterByTargetFrameworkVersion()
+            {
+                var b1 = MakeSamplePackage("b", "1.0");
+                var a1 = MakeSamplePackage("a", "1.0");
+                var a2 = MakeSamplePackage("a", "2.0");
+                var a3 = MakeSamplePackage("a", "3.0");
+
+                a2.SupportedFrameworks = new[] {"net20"};
+                a3.SupportedFrameworks = new[] {"net451"};
+                a3.IsLatestVersion = true;
+
+                InsertPackage(b1);
+                InsertPackage(a1);
+                InsertPackage(a2);
+                InsertPackage(a3);
+
+                var result = repository.GetUpdates(new[] {b1, a1}, false, false, a2.GetSupportedFrameworks());
+
+                Assert.That(result.Single().Version.ToString(), Is.EqualTo(a2.Version.ToString()));
+            }
+
+            [Test]
+            public void IncludeAll()
+            {
+                var a1 = MakeSamplePackage("a", "1.0");
+                var a2 = MakeSamplePackage("a", "2.0-pre");
+                var a3 = MakeSamplePackage("a", "3.0");
+
+                a3.IsLatestVersion = true;
+
+                InsertPackage(a1);
+                InsertPackage(a2);
+                InsertPackage(a3);
+
+                var result = repository.GetUpdates(new[] {a1}, true, true, new FrameworkName[0]);
+
+                Assert.That(result.Select(p => p.Version.ToString()).ToArray(),
+                    Is.EqualTo(new[] {a2.Version.ToString(), a3.Version.ToString()}));
+            }
         }
 
-        [Test]
-        public void ConvertPackage_SupportedFrameworks()
+        public class LoadFromFileSystemTests : LucenePackageRepositoryTests
         {
-            var package = SetUpConvertPackage();
+            [Test]
+            public void LoadFromFileSystem()
+            {
+                const string expectedPath = @"a\non\standard\package\location.nupkg";
+                var date = new DateTime(2001, 5, 27, 0, 0, 0, DateTimeKind.Utc);
 
-            var result = repository.Convert(package.Object);
+                fileSystem.SetupGet(fs => fs.Root).Returns(@"c:\packages");
+                fileSystem.Setup(fs => fs.GetFullPath(It.IsAny<string>()))
+                    .Returns<string>(p => Path.Combine(@"c:\packages", p));
+                fileSystem.Setup(fs => fs.OpenFile(It.IsAny<string>())).Returns(new MemoryStream());
+                fileSystem.Setup(fs => fs.GetLastModified(expectedPath)).Returns(date).Verifiable();
 
-            Assert.That(result.SupportedFrameworks, Is.Not.Null, "SupportedFrameworks");
-            Assert.That(result.SupportedFrameworks.ToArray(), Is.EquivalentTo(new[] {"net40"}));
-        }
+                var result = repository.LoadFromFileSystem(expectedPath);
 
-        [Test]
-        public void ConvertPackage_DetectsInvalidModifiedTime()
-        {
-            var package = SetUpConvertPackage();
-            fileSystem.Setup(fs => fs.GetLastModified(It.IsAny<string>())).Returns(new DateTime(1601, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc));
-            var result = repository.Convert(package.Object);
-
-            Assert.That(result.Published, Is.EqualTo(result.Created));
-        }
-
-        [Test]
-        public void ConvertPackage_Files()
-        {
-            var package = SetUpConvertPackage();
-            var file1 = new Mock<IPackageFile>();
-            file1.Setup(f => f.Path).Returns("path1");
-            package.Object.Files = new[] {file1.Object};
-
-            var result = repository.Convert(package.Object);
-
-            Assert.That(result.Files, Is.Not.Null, "Files");
-            Assert.That(result.Files.ToArray(), Is.EquivalentTo(new[] { "path1" }));
-        }
-
-        [Test]
-        public void ConvertPackage_RemovesPlaceholderUrls()
-        {
-            var package = SetUpConvertPackage();
-
-            package.Object.IconUrl = new Uri("http://ICON_URL_HERE_OR_DELETE_THIS_LINE");
-            package.Object.LicenseUrl = new Uri("http://LICENSE_URL_HERE_OR_DELETE_THIS_LINE");
-            package.Object.ProjectUrl = new Uri("http://PROJECT_URL_HERE_OR_DELETE_THIS_LINE");
-
-            var result = repository.Convert(package.Object);
-
-            Assert.That(result.IconUrl, Is.Null, "IconUrl");
-            Assert.That(result.LicenseUrl, Is.Null, "LicenseUrl");
-            Assert.That(result.ProjectUrl, Is.Null, "ProjectUrl");
-        }
-
-        [Test]
-        public void GetUpdates()
-        {
-            var a1 = MakeSamplePackage("a", "1.0");
-            var a2 = MakeSamplePackage("a", "2.0");
-            var a3 = MakeSamplePackage("a", "3.0");
-
-            a3.IsLatestVersion = true;
-
-            InsertPackage(a1);
-            InsertPackage(a2);
-            InsertPackage(a3);
-
-            var result = repository.GetUpdates(new[] {a1}, false, false, new FrameworkName[0]);
-
-            Assert.That(result.Single().Version.ToString(), Is.EqualTo(a3.Version.ToString()));
-        }
-
-        [Test]
-        public void GetUpdatesFilterByTargetFrameworkVersion()
-        {
-            var b1 = MakeSamplePackage("b", "1.0");
-            var a1 = MakeSamplePackage("a", "1.0");
-            var a2 = MakeSamplePackage("a", "2.0");
-            var a3 = MakeSamplePackage("a", "3.0");
-
-            a2.SupportedFrameworks = new[] {"net20"};
-            a3.SupportedFrameworks = new[] {"net451"};
-            a3.IsLatestVersion = true;
-
-            InsertPackage(b1);
-            InsertPackage(a1);
-            InsertPackage(a2);
-            InsertPackage(a3);
-
-            var result = repository.GetUpdates(new[] { b1, a1 }, false, false, a2.GetSupportedFrameworks());
-
-            Assert.That(result.Single().Version.ToString(), Is.EqualTo(a2.Version.ToString()));
-        }
-
-        [Test]
-        public void GetUpdatesIncludeAll()
-        {
-            var a1 = MakeSamplePackage("a", "1.0");
-            var a2 = MakeSamplePackage("a", "2.0-pre");
-            var a3 = MakeSamplePackage("a", "3.0");
-
-            a3.IsLatestVersion = true;
-
-            InsertPackage(a1);
-            InsertPackage(a2);
-            InsertPackage(a3);
-
-            var result = repository.GetUpdates(new[] { a1 }, true, true, new FrameworkName[0]);
-
-            Assert.That(result.Select(p => p.Version.ToString()).ToArray(), Is.EqualTo(new[] {a2.Version.ToString(), a3.Version.ToString()}));
-        }
-
-        [Test]
-        public void LoadFromFileSystem()
-        {
-            const string expectedPath = @"a\non\standard\package\location.nupkg";
-            var date = new DateTime(2001, 5, 27, 0, 0, 0, DateTimeKind.Utc);
-
-            fileSystem.SetupGet(fs => fs.Root).Returns(@"c:\packages");
-            fileSystem.Setup(fs => fs.GetFullPath(It.IsAny<string>())).Returns<string>(p => Path.Combine(@"c:\packages", p));
-            fileSystem.Setup(fs => fs.OpenFile(It.IsAny<string>())).Returns(new MemoryStream());
-            fileSystem.Setup(fs => fs.GetLastModified(expectedPath)).Returns(date).Verifiable();
-
-            var result = repository.LoadFromFileSystem(expectedPath);
-
-            Assert.That(result.Published.GetValueOrDefault().DateTime, Is.EqualTo(date));
-            fileSystem.VerifyAll();
+                Assert.That(result.Published.GetValueOrDefault().DateTime, Is.EqualTo(date));
+                fileSystem.VerifyAll();
+            }
         }
 
         private Mock<PackageWithFiles> SetUpConvertPackage()
