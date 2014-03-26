@@ -103,7 +103,7 @@ namespace NuGet.Lucene.Tests
         }
 
         [Test]
-        public void AddPackage_NewVersion_ZerosVersionDownloadCount()
+        public void AddPackage_NoneExisting_NewVersion_ZerosVersionDownloadCount()
         {
             var t1 = indexer.AddPackage(MakeSamplePackage("Sample.Package", "1.0"));
             var t2 = indexer.AddPackage(MakeSamplePackage("Sample.Package", "1.1"));
@@ -112,6 +112,29 @@ namespace NuGet.Lucene.Tests
 
             var packages = datasource.OrderBy(p => p.Version).ToArray();
             Assert.AreEqual(0, packages.Last().VersionDownloadCount);
+        }
+
+        [Test]
+        public async void AddPackage_WithExisting_NewVersion_ZerosVersionDownloadCount()
+        {
+            var existing = MakeSamplePackage("Sample.Package", "1.0");
+            existing.VersionDownloadCount = 199;
+            InsertPackage(existing);
+
+            await indexer.AddPackage(MakeSamplePackage("Sample.Package", "1.1"));
+            Assert.AreEqual(0, datasource.Single(p => p.Version == new StrictSemanticVersion("1.1")).VersionDownloadCount);
+        }
+
+        [Test]
+        public async void AddPackage_WithExisting_NewVersion_CarriesForwardDownloadCount()
+        {
+            const int downloadCount = 219;
+            var existing = MakeSamplePackage("Sample.Package", "1.0");
+            existing.DownloadCount = downloadCount;
+            InsertPackage(existing);
+
+            await indexer.AddPackage(MakeSamplePackage("Sample.Package", "1.1"));
+            Assert.AreEqual(downloadCount, datasource.Single(p => p.Version == new StrictSemanticVersion("1.1")).DownloadCount);
         }
 
     }

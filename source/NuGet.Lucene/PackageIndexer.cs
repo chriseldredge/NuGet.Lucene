@@ -323,14 +323,14 @@ namespace NuGet.Lucene
                                    select p).ToList();
 
             var newest = currentPackages.FirstOrDefault();
-            var versionDownloadCount = newest != null ? newest.VersionDownloadCount : 0;
+            var totalDownloadCount = newest != null ? newest.DownloadCount : 0;
 
             foreach (var package in packages)
             {
                 var packageToReplace = currentPackages.Find(p => p.Version == package.Version);
 
-                package.VersionDownloadCount = versionDownloadCount;
-                package.DownloadCount = packageToReplace != null ? packageToReplace.DownloadCount : 0;
+                package.DownloadCount = totalDownloadCount;
+                package.VersionDownloadCount = packageToReplace != null ? packageToReplace.VersionDownloadCount : 0;
 
                 if (packageToReplace != null)
                 {
