@@ -149,6 +149,11 @@ namespace NuGet.Lucene
 
         public override IPackage FindPackage(string packageId, SemanticVersion version)
         {
+            return FindLucenePackage(packageId, version);
+        }
+
+        public LucenePackage FindLucenePackage(string packageId, SemanticVersion version)
+        {
             var packages = LucenePackages;
 
             var matches = from p in packages
@@ -327,6 +332,27 @@ namespace NuGet.Lucene
             var fullPath = FileSystem.GetFullPath(path);
             var package = Convert(OpenPackage(fullPath), new LucenePackage(FileSystem) { Path = FileSystem.MakeRelative(fullPath) });
             return package;
+        }
+
+        protected override string GetPackageFilePath(IPackage package)
+        {
+            return GetPackageFilePath((IPackageName)package);
+        }
+
+        protected override string GetPackageFilePath(string id, SemanticVersion version)
+        {
+            return GetPackageFilePath(new PackageName(id, version));
+        }
+
+        protected string GetPackageFilePath(IPackageName package)
+        {
+            var lucenePackage = package as LucenePackage ?? FindLucenePackage(package.Id, package.Version);
+            if (lucenePackage != null && !string.IsNullOrEmpty(lucenePackage.Path))
+            {
+                return lucenePackage.Path;
+            }
+
+            return base.GetPackageFilePath(package.Id, package.Version);
         }
 
         protected override IPackage OpenPackage(string path)

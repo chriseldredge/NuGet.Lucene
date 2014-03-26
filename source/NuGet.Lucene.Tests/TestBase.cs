@@ -27,7 +27,9 @@ namespace NuGet.Lucene.Tests
             fileSystem = new Mock<IFileSystem>();
 
             packagePathResolver.Setup(p => p.GetPackageDirectory(It.IsAny<IPackage>())).Returns("package-dir");
+            packagePathResolver.Setup(p => p.GetPackageDirectory(It.IsAny<string>(), It.IsAny<SemanticVersion>())).Returns("package-dir");
             packagePathResolver.Setup(p => p.GetPackageFileName(It.IsAny<IPackage>())).Returns((Func<IPackage, string>)(pkg => pkg.Id));
+            packagePathResolver.Setup(p => p.GetPackageFileName(It.IsAny<string>(), It.IsAny<SemanticVersion>())).Returns((Func<string, SemanticVersion, string>)((id, version) => id + "." + version));
 
             var dir = new RAMDirectory();
 
