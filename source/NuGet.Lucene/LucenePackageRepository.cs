@@ -130,11 +130,13 @@ namespace NuGet.Lucene
 
         public async Task RemovePackageAsync(IPackage package)
         {
-            base.RemovePackage(package);
-            
-            await Indexer.RemovePackage(package);
-        }
+            var task = Indexer.RemovePackage(package);
 
+            base.RemovePackage(package);
+
+            await task;
+        }
+        
         public override void RemovePackage(IPackage package)
         {
             var task = TaskEx.Run(() => RemovePackageAsync(package));
