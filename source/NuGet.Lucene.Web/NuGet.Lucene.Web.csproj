@@ -177,6 +177,7 @@
   <ItemGroup>
     <Compile Include="Authentication\ApiUser.cs" />
     <Compile Include="Authentication\ApiUserPrincipal.cs" />
+    <Compile Include="Controllers\ApiControllerBase.cs" />
     <Compile Include="Controllers\SourceFilesController.cs" />
     <Compile Include="Controllers\SymbolsController.cs" />
     <Compile Include="DataServices\IOperationContext.cs" />

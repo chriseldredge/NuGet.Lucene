@@ -19,7 +19,7 @@ namespace NuGet.Lucene.Web.Controllers
     /// on requests.
     /// </para>
     /// </summary>
-    public class UsersController : ApiController
+    public class UsersController : ApiControllerBase
     {
         public UserStore Store { get; set; }
 
@@ -52,6 +52,8 @@ namespace NuGet.Lucene.Web.Controllers
         [Authorize(Roles = RoleNames.AccountAdministrator)]
         public HttpResponseMessage Put(string username, [FromBody]UserAttributes attributes)
         {
+            Audit("Create user {0} with roles [{1}]", username, string.Join(", ", attributes.Roles ?? new string[0]));
+
             var user = new ApiUser {Username = username, Key = attributes.Key, Roles = attributes.Roles};
 
             try
@@ -80,6 +82,8 @@ namespace NuGet.Lucene.Web.Controllers
         [Authorize(Roles = RoleNames.AccountAdministrator)]
         public HttpResponseMessage Post(string username, [FromBody]UpdateUserAttributes attributes)
         {
+            Audit("Update user {0} with roles [{1}]", username, string.Join(", ", attributes.Roles ?? new string[0]));
+
             try
             {
                 Store.Update(username, attributes.RenameTo, attributes.Key, attributes.Roles, GetUserUpdateMode(attributes));
@@ -103,6 +107,8 @@ namespace NuGet.Lucene.Web.Controllers
         [Authorize(Roles = RoleNames.AccountAdministrator)]
         public HttpResponseMessage Delete(string username)
         {
+            Audit("Delete user {0}", username);
+
             try
             {
                 Store.Delete(username);
@@ -122,6 +128,8 @@ namespace NuGet.Lucene.Web.Controllers
         [Authorize(Roles = RoleNames.AccountAdministrator)]
         public HttpResponseMessage DeleteAllUsers()
         {
+            Audit("Delete all users (except built-in)");
+
             Store.DeleteAll();
 
             return Request.CreateResponse(HttpStatusCode.OK);
@@ -172,6 +180,8 @@ namespace NuGet.Lucene.Web.Controllers
         public object ChangeApiKey([FromBody]KeyChangeRequest req)
         {
             var username = User.Identity.Name;
+
+            Audit("Change API key for user {0}", username);
 
             try
             {

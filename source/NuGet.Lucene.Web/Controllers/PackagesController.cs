@@ -18,7 +18,7 @@ namespace NuGet.Lucene.Web.Controllers
     /// <summary>
     /// Provides methods to search, get metadata, download, upload and delete packages.
     /// </summary>
-    public class PackagesController : ApiController
+    public class PackagesController : ApiControllerBase
     {
         public ILucenePackageRepository LuceneRepository { get; set; }
         public IMirroringPackageRepository MirroringRepository { get; set; }
@@ -193,6 +193,8 @@ namespace NuGet.Lucene.Web.Controllers
                 return Request.CreateErrorResponse(HttpStatusCode.NotFound, message);
             }
 
+            Audit("Delete package {0} version {1}", id, version);
+
             var task1 = LuceneRepository.RemovePackageAsync(package);
             var task2 = SymbolSource.RemoveSymbolsAsync(package);
 
@@ -219,10 +221,12 @@ namespace NuGet.Lucene.Web.Controllers
 
             if (package.IsSymbolPackage())
             {
+                Audit("Add symbols package {0} version {1}", package.Id, package.Version);
                 await SymbolSource.AddSymbolsAsync(package, Url.GetSymbolSourceUri());
                 return result;
             }
 
+            Audit("Add package {0} version {1}", package.Id, package.Version);
             await LuceneRepository.AddPackageAsync(package);
 
             var location = Url.Link(RouteNames.Packages.Info, new { id = package.Id, version = package.Version });
