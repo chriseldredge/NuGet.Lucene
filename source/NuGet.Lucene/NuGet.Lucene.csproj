@@ -92,6 +92,7 @@
     <Compile Include="LuceneRepositoryConfigurator.cs" />
     <Compile Include="Mapping\CachingVersionConverter.cs" />
     <Compile Include="GroupingPackagePathResolver.cs" />
+    <Compile Include="NuGetCommonLoggingAdapter.cs" />
     <Compile Include="PackageOriginFilter.cs" />
     <Compile Include="PorterStemAnalyzer.cs" />
     <Compile Include="SearchCriteria.cs" />

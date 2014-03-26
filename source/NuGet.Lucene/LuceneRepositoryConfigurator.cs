@@ -78,7 +78,7 @@ namespace NuGet.Lucene
         public void Initialize()
         {
             var packagePathResolver = CreatePackagePathResolver();
-            var fileSystem = new PhysicalFileSystem(PackagePath);
+            var fileSystem = new PhysicalFileSystem(PackagePath) { Logger = new NuGetCommonLoggingAdapter() };
             var hashProvider = new CryptoHashProvider(PackageHashAlgorithm);
 
             CreateDirectories();
