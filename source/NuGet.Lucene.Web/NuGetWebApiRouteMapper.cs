@@ -1,6 +1,7 @@
 ﻿using System.Net.Http;
 using System.ServiceModel.Activation;
 using System.Web.Http;
+using System.Web.Http.OData.Builder;
 using System.Web.Routing;
 using Ninject.Extensions.Wcf;
 using NuGet.Lucene.Web.DataServices;
@@ -172,8 +173,18 @@ namespace NuGet.Lucene.Web
                         new { controller = "Symbols", action = "GetFile" });
         }
 
-        public void MapDataServiceRoutes(RouteCollection routes)
+        public void MapDataServiceRoutes(HttpConfiguration config)
         {
+            var builder = new ODataConventionModelBuilder();
+            builder.EntitySet<DataServices.DataServicePackage>("Packages");
+            
+            //ActionConfiguration rateProduct = builder.Entity<Product>().Action("RateProduct");
+            //rateProduct.Parameter<int>("Rating");
+            //rateProduct.Returns<double>();
+
+            config.Routes.MapODataRoute(RouteNames.Packages.Feed, ODataRoutePath, builder.GetEdmModel());
+
+            /*
             var dataServiceHostFactory = new NinjectDataServiceHostFactory();
 
             var serviceRoute = new ServiceRoute(ODataRoutePath, dataServiceHostFactory, typeof(PackageDataService))
@@ -183,6 +194,7 @@ namespace NuGet.Lucene.Web
             };
 
             routes.Add(RouteNames.Packages.Feed, serviceRoute);
+            */
         }
 
         public string PathPrefix { get { return pathPrefix; } }

@@ -1,3 +1,4 @@
+/*
 using System;
 using System.Data.Services;
 using System.Data.Services.Providers;
@@ -55,3 +56,4 @@ namespace NuGet.Lucene.Web.DataServices
         public string ETag { get; protected set; }
     }
 }
+*/

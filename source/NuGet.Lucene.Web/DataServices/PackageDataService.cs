@@ -1,3 +1,4 @@
+/*
 using System;
 using System.Data.Services;
 using System.Data.Services.Common;
@@ -190,3 +191,4 @@ namespace NuGet.Lucene.Web.DataServices
         }
     }
 }
+*/

@@ -1,3 +1,4 @@
+/*
 using System.Linq;
 using NuGet.Lucene.Web.Models;
 
@@ -46,3 +47,4 @@ namespace NuGet.Lucene.Web.DataServices
         }
     }
 }
+*/

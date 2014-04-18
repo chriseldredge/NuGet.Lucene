@@ -1,14 +1,15 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.Data.Services.Common;
 
 namespace NuGet.Lucene.Web.DataServices
 {
-    [DataServiceKey("Id", "Version")]
+    //[DataServiceKey("Id", "Version")]
     [EntityPropertyMapping("Id", SyndicationItemProperty.Title, SyndicationTextContentKind.Plaintext, keepInContent: false)]
     [EntityPropertyMapping("Authors", SyndicationItemProperty.AuthorName, SyndicationTextContentKind.Plaintext, keepInContent: false)]
     [EntityPropertyMapping("LastUpdated", SyndicationItemProperty.Updated, SyndicationTextContentKind.Plaintext, keepInContent: false)]
     [EntityPropertyMapping("Summary", SyndicationItemProperty.Summary, SyndicationTextContentKind.Plaintext, keepInContent: false)]
-    [HasStream]
+    //[HasStream]
     public class DataServicePackage : IEquatable<DataServicePackage>
     {
         public DataServicePackage(LucenePackage package)
@@ -93,8 +94,10 @@ namespace NuGet.Lucene.Web.DataServices
             }
         }
 
+        [Key]
         public string Id { get; set; }
 
+        [Key]
         public string Version { get; set; }
 
         public string Title { get; set; }
