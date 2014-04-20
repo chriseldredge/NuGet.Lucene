@@ -1,18 +1,16 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
+using System;
 using System.Data.Services.Common;
+using System.IO;
 
-namespace NuGet.Lucene.Web.DataServices
+namespace NuGet.Lucene.Web.Models
 {
-    //[DataServiceKey("Id", "Version")]
     [EntityPropertyMapping("Id", SyndicationItemProperty.Title, SyndicationTextContentKind.Plaintext, keepInContent: false)]
     [EntityPropertyMapping("Authors", SyndicationItemProperty.AuthorName, SyndicationTextContentKind.Plaintext, keepInContent: false)]
     [EntityPropertyMapping("LastUpdated", SyndicationItemProperty.Updated, SyndicationTextContentKind.Plaintext, keepInContent: false)]
     [EntityPropertyMapping("Summary", SyndicationItemProperty.Summary, SyndicationTextContentKind.Plaintext, keepInContent: false)]
-    //[HasStream]
-    public class DataServicePackage : IEquatable<DataServicePackage>
+    public class ODataPackage : IEquatable<ODataPackage>
     {
-        public DataServicePackage(LucenePackage package)
+        public ODataPackage(LucenePackage package)
         {
             #region Converted Properties
             Version = package.Version.ToString();
@@ -48,7 +46,7 @@ namespace NuGet.Lucene.Web.DataServices
             #endregion
         }
 
-        public DataServicePackage(NuGet.DataServicePackage package)
+        public ODataPackage(DataServicePackage package)
         {
             Version = package.Version;
             Authors = package.Authors;
@@ -94,10 +92,8 @@ namespace NuGet.Lucene.Web.DataServices
             }
         }
 
-        [Key]
         public string Id { get; set; }
 
-        [Key]
         public string Version { get; set; }
 
         public string Title { get; set; }
@@ -154,7 +150,9 @@ namespace NuGet.Lucene.Web.DataServices
 
         public float Score { get; set; }
 
-        public bool Equals(DataServicePackage other)
+        public Stream Content { get; set; }
+
+        public bool Equals(ODataPackage other)
         {
             if (ReferenceEquals(other, null)) return false;
             if (ReferenceEquals(this, other)) return true;
@@ -164,7 +162,7 @@ namespace NuGet.Lucene.Web.DataServices
 
         public override bool Equals(object obj)
         {
-            return !ReferenceEquals(obj, null) && ReferenceEquals(this, obj) || Equals(obj as DataServicePackage);
+            return !ReferenceEquals(obj, null) && ReferenceEquals(this, obj) || Equals(obj as ODataPackage);
         }
 
         public override int GetHashCode()

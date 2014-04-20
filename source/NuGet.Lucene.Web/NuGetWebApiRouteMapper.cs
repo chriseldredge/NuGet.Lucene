@@ -2,9 +2,13 @@
 using System.ServiceModel.Activation;
 using System.Web.Http;
 using System.Web.Http.OData.Builder;
+using System.Web.Http.OData.Formatter;
+using System.Web.Http.OData.Formatter.Deserialization;
 using System.Web.Routing;
+using Microsoft.Data.OData;
 using Ninject.Extensions.Wcf;
 using NuGet.Lucene.Web.DataServices;
+using NuGet.Lucene.Web.Models;
 using HttpMethodConstraint = System.Web.Http.Routing.HttpMethodConstraint;
 
 namespace NuGet.Lucene.Web
@@ -176,11 +180,18 @@ namespace NuGet.Lucene.Web
         public void MapDataServiceRoutes(HttpConfiguration config)
         {
             var builder = new ODataConventionModelBuilder();
-            builder.EntitySet<DataServices.DataServicePackage>("Packages");
+            var entity = builder.EntitySet<ODataPackage>("PackagesOData");
+            entity.EntityType.HasKey(pkg => pkg.Id);
+            entity.EntityType.HasKey(pkg => pkg.Version);
             
             //ActionConfiguration rateProduct = builder.Entity<Product>().Action("RateProduct");
             //rateProduct.Parameter<int>("Rating");
             //rateProduct.Returns<double>();
+
+            config.Formatters.InsertRange(0,
+                ODataMediaTypeFormatters.Create(
+                    new NamedStreamAwareSerializerProvider(),
+                    new DefaultODataDeserializerProvider()));
 
             config.Routes.MapODataRoute(RouteNames.Packages.Feed, ODataRoutePath, builder.GetEdmModel());
 

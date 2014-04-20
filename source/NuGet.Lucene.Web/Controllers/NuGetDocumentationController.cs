@@ -18,12 +18,12 @@ namespace NuGet.Lucene.Web.Controllers
         public override SimpleApiDocumentation GetApiDocumentation()
         {
             var docs = base.GetApiDocumentation();
-            /*
+            
             docs.Add("Packages", new SimpleApiDescription(Request, "OData", NuGetWebApiRouteMapper.ODataRoutePath)
                 {
-                    Documentation = DocumentationProvider.GetDocumentation(typeof(PackageDataService))
+                   // Documentation = DocumentationProvider.GetDocumentation(typeof(PackagesODataController))
                 });
-            */
+            
             docs.Add("Indexing", new SimpleApiDescription(Request, "Hub", NuGetWebApiRouteMapper.SignalrRoutePath)
                 {
                     Documentation = DocumentationProvider.GetDocumentation(typeof(StatusHub))

@@ -190,6 +190,9 @@
     <Compile Include="Controllers\SourceFilesController.cs" />
     <Compile Include="Controllers\SymbolsController.cs" />
     <Compile Include="DataServices\IOperationContext.cs" />
+    <Compile Include="DataServices\NamedStreamAwareEntityTypeSerializer.cs" />
+    <Compile Include="DataServices\NamedStreamAwareSerializerProvider.cs" />
+    <Compile Include="DataServices\ODataPackageNamedStreamAwareEntityTypeSerializer.cs" />
     <Compile Include="DeletePackageRedirectHandler.cs" />
     <Compile Include="Formatters\NuGetHtmlMicrodataFormatter.cs" />
     <Compile Include="Formatters\PackageHtmlSerializer.cs" />
@@ -197,6 +200,7 @@
     <Compile Include="Models\DelegatingPackageRepository.cs" />
     <Compile Include="Models\KeyChangeRequest.cs" />
     <Compile Include="Models\MirroringPackageRepository.cs" />
+    <Compile Include="Models\ODataPackage.cs" />
     <Compile Include="Models\PackageVersionSummary.cs" />
     <Compile Include="Models\UpdateUserAttributes.cs" />
     <Compile Include="Models\UserAttributes.cs" />
@@ -219,7 +223,6 @@
     <Compile Include="Filters\ExceptionLoggingFilter.cs" />
     <Compile Include="Formatters\PackageFormDataMediaFormatter.cs" />
     <Compile Include="Formatters\MultipartFormDataMediaFormatter.cs" />
-    <Compile Include="DataServices\DataServicePackage.cs" />
     <Compile Include="Hubs\StatusHub.cs" />
     <Compile Include="MessageHandlers\CrossOriginMessageHandler.cs" />
     <Compile Include="Models\PackageSpec.cs" />
@@ -244,6 +247,7 @@
     <Compile Include="UserStore.cs" />
     <Compile Include="Util\DynamicUtils.cs" />
     <Compile Include="Util\ICache.cs" />
+    <Compile Include="Util\PackageExtensions.cs" />
     <Compile Include="Util\TaskUtils.cs" />
     <Compile Include="Util\UrlHelperExtensions.cs" />
     <None Include="app.config" />

@@ -16,14 +16,14 @@ namespace NuGet.Lucene.Web.DataServices
 
         public override Uri GetReadStreamUri(object entity, DataServiceOperationContext operationContext)
         {
-            var package = (DataServicePackage)entity;
+            var package = (ODataPackage)entity;
             
             var vpath = GetPackageDownloadPath(package);
 
             return new Uri(operationContext.AbsoluteRequestUri, vpath);
         }
 
-        public virtual string GetPackageDownloadPath(DataServicePackage package)
+        public virtual string GetPackageDownloadPath(ODataPackage package)
         {
             var route = RouteTable.Routes[RouteNames.Packages.Download];
 

@@ -56,7 +56,7 @@ namespace NuGet.Lucene.Web.DataServices
         }
 
         [WebGet]
-        public IQueryable<DataServicePackage> Search(string searchTerm, string targetFramework, bool includePrerelease)
+        public IQueryable<ODataPackage> Search(string searchTerm, string targetFramework, bool includePrerelease)
         {
             var targetFrameworks = Enumerable.Empty<string>();
 
@@ -76,7 +76,7 @@ namespace NuGet.Lucene.Web.DataServices
         }
 
         [WebGet]
-        public IQueryable<DataServicePackage> FindPackagesById(string id)
+        public IQueryable<ODataPackage> FindPackagesById(string id)
         {
             return PackageRepository.FindPackagesById(id)
                         .Select(AsDataServicePackage)
@@ -84,11 +84,11 @@ namespace NuGet.Lucene.Web.DataServices
         }
 
         [WebGet]
-        public IQueryable<DataServicePackage> GetUpdates(string packageIds, string versions, bool includePrerelease, bool includeAllVersions, string targetFrameworks, string versionConstraints)
+        public IQueryable<ODataPackage> GetUpdates(string packageIds, string versions, bool includePrerelease, bool includeAllVersions, string targetFrameworks, string versionConstraints)
         {
             if (String.IsNullOrEmpty(packageIds) || String.IsNullOrEmpty(versions))
             {
-                return Enumerable.Empty<DataServicePackage>().AsQueryable();
+                return Enumerable.Empty<ODataPackage>().AsQueryable();
             }
 
             var idValues = packageIds.Trim().Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
@@ -100,7 +100,7 @@ namespace NuGet.Lucene.Web.DataServices
             if ((idValues.Length == 0) || (idValues.Length != versionValues.Length))
             {
                 // Exit early if the request looks invalid
-                return Enumerable.Empty<DataServicePackage>().AsQueryable();
+                return Enumerable.Empty<ODataPackage>().AsQueryable();
             }
 
             var packages = idValues
@@ -132,19 +132,19 @@ namespace NuGet.Lucene.Web.DataServices
             return new VersionSpec { MinVersion = currentVersion, IsMinInclusive = false };
         }
 
-        public static DataServicePackage AsDataServicePackage(IPackage package)
+        public static ODataPackage AsDataServicePackage(IPackage package)
         {
             var lucenePackage = package as LucenePackage;
 
             if (lucenePackage != null)
-                return new DataServicePackage(lucenePackage);
+                return new ODataPackage(lucenePackage);
 
-            var dataServicePackage = package as NuGet.DataServicePackage;
+            var dataServicePackage = package as NuGet.ODataPackage;
             
             if (dataServicePackage != null)
-                return new DataServicePackage(dataServicePackage);
+                return new ODataPackage(dataServicePackage);
 
-            throw new ArgumentException("Cannot convert package of type " + package.GetType() + " to DataServicePackage.");
+            throw new ArgumentException("Cannot convert package of type " + package.GetType() + " to ODataPackage.");
         }
 
         protected override void OnStartProcessingRequest(ProcessRequestArgs args)

@@ -15,7 +15,7 @@ namespace NuGet.Lucene.Web.DataServices
             this.operationContext = operationContext;
         }
 
-        public IQueryable<DataServicePackage> Packages
+        public IQueryable<ODataPackage> Packages
         {
             get
             {

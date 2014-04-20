@@ -1,36 +1,22 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Web.Http;
 using System.Web.Http.OData;
-using NuGet.Lucene.Web.DataServices;
+using NuGet.Lucene.Web.Models;
+using NuGet.Lucene.Web.Util;
 
 namespace NuGet.Lucene.Web.Controllers
 {
+    /// <summary>
+    /// OData provider for Lucene based NuGet package repository.
+    /// </summary>
     public class PackagesODataController : ODataController
     {
         public ILucenePackageRepository Repository { get; set; }
 
         [Queryable]
-        public IQueryable<DataServices.DataServicePackage> GetPackages()
+        public IQueryable<ODataPackage> GetPackagesOData()
         {
-            return Repository.LucenePackages.Select(AsDataServicePackage).AsQueryable();
+            return Repository.LucenePackages.Select(p => p.AsDataServicePackage()).AsQueryable();
         }
-
-
-        public static DataServices.DataServicePackage AsDataServicePackage(IPackage package)
-        {
-            var lucenePackage = package as LucenePackage;
-
-            if (lucenePackage != null)
-                return new DataServices.DataServicePackage(lucenePackage);
-
-            var dataServicePackage = package as NuGet.DataServicePackage;
-
-            if (dataServicePackage != null)
-                return new DataServices.DataServicePackage(dataServicePackage);
-
-            throw new ArgumentException("Cannot convert package of type " + package.GetType() + " to DataServicePackage.");
-        }
-
     }
 }
