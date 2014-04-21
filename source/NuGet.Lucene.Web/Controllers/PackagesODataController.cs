@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Net.Http;
 using System.Web.Http;
 using System.Web.Http.OData;
 using NuGet.Lucene.Web.Models;
@@ -20,7 +21,7 @@ namespace NuGet.Lucene.Web.Controllers
             return Repository.LucenePackages.Select(p => p.AsDataServicePackage()).AsQueryable();
         }
 
-        public object Get([FromODataUri] string id, [FromODataUri] string version)
+        public IHttpActionResult Get([FromODataUri] string id, [FromODataUri] string version)
         {
             SemanticVersion semanticVersion;
             if (!SemanticVersion.TryParse(version, out semanticVersion))
@@ -35,7 +36,7 @@ namespace NuGet.Lucene.Web.Controllers
 
             var package = MirroringRepository.FindPackage(id, semanticVersion);
 
-            return package == null ? (object)NotFound() : package.AsDataServicePackage();
+            return package == null ? (IHttpActionResult)NotFound() : Ok(package.AsDataServicePackage());
         }
     }
 }
