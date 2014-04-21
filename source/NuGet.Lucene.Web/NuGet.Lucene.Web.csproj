@@ -189,6 +189,7 @@
     <Compile Include="Controllers\PackagesODataController.cs" />
     <Compile Include="Controllers\SourceFilesController.cs" />
     <Compile Include="Controllers\SymbolsController.cs" />
+    <Compile Include="DataServices\CompositeKeyRoutingConvention.cs" />
     <Compile Include="DataServices\IOperationContext.cs" />
     <Compile Include="DataServices\NamedStreamAwareEntityTypeSerializer.cs" />
     <Compile Include="DataServices\NamedStreamAwareSerializerProvider.cs" />

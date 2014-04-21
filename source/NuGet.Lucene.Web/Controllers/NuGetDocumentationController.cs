@@ -21,7 +21,7 @@ namespace NuGet.Lucene.Web.Controllers
             
             docs.Add("Packages", new SimpleApiDescription(Request, "OData", NuGetWebApiRouteMapper.ODataRoutePath)
                 {
-                   // Documentation = DocumentationProvider.GetDocumentation(typeof(PackagesODataController))
+                    Documentation = DocumentationProvider.GetDocumentation(typeof(PackagesODataController))
                 });
             
             docs.Add("Indexing", new SimpleApiDescription(Request, "Hub", NuGetWebApiRouteMapper.SignalrRoutePath)

@@ -1,12 +1,10 @@
 ﻿using System.Net.Http;
-using System.ServiceModel.Activation;
 using System.Web.Http;
 using System.Web.Http.OData.Builder;
 using System.Web.Http.OData.Formatter;
 using System.Web.Http.OData.Formatter.Deserialization;
-using System.Web.Routing;
-using Microsoft.Data.OData;
-using Ninject.Extensions.Wcf;
+using System.Web.Http.OData.Routing;
+using System.Web.Http.OData.Routing.Conventions;
 using NuGet.Lucene.Web.DataServices;
 using NuGet.Lucene.Web.Models;
 using HttpMethodConstraint = System.Web.Http.Routing.HttpMethodConstraint;
@@ -180,7 +178,7 @@ namespace NuGet.Lucene.Web
         public void MapDataServiceRoutes(HttpConfiguration config)
         {
             var builder = new ODataConventionModelBuilder();
-            var entity = builder.EntitySet<ODataPackage>("PackagesOData");
+            var entity = builder.EntitySet<ODataPackage>("Packages");
             entity.EntityType.HasKey(pkg => pkg.Id);
             entity.EntityType.HasKey(pkg => pkg.Version);
             
@@ -193,7 +191,15 @@ namespace NuGet.Lucene.Web
                     new NamedStreamAwareSerializerProvider(),
                     new DefaultODataDeserializerProvider()));
 
-            config.Routes.MapODataRoute(RouteNames.Packages.Feed, ODataRoutePath, builder.GetEdmModel());
+            var conventions = ODataRoutingConventions.CreateDefault();
+            conventions.Insert(0, new CompositeKeyRoutingConvention());
+
+            config.Routes.MapODataRoute(
+                RouteNames.Packages.Feed,
+                ODataRoutePath,
+                builder.GetEdmModel(),
+                new DefaultODataPathHandler(),
+                conventions);
 
             /*
             var dataServiceHostFactory = new NinjectDataServiceHostFactory();

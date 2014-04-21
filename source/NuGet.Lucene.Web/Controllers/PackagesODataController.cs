@@ -14,9 +14,27 @@ namespace NuGet.Lucene.Web.Controllers
         public ILucenePackageRepository Repository { get; set; }
 
         [Queryable]
-        public IQueryable<ODataPackage> GetPackagesOData()
+        public IQueryable<ODataPackage> Get()
         {
             return Repository.LucenePackages.Select(p => p.AsDataServicePackage()).AsQueryable();
+        }
+
+        public object Get([FromODataUri] string id, [FromODataUri] string version)
+        {
+            SemanticVersion semanticVersion;
+            if (!SemanticVersion.TryParse(version, out semanticVersion))
+            {
+                return BadRequest("Invalid version");
+            }
+
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                return BadRequest("Invalid package id");
+            }
+
+            var package = Repository.FindPackage(id, semanticVersion);
+
+            return package == null ? (object)NotFound() : package.AsDataServicePackage();
         }
     }
 }
