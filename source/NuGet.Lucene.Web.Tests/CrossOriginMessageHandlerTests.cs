@@ -9,7 +9,7 @@ namespace NuGet.Lucene.Web.Tests
     public abstract class CrossOriginMessageHandlerTests : RouteTests
     {
         [TestFixture]
-        public class PackagesController : CrossOriginMessageHandlerTests
+        public class PackagesControllerTests : CrossOriginMessageHandlerTests
         {
             [Test]
             public void PackageDownload()
@@ -53,7 +53,7 @@ namespace NuGet.Lucene.Web.Tests
         }
 
         [TestFixture]
-        public class IndexingController : CrossOriginMessageHandlerTests
+        public class IndexingControllerTests : CrossOriginMessageHandlerTests
         {
             [Test]
             public void Status()
@@ -81,7 +81,7 @@ namespace NuGet.Lucene.Web.Tests
         }
 
         [TestFixture]
-        public class UsersController : CrossOriginMessageHandlerTests
+        public class UsersControllerTests : CrossOriginMessageHandlerTests
         {
             [Test]
             public void GetAll()
@@ -109,7 +109,7 @@ namespace NuGet.Lucene.Web.Tests
         }
 
         [TestFixture]
-        public class TabCompletionController : CrossOriginMessageHandlerTests
+        public class TabCompletionControllerTests : CrossOriginMessageHandlerTests
         {
             [Test]
             public void PackageIds()
