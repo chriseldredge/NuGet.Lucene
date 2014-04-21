@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Web.Http.Controllers;
@@ -12,15 +11,12 @@ namespace NuGet.Lucene.Web.DataServices
     {
         private readonly EntityRoutingConvention entityRoutingConvention = new EntityRoutingConvention();
 
-        public string SelectController(ODataPath odataPath, HttpRequestMessage request)
+        public virtual string SelectController(ODataPath odataPath, HttpRequestMessage request)
         {
-            var controller = entityRoutingConvention.SelectController(odataPath, request);
-            return string.Equals(controller, "Packages", StringComparison.OrdinalIgnoreCase)
-                ? "PackagesOData"
-                : controller;
+            return entityRoutingConvention.SelectController(odataPath, request);
         }
 
-        public string SelectAction(ODataPath odataPath, HttpControllerContext controllerContext, ILookup<string, HttpActionDescriptor> actionMap)
+        public virtual string SelectAction(ODataPath odataPath, HttpControllerContext controllerContext, ILookup<string, HttpActionDescriptor> actionMap)
         {
             var action = entityRoutingConvention.SelectAction(odataPath, controllerContext, actionMap);
             if (action == null)

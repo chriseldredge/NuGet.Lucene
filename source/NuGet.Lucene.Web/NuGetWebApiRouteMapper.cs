@@ -1,10 +1,13 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Net.Http;
 using System.Web.Http;
 using System.Web.Http.OData.Builder;
 using System.Web.Http.OData.Formatter;
 using System.Web.Http.OData.Formatter.Deserialization;
 using System.Web.Http.OData.Routing;
 using System.Web.Http.OData.Routing.Conventions;
+using Microsoft.Data.Edm;
+using Microsoft.Data.OData;
 using NuGet.Lucene.Web.DataServices;
 using NuGet.Lucene.Web.Models;
 using HttpMethodConstraint = System.Web.Http.Routing.HttpMethodConstraint;
@@ -178,40 +181,32 @@ namespace NuGet.Lucene.Web
         public void MapDataServiceRoutes(HttpConfiguration config)
         {
             var builder = new ODataConventionModelBuilder();
+            builder.DataServiceVersion = new Version("2.0");
             var entity = builder.EntitySet<ODataPackage>("Packages");
             entity.EntityType.HasKey(pkg => pkg.Id);
             entity.EntityType.HasKey(pkg => pkg.Version);
-            
+
             //ActionConfiguration rateProduct = builder.Entity<Product>().Action("RateProduct");
             //rateProduct.Parameter<int>("Rating");
             //rateProduct.Returns<double>();
 
+            var model = builder.GetEdmModel();
+            model.SetHasDefaultStream(model.FindDeclaredType(typeof(ODataPackage).FullName) as IEdmEntityType, hasStream: true);
+
             config.Formatters.InsertRange(0,
                 ODataMediaTypeFormatters.Create(
-                    new NamedStreamAwareSerializerProvider(),
+                    new ODataPackageDefaultStreamAwareSerializerProvider(),
                     new DefaultODataDeserializerProvider()));
 
             var conventions = ODataRoutingConventions.CreateDefault();
-            conventions.Insert(0, new CompositeKeyRoutingConvention());
+            conventions.Insert(0, new ControllerAliasingODataRoutingConvention(new CompositeKeyRoutingConvention(), "Packages", "PackagesOData"));
 
             config.Routes.MapODataRoute(
                 RouteNames.Packages.Feed,
                 ODataRoutePath,
-                builder.GetEdmModel(),
+                model,
                 new DefaultODataPathHandler(),
                 conventions);
-
-            /*
-            var dataServiceHostFactory = new NinjectDataServiceHostFactory();
-
-            var serviceRoute = new ServiceRoute(ODataRoutePath, dataServiceHostFactory, typeof(PackageDataService))
-            {
-                Defaults = RouteNames.PackageFeedRouteValues,
-                Constraints = RouteNames.PackageFeedRouteValues
-            };
-
-            routes.Add(RouteNames.Packages.Feed, serviceRoute);
-            */
         }
 
         public string PathPrefix { get { return pathPrefix; } }

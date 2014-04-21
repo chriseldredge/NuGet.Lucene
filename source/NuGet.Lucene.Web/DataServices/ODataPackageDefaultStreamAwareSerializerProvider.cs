@@ -3,22 +3,22 @@ using Microsoft.Data.Edm;
 
 namespace NuGet.Lucene.Web.DataServices
 {
-    public class NamedStreamAwareSerializerProvider : DefaultODataSerializerProvider
+    public class ODataPackageDefaultStreamAwareSerializerProvider : DefaultODataSerializerProvider
     {
-        private readonly NamedStreamAwareEntityTypeSerializer customEntitySerializer;
-        
-        public NamedStreamAwareSerializerProvider()
+        private readonly ODataEdmTypeSerializer entitySerializer;
+
+        public ODataPackageDefaultStreamAwareSerializerProvider()
         {
-            customEntitySerializer = new ODataPackageNamedStreamAwareEntityTypeSerializer(this);
+            this.entitySerializer = new ODataPackageDefaultStreamAwareEntityTypeSerializer(this);
         }
 
         public override ODataEdmTypeSerializer GetEdmTypeSerializer(IEdmTypeReference edmType)
         {
             if (edmType.IsEntity())
             {
-                return customEntitySerializer;
+                return entitySerializer;
             }
-
+            
             return base.GetEdmTypeSerializer(edmType);
         }
     }

@@ -150,8 +150,6 @@ namespace NuGet.Lucene.Web.Models
 
         public float Score { get; set; }
 
-        public Stream Content { get; set; }
-
         public bool Equals(ODataPackage other)
         {
             if (ReferenceEquals(other, null)) return false;

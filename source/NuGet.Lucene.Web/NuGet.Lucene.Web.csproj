@@ -190,10 +190,10 @@
     <Compile Include="Controllers\SourceFilesController.cs" />
     <Compile Include="Controllers\SymbolsController.cs" />
     <Compile Include="DataServices\CompositeKeyRoutingConvention.cs" />
-    <Compile Include="DataServices\IOperationContext.cs" />
-    <Compile Include="DataServices\NamedStreamAwareEntityTypeSerializer.cs" />
-    <Compile Include="DataServices\NamedStreamAwareSerializerProvider.cs" />
-    <Compile Include="DataServices\ODataPackageNamedStreamAwareEntityTypeSerializer.cs" />
+    <Compile Include="DataServices\ControllerAliasingODataRoutingConvention.cs" />
+    <Compile Include="DataServices\DefaultStreamAwareEntityTypeSerializer.cs" />
+    <Compile Include="DataServices\ODataPackageDefaultStreamAwareSerializerProvider.cs" />
+    <Compile Include="DataServices\ODataPackageDefaultStreamAwareEntityTypeSerializer.cs" />
     <Compile Include="DeletePackageRedirectHandler.cs" />
     <Compile Include="Formatters\NuGetHtmlMicrodataFormatter.cs" />
     <Compile Include="Formatters\PackageHtmlSerializer.cs" />
@@ -217,7 +217,6 @@
     <Compile Include="Controllers\PackagesController.cs" />
     <Compile Include="Controllers\TabCompletionController.cs" />
     <Compile Include="Controllers\UsersController.cs" />
-    <Compile Include="DataServices\DefaultServiceStreamProvider.cs" />
     <Compile Include="DataServices\PackageDataSource.cs" />
     <Compile Include="DataServices\PackageDataService.cs" />
     <Compile Include="DataServices\PackageServiceStreamProvider.cs" />
