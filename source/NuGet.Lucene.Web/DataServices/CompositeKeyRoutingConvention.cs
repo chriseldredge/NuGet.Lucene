@@ -7,6 +7,10 @@ using System.Web.Http.OData.Routing.Conventions;
 
 namespace NuGet.Lucene.Web.DataServices
 {
+    /// <summary>
+    /// Enables OData entities to be retrieved by URIs that use composite keys
+    /// as in <c>~/odata/Packages(Id='Foo',Version='1.0')</c>.
+    /// </summary>
     public class CompositeKeyRoutingConvention : IODataRoutingConvention
     {
         private readonly EntityRoutingConvention entityRoutingConvention = new EntityRoutingConvention();

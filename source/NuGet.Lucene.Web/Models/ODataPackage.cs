@@ -1,6 +1,5 @@
 using System;
 using System.Data.Services.Common;
-using System.IO;
 
 namespace NuGet.Lucene.Web.Models
 {
