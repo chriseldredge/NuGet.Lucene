@@ -5,7 +5,7 @@ using NUnit.Framework;
 namespace NuGet.Lucene.Web.Tests
 {
     [TestFixture]
-    public class PackageRouteTests : RouteTests
+    public class PackagesRouteTests : RouteTests
     {
         [Test]
         [TestCase("api/packages/Sample/1.0", "1.0")]
