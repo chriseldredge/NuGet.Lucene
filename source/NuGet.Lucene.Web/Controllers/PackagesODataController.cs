@@ -12,6 +12,7 @@ namespace NuGet.Lucene.Web.Controllers
     public class PackagesODataController : ODataController
     {
         public ILucenePackageRepository Repository { get; set; }
+        public IMirroringPackageRepository MirroringRepository { get; set; }
 
         [Queryable]
         public IQueryable<ODataPackage> Get()
@@ -32,7 +33,7 @@ namespace NuGet.Lucene.Web.Controllers
                 return BadRequest("Invalid package id");
             }
 
-            var package = Repository.FindPackage(id, semanticVersion);
+            var package = MirroringRepository.FindPackage(id, semanticVersion);
 
             return package == null ? (object)NotFound() : package.AsDataServicePackage();
         }
