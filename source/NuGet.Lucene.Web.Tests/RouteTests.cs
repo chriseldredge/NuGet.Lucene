@@ -21,7 +21,9 @@ namespace NuGet.Lucene.Web.Tests
 
             documentationProvider = new Mock<IDocumentationProviderEx>();
             configuration.Services.Replace(typeof(IDocumentationProvider), documentationProvider.Object);
-            new NuGetWebApiRouteMapper("api/").MapApiRoutes(configuration);
+            var routeMapper = new NuGetWebApiRouteMapper("api/");
+            routeMapper.MapApiRoutes(configuration);
+            routeMapper.MapDataServiceRoutes(configuration);
         }
 
         public RouteResolveContstraint HasRouteFor(string url)

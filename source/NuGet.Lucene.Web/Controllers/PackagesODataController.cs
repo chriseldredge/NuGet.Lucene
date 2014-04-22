@@ -48,7 +48,8 @@ namespace NuGet.Lucene.Web.Controllers
         public IQueryable<ODataPackage> Search(
             [FromODataUri] string searchTerm,
             [FromODataUri] string targetFramework,
-            [FromODataUri] bool includePrerelease)
+            [FromODataUri] bool includePrerelease,
+            ODataQueryOptions<ODataPackage> options)
         {
             var targetFrameworks = Enumerable.Empty<string>();
 
@@ -58,8 +59,14 @@ namespace NuGet.Lucene.Web.Controllers
             }
 
             var searchQuery = Repository.Search(searchTerm, targetFrameworks, includePrerelease);
-            
-            //TODO: verify default sort order is score and that paging does not alter it.
+
+            if (options.OrderBy == null)
+            {
+                // If no explicit ordering was specified, a default ordering by key (Id, then Version) will be applied.
+                // Order by Score in this case to prevent default ordering from taking precendence.
+                searchQuery = searchQuery.OrderBy(result => result.Score());
+            }
+
             return from package in searchQuery select package.ToODataPackage();
         }
 
