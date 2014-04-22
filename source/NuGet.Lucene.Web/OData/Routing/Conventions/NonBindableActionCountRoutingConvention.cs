@@ -6,18 +6,21 @@ using System.Web.Http.OData.Routing.Conventions;
 
 namespace NuGet.Lucene.Web.OData.Routing.Conventions
 {
-    public class NonBindableActionRoutingConvention : IODataRoutingConvention
+    /// <summary>
+    /// Adds support for $count operation on non-bindable actions when controller has a <c>"Count" + ActionName</c> action.
+    /// </summary>
+    public class NonBindableActionCountRoutingConvention : IODataRoutingConvention
     {
         private readonly string controllerName;
 
-        public NonBindableActionRoutingConvention(string controllerName)
+        public NonBindableActionCountRoutingConvention(string controllerName)
         {
             this.controllerName = controllerName;
         }
 
         public string SelectController(ODataPath odataPath, HttpRequestMessage request)
         {
-            if (odataPath.PathTemplate == "~/action")
+            if (odataPath.PathTemplate == "~/action/$count")
             {
                 return controllerName;
             }
@@ -27,7 +30,7 @@ namespace NuGet.Lucene.Web.OData.Routing.Conventions
         // Route the action to a method with the same name as the action.
         public string SelectAction(ODataPath odataPath, HttpControllerContext controllerContext, ILookup<string, HttpActionDescriptor> actionMap)
         {
-            if (odataPath.PathTemplate != "~/action")
+            if (odataPath.PathTemplate != "~/action/$count")
             {
                 return null;
             }
@@ -40,9 +43,11 @@ namespace NuGet.Lucene.Web.OData.Routing.Conventions
                 return null;
             }
 
-            if (actionMap.Contains(action.Name) && actionMap[action.Name].Any(desc => MatchHttpMethod(desc, controllerContext.Request.Method)))
+            var actionName = "Count" + action.Name;
+
+            if (actionMap.Contains(actionName) && actionMap[actionName].Any(desc => MatchHttpMethod(desc, controllerContext.Request.Method)))
             {
-                return action.Name;
+                return actionName;
             }
 
             return null;

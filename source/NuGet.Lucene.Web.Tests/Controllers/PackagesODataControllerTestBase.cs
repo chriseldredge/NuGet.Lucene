@@ -1,6 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Net.Http;
+using System.Web.Http.OData;
+using System.Web.Http.OData.Query;
 using Microsoft.Data.Edm;
 using Moq;
 using NuGet.Lucene.Web.Controllers;
@@ -52,6 +55,12 @@ namespace NuGet.Lucene.Web.Tests.Controllers
             }
 
             public IEnumerable<MethodCallExpression> Matches { get { return matches; } }
+        }
+
+        protected ODataQueryOptions<ODataPackage> SetUpRequestWithOptions(string path)
+        {
+            SetUpRequest(RouteNames.Packages.Feed, HttpMethod.Post, path);
+            return new ODataQueryOptions<ODataPackage>(new ODataQueryContext(model, typeof(ODataPackage)), request);
         }
     }
 }

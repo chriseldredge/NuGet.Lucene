@@ -1,4 +1,6 @@
 ﻿using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
 using System.Web.Http.Results;
 using Moq;
 using NuGet.Lucene.Tests;
@@ -62,6 +64,17 @@ namespace NuGet.Lucene.Web.Tests.Controllers
             Assert.That(result, Is.InstanceOf<BadRequestErrorMessageResult>());
 
             repo.Verify(r => r.FindPackage(It.IsAny<string>(), It.IsAny<SemanticVersion>()), Times.Never);
+        }
+
+        [Test]
+        public async Task GetCount()
+        {
+            repo.Setup(r => r.GetPackages()).Returns(packages.AsQueryable()).Verifiable();
+            var options = SetUpRequestWithOptions("/api/odata/Packages()/$count");
+
+            var response = controller.GetCount(options);
+
+            Assert.That(await response.Content.ReadAsStringAsync(), Is.EqualTo(packages.Count().ToString()));
         }
     }
 }

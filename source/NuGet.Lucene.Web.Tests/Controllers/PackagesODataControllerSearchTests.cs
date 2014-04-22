@@ -1,8 +1,6 @@
 ﻿using System.Linq;
-using System.Net.Http;
-using System.Web.Http.OData;
-using System.Web.Http.OData.Query;
-using NuGet.Lucene.Web.Models;
+using System.Threading.Tasks;
+using NuGet.Lucene.Tests;
 using NUnit.Framework;
 
 namespace NuGet.Lucene.Web.Tests.Controllers
@@ -10,12 +8,6 @@ namespace NuGet.Lucene.Web.Tests.Controllers
     [TestFixture]
     public class PackagesODataControllerSearchTests : PackagesODataControllerTestBase
     {
-        protected ODataQueryOptions<ODataPackage> SetUpRequestWithOptions(string path)
-        {
-            SetUpRequest(RouteNames.Packages.Feed, HttpMethod.Post, path);
-            return new ODataQueryOptions<ODataPackage>(new ODataQueryContext(model, typeof(ODataPackage)), request);
-        }
-
         [Test]
         public void SortsByScore()
         {
@@ -44,5 +36,17 @@ namespace NuGet.Lucene.Web.Tests.Controllers
             AssertOrderingBy(query);
         }
 
+
+        [Test]
+        public async Task CountSearch()
+        {
+            var packages = new [] { new TestPackage("a", "1.0")};
+            repo.Setup(r => r.Search("foo", new string[0], false)).Returns(packages.AsQueryable()).Verifiable();
+            var queryOptions = SetUpRequestWithOptions("/api/odata/Search()?$orderby=Id");
+
+            var response = controller.CountSearch("foo", "", false, queryOptions);
+
+            Assert.That(await response.Content.ReadAsStringAsync(), Is.EqualTo(packages.Count().ToString()));
+        }
     }
 }

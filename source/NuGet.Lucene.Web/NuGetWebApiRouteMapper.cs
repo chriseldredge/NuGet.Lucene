@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Web.Http;
 using System.Web.Http.OData.Formatter;
@@ -6,6 +7,7 @@ using System.Web.Http.OData.Formatter.Deserialization;
 using System.Web.Http.OData.Routing;
 using System.Web.Http.OData.Routing.Conventions;
 using NuGet.Lucene.Web.OData.Formatter.Serialization;
+using NuGet.Lucene.Web.OData.Routing;
 using NuGet.Lucene.Web.OData.Routing.Conventions;
 using HttpMethodConstraint = System.Web.Http.Routing.HttpMethodConstraint;
 
@@ -186,16 +188,23 @@ namespace NuGet.Lucene.Web
                     new ODataPackageDefaultStreamAwareSerializerProvider(),
                     new DefaultODataDeserializerProvider()));
 
-            var conventions = ODataRoutingConventions.CreateDefault();
-            conventions.Insert(0, new CompositeKeyRoutingConvention());
-            conventions.Insert(0, new NonBindableActionRoutingConvention("PackagesOData"));
+            var conventions = new List<IODataRoutingConvention>
+            {
+                new CompositeKeyRoutingConvention(),
+                new NonBindableActionRoutingConvention("PackagesOData"),
+                new EntitySetCountRoutingConvention(),
+                new NonBindableActionCountRoutingConvention("PackagesOData")
+            };
+            
+            conventions.AddRange(ODataRoutingConventions.CreateDefault());
+
             conventions = conventions.Select(c => new ControllerAliasingODataRoutingConvention(c, "Packages", "PackagesOData")).Cast<IODataRoutingConvention>().ToList();
             
             config.Routes.MapODataRoute(
                 RouteNames.Packages.Feed,
                 ODataRoutePath,
                 builder.Model,
-                new DefaultODataPathHandler(),
+                new CountODataPathHandler(),
                 conventions);
         }
 

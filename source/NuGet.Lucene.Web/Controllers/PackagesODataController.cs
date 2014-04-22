@@ -1,5 +1,9 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Text;
 using System.Web.Http;
 using System.Web.Http.OData;
 using System.Web.Http.OData.Query;
@@ -22,6 +26,14 @@ namespace NuGet.Lucene.Web.Controllers
         public IQueryable<ODataPackage> Get()
         {
             return Repository.GetPackages().Select(p => p.ToODataPackage()).AsQueryable();
+        }
+
+        public HttpResponseMessage GetCount(ODataQueryOptions<ODataPackage> options)
+        {
+            var queryResults = (IQueryable<ODataPackage>)options.ApplyTo(Get());
+            var count = queryResults.Count();
+
+            return OkCount(count);    
         }
 
         public IHttpActionResult Get([FromODataUri] string id, [FromODataUri] string version)
@@ -68,6 +80,19 @@ namespace NuGet.Lucene.Web.Controllers
             }
 
             return from package in searchQuery select package.ToODataPackage();
+        }
+
+        [HttpGet]
+        public HttpResponseMessage CountSearch(
+            [FromODataUri] string searchTerm,
+            [FromODataUri] string targetFramework,
+            [FromODataUri] bool includePrerelease,
+            ODataQueryOptions<ODataPackage> options)
+        {
+            var queryResults = (IQueryable<ODataPackage>)options.ApplyTo(Search(searchTerm, targetFramework, includePrerelease, options));
+            var count = queryResults.Count();
+
+            return OkCount(count);
         }
 
         [HttpPost]
@@ -131,7 +156,7 @@ namespace NuGet.Lucene.Web.Controllers
             return Ok(updates.Select(p => p.ToODataPackage()).AsQueryable());
         }
 
-        private IVersionSpec CreateVersionSpec(string constraint, SemanticVersion currentVersion)
+        protected virtual IVersionSpec CreateVersionSpec(string constraint, SemanticVersion currentVersion)
         {
             if (!string.IsNullOrWhiteSpace(constraint))
             {
@@ -139,6 +164,17 @@ namespace NuGet.Lucene.Web.Controllers
             }
 
             return new VersionSpec { MinVersion = currentVersion, IsMinInclusive = false };
+        }
+
+        /// <summary>
+        /// Creates a text/plain response that contains a count of items.
+        /// </summary>
+        protected virtual HttpResponseMessage OkCount(int count)
+        {
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(count.ToString(CultureInfo.InvariantCulture), Encoding.UTF8, "text/plain")
+            };
         }
 
     }
