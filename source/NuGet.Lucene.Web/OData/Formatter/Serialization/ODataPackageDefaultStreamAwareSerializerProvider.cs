@@ -1,7 +1,7 @@
 using System.Web.Http.OData.Formatter.Serialization;
 using Microsoft.Data.Edm;
 
-namespace NuGet.Lucene.Web.DataServices
+namespace NuGet.Lucene.Web.OData.Formatter.Serialization
 {
     public class ODataPackageDefaultStreamAwareSerializerProvider : DefaultODataSerializerProvider
     {

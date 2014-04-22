@@ -1,5 +1,4 @@
 ﻿using AspNet.WebApi.HtmlMicrodataFormatter;
-using NuGet.Lucene.Web.DataServices;
 using NuGet.Lucene.Web.Hubs;
 
 namespace NuGet.Lucene.Web.Controllers

@@ -1,9 +1,9 @@
-﻿using System.Web.Http.OData;
+using System.Web.Http.OData;
 using System.Web.Http.OData.Formatter.Serialization;
 using System.Web.Http.Routing;
 using NuGet.Lucene.Web.Models;
 
-namespace NuGet.Lucene.Web.DataServices
+namespace NuGet.Lucene.Web.OData.Formatter.Serialization
 {
     public class ODataPackageDefaultStreamAwareEntityTypeSerializer : DefaultStreamAwareEntityTypeSerializer<ODataPackage>
     {

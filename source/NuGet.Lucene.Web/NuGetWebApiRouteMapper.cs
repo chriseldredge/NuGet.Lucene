@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Net.Http;
 using System.Web.Http;
 using System.Web.Http.OData.Builder;
@@ -8,8 +9,9 @@ using System.Web.Http.OData.Routing;
 using System.Web.Http.OData.Routing.Conventions;
 using Microsoft.Data.Edm;
 using Microsoft.Data.OData;
-using NuGet.Lucene.Web.DataServices;
 using NuGet.Lucene.Web.Models;
+using NuGet.Lucene.Web.OData.Formatter.Serialization;
+using NuGet.Lucene.Web.OData.Routing.Conventions;
 using HttpMethodConstraint = System.Web.Http.Routing.HttpMethodConstraint;
 
 namespace NuGet.Lucene.Web
@@ -186,9 +188,23 @@ namespace NuGet.Lucene.Web
             entity.EntityType.HasKey(pkg => pkg.Id);
             entity.EntityType.HasKey(pkg => pkg.Version);
 
-            //ActionConfiguration rateProduct = builder.Entity<Product>().Action("RateProduct");
-            //rateProduct.Parameter<int>("Rating");
-            //rateProduct.Returns<double>();
+            var searchAction = builder.Action("Search");
+            searchAction.Parameter<string>("searchTerm");
+            searchAction.Parameter<string>("targetFramework");
+            searchAction.Parameter<bool>("includePrerelease");
+            searchAction.ReturnsCollectionFromEntitySet<ODataPackage>("Packages");
+
+            var findPackagesAction = builder.Action("FindPackagesById");
+            findPackagesAction.Parameter<string>("id");
+            findPackagesAction.ReturnsCollectionFromEntitySet<ODataPackage>("Packages");
+
+            var getUpdatesAction = builder.Action("GetUpdates");
+            getUpdatesAction.Parameter<string>("packageIds");
+            getUpdatesAction.Parameter<bool>("includePrerelease");
+            getUpdatesAction.Parameter<bool>("includeAllVersions");
+            getUpdatesAction.Parameter<string>("targetFrameworks");
+            getUpdatesAction.Parameter<string>("versionConstraints");
+            getUpdatesAction.ReturnsCollectionFromEntitySet<ODataPackage>("Packages");
 
             var model = builder.GetEdmModel();
             model.SetHasDefaultStream(model.FindDeclaredType(typeof(ODataPackage).FullName) as IEdmEntityType, hasStream: true);
@@ -199,8 +215,10 @@ namespace NuGet.Lucene.Web
                     new DefaultODataDeserializerProvider()));
 
             var conventions = ODataRoutingConventions.CreateDefault();
-            conventions.Insert(0, new ControllerAliasingODataRoutingConvention(new CompositeKeyRoutingConvention(), "Packages", "PackagesOData"));
-
+            conventions.Insert(0, new CompositeKeyRoutingConvention());
+            conventions.Insert(0, new NonBindableActionRoutingConvention("PackagesOData"));
+            conventions = conventions.Select(c => new ControllerAliasingODataRoutingConvention(c, "Packages", "PackagesOData")).Cast<IODataRoutingConvention>().ToList();
+            
             config.Routes.MapODataRoute(
                 RouteNames.Packages.Feed,
                 ODataRoutePath,

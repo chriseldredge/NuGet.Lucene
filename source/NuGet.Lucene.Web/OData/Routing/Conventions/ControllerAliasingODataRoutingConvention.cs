@@ -5,7 +5,7 @@ using System.Web.Http.Controllers;
 using System.Web.Http.OData.Routing;
 using System.Web.Http.OData.Routing.Conventions;
 
-namespace NuGet.Lucene.Web.DataServices
+namespace NuGet.Lucene.Web.OData.Routing.Conventions
 {
     /// <summary>
     /// Decorates an <see cref="IODataRoutingConvention"/> to use a controller name

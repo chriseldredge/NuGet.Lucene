@@ -5,7 +5,7 @@ using System.Web.Http.Controllers;
 using System.Web.Http.OData.Routing;
 using System.Web.Http.OData.Routing.Conventions;
 
-namespace NuGet.Lucene.Web.DataServices
+namespace NuGet.Lucene.Web.OData.Routing.Conventions
 {
     /// <summary>
     /// Enables OData entities to be retrieved by URIs that use composite keys

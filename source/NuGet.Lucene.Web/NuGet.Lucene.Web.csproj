@@ -189,11 +189,6 @@
     <Compile Include="Controllers\PackagesODataController.cs" />
     <Compile Include="Controllers\SourceFilesController.cs" />
     <Compile Include="Controllers\SymbolsController.cs" />
-    <Compile Include="DataServices\CompositeKeyRoutingConvention.cs" />
-    <Compile Include="DataServices\ControllerAliasingODataRoutingConvention.cs" />
-    <Compile Include="DataServices\DefaultStreamAwareEntityTypeSerializer.cs" />
-    <Compile Include="DataServices\ODataPackageDefaultStreamAwareSerializerProvider.cs" />
-    <Compile Include="DataServices\ODataPackageDefaultStreamAwareEntityTypeSerializer.cs" />
     <Compile Include="DeletePackageRedirectHandler.cs" />
     <Compile Include="Formatters\NuGetHtmlMicrodataFormatter.cs" />
     <Compile Include="Formatters\PackageHtmlSerializer.cs" />
@@ -217,9 +212,6 @@
     <Compile Include="Controllers\PackagesController.cs" />
     <Compile Include="Controllers\TabCompletionController.cs" />
     <Compile Include="Controllers\UsersController.cs" />
-    <Compile Include="DataServices\PackageDataSource.cs" />
-    <Compile Include="DataServices\PackageDataService.cs" />
-    <Compile Include="DataServices\PackageServiceStreamProvider.cs" />
     <Compile Include="Filters\ExceptionLoggingFilter.cs" />
     <Compile Include="Formatters\PackageFormDataMediaFormatter.cs" />
     <Compile Include="Formatters\MultipartFormDataMediaFormatter.cs" />
@@ -228,6 +220,12 @@
     <Compile Include="Models\PackageSpec.cs" />
     <Compile Include="Modules\ApiKeyAuthenticationModule.cs" />
     <Compile Include="Modules\HttpModule.cs" />
+    <Compile Include="OData\Formatter\Serialization\DefaultStreamAwareEntityTypeSerializer.cs" />
+    <Compile Include="OData\Formatter\Serialization\ODataPackageDefaultStreamAwareEntityTypeSerializer.cs" />
+    <Compile Include="OData\Formatter\Serialization\ODataPackageDefaultStreamAwareSerializerProvider.cs" />
+    <Compile Include="OData\Routing\Conventions\CompositeKeyRoutingConvention.cs" />
+    <Compile Include="OData\Routing\Conventions\ControllerAliasingODataRoutingConvention.cs" />
+    <Compile Include="OData\Routing\Conventions\NonBindableActionRoutingConvention.cs" />
     <Compile Include="OptionalSemanticVersionConstraint.cs" />
     <Compile Include="MirroringPackageRepositoryFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

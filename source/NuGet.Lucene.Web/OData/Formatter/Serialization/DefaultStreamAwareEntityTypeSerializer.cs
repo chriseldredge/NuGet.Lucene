@@ -3,7 +3,7 @@ using System.Web.Http.OData;
 using System.Web.Http.OData.Formatter.Serialization;
 using Microsoft.Data.OData;
 
-namespace NuGet.Lucene.Web.DataServices
+namespace NuGet.Lucene.Web.OData.Formatter.Serialization
 {
     public abstract class DefaultStreamAwareEntityTypeSerializer<T> : ODataEntityTypeSerializer where T : class
     {

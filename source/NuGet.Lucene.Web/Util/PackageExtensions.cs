@@ -5,7 +5,7 @@ namespace NuGet.Lucene.Web.Util
 {
     public static class PackageExtensions
     {
-        public static ODataPackage AsDataServicePackage(this IPackage package)
+        public static ODataPackage ToODataPackage(this IPackage package)
         {
             var lucenePackage = package as LucenePackage;
 
