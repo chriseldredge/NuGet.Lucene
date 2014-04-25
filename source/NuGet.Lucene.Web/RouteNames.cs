@@ -1,15 +1,7 @@
-﻿using System.Data;
-using System.Web.Routing;
-
-namespace NuGet.Lucene.Web
+﻿namespace NuGet.Lucene.Web
 {
     public static class RouteNames
     {
-        public static readonly RouteValueDictionary PackageFeedRouteValues = new RouteValueDictionary
-        {
-            {"serviceType", "odata"}
-        };
-
         public const string Indexing = "Indexing";
 
         public static class Users

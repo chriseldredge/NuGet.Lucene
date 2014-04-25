@@ -48,7 +48,7 @@ namespace NuGet.Lucene.Web
                                 routeTemplate,
                                 new { },
                                 new { userAgent = new NuGetUserAgentConstraint() },
-                                new RedirectHandler(RouteNames.Packages.Feed, RouteNames.PackageFeedRouteValues) { AppendTrailingSlash = true });
+                                new RedirectHandler(RouteNames.Packages.Feed) { AppendTrailingSlash = true });
 
             config.Routes.MapHttpRoute(RouteNames.Redirect.Upload,
                                 ODataRoutePath,
