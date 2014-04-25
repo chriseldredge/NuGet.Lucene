@@ -9,6 +9,10 @@ namespace NuGet.Lucene.Web.Models
     [EntityPropertyMapping("Summary", SyndicationItemProperty.Summary, SyndicationTextContentKind.Plaintext, keepInContent: false)]
     public class ODataPackage : IEquatable<ODataPackage>
     {
+        public ODataPackage()
+        {
+        }
+
         public ODataPackage(LucenePackage package)
         {
             #region Converted Properties
