@@ -4,7 +4,6 @@ using System.Net.Http;
 using System.Web.Http;
 using System.Web.Http.OData.Formatter;
 using System.Web.Http.OData.Formatter.Deserialization;
-using System.Web.Http.OData.Routing;
 using System.Web.Http.OData.Routing.Conventions;
 using NuGet.Lucene.Web.OData.Formatter.Serialization;
 using NuGet.Lucene.Web.OData.Routing;
@@ -177,7 +176,7 @@ namespace NuGet.Lucene.Web
                         new { controller = "Symbols", action = "GetFile" });
         }
 
-        public void MapDataServiceRoutes(HttpConfiguration config)
+        public void MapODataRoutes(HttpConfiguration config)
         {
             var builder = new NuGetWebApiODataModelBuilder();
 

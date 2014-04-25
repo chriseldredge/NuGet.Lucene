@@ -23,7 +23,7 @@ namespace NuGet.Lucene.Web.Tests
             configuration.Services.Replace(typeof(IDocumentationProvider), documentationProvider.Object);
             var routeMapper = new NuGetWebApiRouteMapper("api/");
             routeMapper.MapApiRoutes(configuration);
-            routeMapper.MapDataServiceRoutes(configuration);
+            routeMapper.MapODataRoutes(configuration);
         }
 
         public RouteResolveContstraint HasRouteFor(string url)
