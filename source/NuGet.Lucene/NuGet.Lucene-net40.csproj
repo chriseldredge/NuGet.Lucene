@@ -40,7 +40,7 @@
     <Compile Include="..\..\build\VersionInfo.cs" Condition="Exists('..\..\build\VersionInfo.cs')">
       <Link>Properties\VersionInfo.cs</Link>
     </Compile>
-    <Compile Include="**\*.cs" />
+    <Compile Include="**\*.cs" Exclude="obj\**\*.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="NuGet.Lucene.nuspec" />
