@@ -194,7 +194,9 @@ namespace NuGet.Lucene.Web
 
             if (path.StartsWith("~/"))
             {
-                return HostingEnvironment.MapPath(path);
+                return HostingEnvironment.IsHosted
+                    ? HostingEnvironment.MapPath(path)
+                    : Path.Combine(Environment.CurrentDirectory, path.Replace("~/", ""));
             }
 
             return path;
