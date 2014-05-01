@@ -1,5 +1,5 @@
 ﻿using AspNet.WebApi.HtmlMicrodataFormatter;
-using NuGet.Lucene.Web.Hubs;
+using NuGet.Lucene.Web.SignalR.Hubs;
 
 namespace NuGet.Lucene.Web.Controllers
 {

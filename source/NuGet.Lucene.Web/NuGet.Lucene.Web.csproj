@@ -190,7 +190,6 @@
     <Compile Include="Filters\ExceptionLoggingFilter.cs" />
     <Compile Include="Formatters\PackageFormDataMediaFormatter.cs" />
     <Compile Include="Formatters\MultipartFormDataMediaFormatter.cs" />
-    <Compile Include="Hubs\StatusHub.cs" />
     <Compile Include="MessageHandlers\CrossOriginMessageHandler.cs" />
     <Compile Include="Models\PackageSpec.cs" />
     <Compile Include="Modules\ApiKeyAuthenticationModule.cs" />
@@ -214,8 +213,14 @@
     <Compile Include="RoleNames.cs" />
     <Compile Include="RouteNames.cs" />
     <Compile Include="SemanticVersionConstraint.cs" />
-    <Compile Include="SignalRModule.cs" />
     <Compile Include="ReusableCancellationTokenSource.cs" />
+    <Compile Include="SignalR\Hubs\StatusHub.cs" />
+    <Compile Include="SignalR\Hubs\StatusHubProvider.cs" />
+    <Compile Include="SignalR\NinjectSignalRDependencyResolver.cs" />
+    <Compile Include="SignalR\SelectiveCamelCaseContractResolver.cs" />
+    <Compile Include="SignalR\SignalRLoggingModule.cs" />
+    <Compile Include="SignalR\SignalRMapper.cs" />
+    <Compile Include="SignalR\SignalRModule.cs" />
     <Compile Include="SimpleParameterInfo.cs" />
     <Compile Include="Symbols\ISymbolSource.cs" />
     <Compile Include="Symbols\SymbolSource.cs" />
@@ -241,6 +246,9 @@
     <Content Include="NuGet.Lucene.Web.nuspec">
       <SubType>Designer</SubType>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Hubs\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

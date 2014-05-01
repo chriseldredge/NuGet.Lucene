@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNet.SignalR;
+using Microsoft.AspNet.SignalR;
 using Microsoft.AspNet.SignalR.Hubs;
 
-namespace NuGet.Lucene.Web.Hubs
+namespace NuGet.Lucene.Web.SignalR.Hubs
 {
     /// <summary>
     /// Provides SignalR powered updates as indexing activity changes.
