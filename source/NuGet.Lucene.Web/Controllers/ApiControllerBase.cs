@@ -8,14 +8,19 @@ namespace NuGet.Lucene.Web.Controllers
     {
         private static readonly ILog AuditLog = LogManager.GetLogger("NuGet.Lucene.Audit");
 
-        private string CurrentUserName
+        protected string CurrentUserName
         {
-            get { return User.Identity.IsAuthenticated ? User.Identity.Name : "anonymous client"; }
+            get { return IsUserAuthenticated ? User.Identity.Name : null; }
+        }
+
+        protected bool IsUserAuthenticated
+        {
+            get { return User != null && User.Identity != null && User.Identity.IsAuthenticated; }
         }
 
         protected void Audit(string format, params object[] args)
         {
-            AuditLog.Info(m => m("{0} requested by {1}", string.Format(format, args), CurrentUserName));
+            AuditLog.Info(m => m("{0} requested by {1}", string.Format(format, args), CurrentUserName ?? "anonymous client"));
         }
     }
 }

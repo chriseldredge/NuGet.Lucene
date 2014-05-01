@@ -143,7 +143,7 @@ namespace NuGet.Lucene.Web.Controllers
         /// </summary>
         public object GetAuthenticationInfo()
         {
-            if (!User.Identity.IsAuthenticated)
+            if (!IsUserAuthenticated)
             {
                 return Request.CreateErrorResponse(HttpStatusCode.NoContent, "Not authenticated.");
             }
@@ -161,11 +161,11 @@ namespace NuGet.Lucene.Web.Controllers
         [Authorize]
         public ApiUser GetRequiredAuthenticationInfo()
         {
-            var apiUser = Store.FindByUsername(User.Identity.Name);
+            var apiUser = Store.FindByUsername(CurrentUserName);
 
             if (apiUser != null) return apiUser;
 
-            apiUser = new ApiUser { Username = User.Identity.Name, Roles = GetUserRoles(User) };
+            apiUser = new ApiUser { Username = CurrentUserName, Roles = GetUserRoles(User) };
 
             Store.Add(apiUser, UserUpdateMode.Overwrite);
 
@@ -179,7 +179,7 @@ namespace NuGet.Lucene.Web.Controllers
         [HttpPost]
         public object ChangeApiKey([FromBody]KeyChangeRequest req)
         {
-            var username = User.Identity.Name;
+            var username = CurrentUserName;
 
             Audit("Change API key for user {0}", username);
 
@@ -205,7 +205,7 @@ namespace NuGet.Lucene.Web.Controllers
 
         private ApiUser DescribeUser(ApiUser user)
         {
-            if (User.IsInRole(RoleNames.AccountAdministrator) || IsSelf(user))
+            if (IsUserAuthenticated && User.IsInRole(RoleNames.AccountAdministrator) || IsSelf(user))
             {
                 return user;
             }
@@ -216,7 +216,8 @@ namespace NuGet.Lucene.Web.Controllers
 
         private bool IsSelf(ApiUser user)
         {
-            return string.Equals(User.Identity.Name, user.Username, StringComparison.InvariantCultureIgnoreCase);
+            if (!IsUserAuthenticated) return false;
+            return string.Equals(CurrentUserName, user.Username, StringComparison.InvariantCultureIgnoreCase);
         }
 
         private static UserUpdateMode GetUserUpdateMode(UserAttributes attributes)

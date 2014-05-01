@@ -64,6 +64,7 @@ namespace NuGet.Lucene.Web
             var tokenSource = new ReusableCancellationTokenSource();
             Bind<ReusableCancellationTokenSource>().ToConstant(tokenSource);
 
+            //TODO: this should move to somewhere else.
             var repository = base.Kernel.Get<ILucenePackageRepository>();
 
             if (GetFlagFromAppSetting("synchronizeOnStart", true))
@@ -237,7 +238,7 @@ namespace NuGet.Lucene.Web
                 return false;
 
             var targetType = propertyInfo.ReflectedType;
-            var assembly = targetType.Assembly;
+            var assembly = targetType != null ? targetType.Assembly : null;
             if (!knownAssemblies.Contains(assembly))
                 return false;
 
