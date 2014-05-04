@@ -3,12 +3,11 @@ using Microsoft.AspNet.SignalR.Hubs;
 using Microsoft.AspNet.SignalR.Infrastructure;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using Ninject;
-using Ninject.Modules;
 using NuGet.Lucene.Web.SignalR.Hubs;
 
 namespace NuGet.Lucene.Web.SignalR
 {
+    /*
     public class SignalRModule : NinjectModule
     {
         public override void Load()
@@ -53,4 +52,5 @@ namespace NuGet.Lucene.Web.SignalR
             return resolver;
         }
     }
+    */
 }

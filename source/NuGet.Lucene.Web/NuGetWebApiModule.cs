@@ -1,32 +1,25 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Configuration;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Web;
 using System.Web.Hosting;
+using Autofac;
 using Lucene.Net.Linq;
 using Lucene.Net.Store;
-using Ninject;
-using Ninject.Components;
-using Ninject.Modules;
-using Ninject.Selection.Heuristics;
 using NuGet.Lucene.Web.Authentication;
 using NuGet.Lucene.Web.Models;
-using NuGet.Lucene.Web.Modules;
 using NuGet.Lucene.Web.Symbols;
 using Version = Lucene.Net.Util.Version;
 
 namespace NuGet.Lucene.Web
 {
-    public class NuGetWebApiModule : NinjectModule
+    public class NuGetWebApiModule : Module
     {
         public const string AppSettingNamesapce = "NuGet.Lucene.Web:";
         public const string DefaultRoutePathPrefix = "api/";
 
-        public override void Load()
+        protected override void Load(ContainerBuilder builder)
         {
             var cfg = new LuceneRepositoryConfigurator
                 {
@@ -38,34 +31,33 @@ namespace NuGet.Lucene.Web
 
             cfg.Initialize();
 
-            Kernel.Components.Add<IInjectionHeuristic, NonDecoratedPropertyInjectionHeuristic>();
-
             var routeMapper = new NuGetWebApiRouteMapper(RoutePathPrefix);
             var mirroringPackageRepository = MirroringPackageRepositoryFactory.Create(
                 cfg.Repository, PackageMirrorTargetUrl, PackageMirrorTimeout, AlwaysCheckMirror);
             var userStore = InitializeUserStore();
 
-            Bind<NuGetWebApiRouteMapper>().ToConstant(routeMapper);
-            Bind<ILucenePackageRepository>().ToConstant(cfg.Repository).OnDeactivation(_ => cfg.Dispose());
-            Bind<IMirroringPackageRepository>().ToConstant(mirroringPackageRepository);
-            Bind<LuceneDataProvider>().ToConstant(cfg.Provider);
-            Bind<UserStore>().ToConstant(userStore);
+            builder.RegisterInstance(routeMapper);
+            builder.RegisterInstance(cfg.Repository).As<ILucenePackageRepository>();
+            //RegisterInstance(cfg.Repository).OnDeactivation(_ => cfg.Dispose());
+            builder.RegisterInstance(mirroringPackageRepository).As<IMirroringPackageRepository>();
+            builder.RegisterInstance(cfg.Provider).As<LuceneDataProvider>();
+            builder.RegisterInstance(userStore).As<UserStore>();
 
             var symbolsPath = MapPathFromAppSetting("symbolsPath", "~/App_Data/Symbols");
-            Bind<ISymbolSource>().ToConstant(new SymbolSource { SymbolsPath = symbolsPath });
-            Bind<SymbolTools>().ToConstant(new SymbolTools
+            builder.RegisterInstance(new SymbolSource { SymbolsPath = symbolsPath }).As<ISymbolSource>();
+            builder.RegisterInstance(new SymbolTools
             {
                 SymbolPath = symbolsPath,
                 ToolPath = MapPathFromAppSetting("debuggingToolsPath", "")
             });
 
-            LoadAuthentication();
+            LoadAuthentication(builder);
 
             var tokenSource = new ReusableCancellationTokenSource();
-            Bind<ReusableCancellationTokenSource>().ToConstant(tokenSource);
+            builder.RegisterInstance(tokenSource);
 
             //TODO: this should move to somewhere else.
-            var repository = base.Kernel.Get<ILucenePackageRepository>();
+            var repository = cfg.Repository;
 
             if (GetFlagFromAppSetting("synchronizeOnStart", true))
             {
@@ -73,10 +65,10 @@ namespace NuGet.Lucene.Web
             }
         }
 
-        public virtual void LoadAuthentication()
+        public virtual void LoadAuthentication(ContainerBuilder builder)
         {
-            Bind<IApiKeyAuthentication>().To<LuceneApiKeyAuthentication>();
-
+            builder.Register(_ => new LuceneApiKeyAuthentication()).As<IApiKeyAuthentication>();
+            /*
             Bind<IHttpModule>().To<ApiKeyAuthenticationModule>();
 
             if (AllowAnonymousPackageChanges)
@@ -93,6 +85,7 @@ namespace NuGet.Lucene.Web
             {
                 Bind<IHttpModule>().To<RoleMappingAuthenticationModule>();
             }
+             * */
         }
 
         public virtual UserStore InitializeUserStore()
@@ -211,41 +204,6 @@ namespace NuGet.Lucene.Web
         private static string GetAppSettingKey(string key)
         {
             return AppSettingNamesapce + key;
-        }
-    }
-
-    public class NonDecoratedPropertyInjectionHeuristic : NinjectComponent, IInjectionHeuristic
-    {
-        private readonly IKernel kernel;
-
-        private static readonly ISet<Assembly> knownAssemblies = new HashSet<Assembly> { typeof(NonDecoratedPropertyInjectionHeuristic).Assembly };
-
-        public NonDecoratedPropertyInjectionHeuristic(IKernel kernel)
-        {
-            this.kernel = kernel;
-        }
-
-        public bool ShouldInject(MemberInfo memberInfo)
-        {
-            var propertyInfo = memberInfo as PropertyInfo;
-            return ShouldInject(propertyInfo);
-        }
-
-        private bool ShouldInject(PropertyInfo propertyInfo)
-        {
-            if (propertyInfo == null)
-                return false;
-
-            if (!propertyInfo.CanWrite)
-                return false;
-
-            var targetType = propertyInfo.ReflectedType;
-            var assembly = targetType != null ? targetType.Assembly : null;
-            if (!knownAssemblies.Contains(assembly))
-                return false;
-
-            var instance = kernel.TryGet(propertyInfo.PropertyType);
-            return instance != null;
         }
     }
 }

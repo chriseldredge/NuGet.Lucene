@@ -1,11 +1,10 @@
 using System;
 using System.Reactive.Linq;
 using Microsoft.AspNet.SignalR.Infrastructure;
-using Ninject;
-using Ninject.Activation;
 
 namespace NuGet.Lucene.Web.SignalR.Hubs
 {
+    /*
     public class StatusHubProvider : IStartable
     {
         public ILucenePackageRepository Repository { get; set; }
@@ -33,4 +32,5 @@ namespace NuGet.Lucene.Web.SignalR.Hubs
             statusObservable = null;
         }
     }
+    */
 }

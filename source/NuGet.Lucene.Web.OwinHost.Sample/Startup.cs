@@ -6,14 +6,14 @@ using System.Web.Http;
 using System.Web.Http.Description;
 using System.Web.Http.ExceptionHandling;
 using AspNet.WebApi.HtmlMicrodataFormatter;
+using Autofac;
+using Autofac.Integration.WebApi;
 using Common.Logging;
 using Microsoft.Owin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
-using Ninject;
-using Ninject.Web.Common.OwinHost;
-using Ninject.Web.WebApi.OwinHost;
+using NuGet.Lucene.Web.Controllers;
 using NuGet.Lucene.Web.Filters;
 using NuGet.Lucene.Web.Formatters;
 using NuGet.Lucene.Web.MessageHandlers;
@@ -26,29 +26,31 @@ namespace NuGet.Lucene.Web.OwinHost.Sample
     {
         public void Configuration(IAppBuilder app)
         {
-            Start(app, CreateKernel());
+            Start(app, CreateContainer());
         }
 
-        private static void Start(IAppBuilder app, IKernel kernel)
+        private static void Start(IAppBuilder app, IContainer container)
         {
             var config = new HttpConfiguration();
-            RegisterServices(kernel, app, config);
+            RegisterServices(container, app, config);
             ConfigureWebApi(config);
 
-            app.UseNinjectMiddleware(() => kernel)
-                .UseNinjectWebApi(config);
+            app.UseAutofacMiddleware(container);
+            app.UseAutofacWebApi(config);
+            app.UseWebApi(config);
 
-            RegisterShutdownCallback(app, kernel);
+            RegisterShutdownCallback(app, container);
         }
 
-        private static void RegisterShutdownCallback(IAppBuilder app, IKernel kernel)
+        private static void RegisterShutdownCallback(IAppBuilder app, IContainer container)
         {
             var context = new OwinContext(app.Properties);
             var token = context.Get<CancellationToken>("host.OnAppDisposing");
 
             if (token != CancellationToken.None)
             {
-                token.Register(kernel.Dispose);
+                //TODO: does not dispose lucene objects
+                token.Register(container.Dispose);
             }
             else
             {
@@ -56,22 +58,25 @@ namespace NuGet.Lucene.Web.OwinHost.Sample
             }
         }
 
-        private static IKernel CreateKernel()
+        private static IContainer CreateContainer()
         {
-            var kernel = new StandardKernel();
-            kernel.Load<NuGetWebApiModule>();
-            kernel.Load<SignalRModule>();
-            return kernel;
+            var builder = new ContainerBuilder();
+            builder.RegisterModule<NuGetWebApiModule>();
+            //container.RegisterModule<SignalRModule>();
+
+            builder.RegisterApiControllers(typeof (IndexingController).Assembly).PropertiesAutowired();
+
+            return builder.Build();
         }
 
-        private static void RegisterServices(IKernel kernel, IAppBuilder app, HttpConfiguration config)
+        private static void RegisterServices(IContainer container, IAppBuilder app, HttpConfiguration config)
         {
-            var apiMapper = kernel.Get<NuGetWebApiRouteMapper>();
+            var apiMapper = container.Resolve<NuGetWebApiRouteMapper>();
             apiMapper.MapApiRoutes(config);
             apiMapper.MapODataRoutes(config);
 
-            var signalRMapper = kernel.Get<SignalRMapper>();
-            signalRMapper.MapSignalR(app);
+            //var signalRMapper = container.Resolve<SignalRMapper>();
+            //signalRMapper.MapSignalR(app);
         }
 
         private static void ConfigureWebApi(HttpConfiguration config)
