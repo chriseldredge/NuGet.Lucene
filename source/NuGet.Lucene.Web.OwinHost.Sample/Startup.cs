@@ -10,6 +10,7 @@ using Autofac;
 using Autofac.Integration.WebApi;
 using Common.Logging;
 using Microsoft.Owin;
+using Microsoft.Owin.Infrastructure;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
@@ -17,7 +18,6 @@ using NuGet.Lucene.Web.Controllers;
 using NuGet.Lucene.Web.Filters;
 using NuGet.Lucene.Web.Formatters;
 using NuGet.Lucene.Web.MessageHandlers;
-using NuGet.Lucene.Web.SignalR;
 using Owin;
 
 namespace NuGet.Lucene.Web.OwinHost.Sample
@@ -26,6 +26,8 @@ namespace NuGet.Lucene.Web.OwinHost.Sample
     {
         public void Configuration(IAppBuilder app)
         {
+            SignatureConversions.AddConversions(app);
+
             Start(app, CreateContainer());
         }
 
@@ -34,12 +36,11 @@ namespace NuGet.Lucene.Web.OwinHost.Sample
             var config = new HttpConfiguration();
             RegisterServices(container, app, config);
             ConfigureWebApi(config);
+            RegisterShutdownCallback(app, container);
 
             app.UseAutofacMiddleware(container);
             app.UseAutofacWebApi(config);
             app.UseWebApi(config);
-
-            RegisterShutdownCallback(app, container);
         }
 
         private static void RegisterShutdownCallback(IAppBuilder app, IContainer container)
