@@ -30,7 +30,7 @@
         <dependency id="Rx-Interfaces" version="[2.2,3.0)"/>
         <dependency id="Rx-Linq" version="[2.2,3.0)"/>
         <dependency id="Rx-PlatformServices" version="[2.2,3.0)"/>
-        <dependency id="Remotion.Linq" version="[1.13,2.0)"/>
+        <dependency id="Remotion.Linq" version="[1.13,1.15.10)"/>
       </group>
 
       <group targetFramework="net40">
