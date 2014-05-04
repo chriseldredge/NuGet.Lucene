@@ -43,9 +43,9 @@
     <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AspNet.WebApi.HtmlMicrodataFormatter">
-      <HintPath>..\packages\AspNet.WebApi.HtmlMicrodataFormatter.2.4.1\lib\net40\AspNet.WebApi.HtmlMicrodataFormatter.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="AspNet.WebApi.HtmlMicrodataFormatter, Version=2.4.2.44, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\AspNet.WebApi.HtmlMicrodataFormatter.2.4.2\lib\net40\AspNet.WebApi.HtmlMicrodataFormatter.dll</HintPath>
     </Reference>
     <Reference Include="Common.Logging, Version=2.1.2.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
