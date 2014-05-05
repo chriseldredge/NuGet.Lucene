@@ -25,7 +25,7 @@ namespace NuGet.Lucene.Web.Symbols
         /// </returns>
         public string FindSourceFile(string referencedSource, ISet<string> sourceFiles)
         {
-            var parts = referencedSource.Split(Path.DirectorySeparatorChar);
+            var parts = referencedSource.Split(new[] {'/', '\\'});
             var c = 0;
             var i = parts[0].Length + 1;
 

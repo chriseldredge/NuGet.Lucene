@@ -255,19 +255,20 @@ namespace NuGet.Lucene.Tests
             [Test]
             public void LoadFromFileSystem()
             {
-                const string expectedPath = @"a\non\standard\package\location.nupkg";
+                var root = Environment.CurrentDirectory;
+                var expectedPath = Path.Combine("a", "non", "standard", "package", "location.nupkg");
                 var date = new DateTime(2001, 5, 27, 0, 0, 0, DateTimeKind.Utc);
 
-                fileSystem.SetupGet(fs => fs.Root).Returns(@"c:\packages");
+                fileSystem.SetupGet(fs => fs.Root).Returns(root);
                 fileSystem.Setup(fs => fs.GetFullPath(It.IsAny<string>()))
-                    .Returns<string>(p => Path.Combine(@"c:\packages", p));
+                    .Returns<string>(p => Path.Combine(root, p));
                 fileSystem.Setup(fs => fs.OpenFile(It.IsAny<string>())).Returns(new MemoryStream());
                 fileSystem.Setup(fs => fs.GetLastModified(expectedPath)).Returns(date).Verifiable();
 
                 var result = repository.LoadFromFileSystem(expectedPath);
 
-                Assert.That(result.Published.GetValueOrDefault().DateTime, Is.EqualTo(date));
                 fileSystem.VerifyAll();
+                Assert.That(result.Published.GetValueOrDefault().DateTime, Is.EqualTo(date));
             }
         }
 
