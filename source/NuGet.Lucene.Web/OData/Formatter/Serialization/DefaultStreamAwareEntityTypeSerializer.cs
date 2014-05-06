@@ -23,17 +23,17 @@ namespace NuGet.Lucene.Web.OData.Formatter.Serialization
                 entry.MediaResource = new ODataStreamReferenceValue
                 {
                     ContentType = ContentType,
-                    ReadLink = new Uri(BuildLinkForStreamProperty(instance, entityInstanceContext))
+                    ReadLink = BuildLinkForStreamProperty(instance, entityInstanceContext)
                 };
             }
             return entry;
         }
 
-        protected virtual string ContentType
+        public virtual string ContentType
         {
             get { return "application/octet-stream"; }
         }
 
-        protected abstract string BuildLinkForStreamProperty(T entity, EntityInstanceContext entityInstanceContext);
+        public abstract Uri BuildLinkForStreamProperty(T entity, EntityInstanceContext entityInstanceContext);
     }
 }
