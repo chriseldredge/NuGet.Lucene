@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.Owin.Hosting;
+using System.Threading;
 
 namespace NuGet.Lucene.Web.OwinHost.Sample
 {
@@ -9,12 +10,16 @@ namespace NuGet.Lucene.Web.OwinHost.Sample
         {
             const string baseAddress = "http://localhost:9000/";
 
+            var cancelToken = new CancellationTokenSource();
+
+            Console.CancelKeyPress += (_, __) => cancelToken.Cancel();
+
             try
             {
                 using (WebApp.Start<Startup>(baseAddress))
                 {
-                    Console.WriteLine("Listening on " + baseAddress + ". Press enter to stop listening.");
-                    Console.ReadLine();
+                    Console.WriteLine("Listening on " + baseAddress + ". Press <ctrl>+c to stop listening.");
+                    cancelToken.Token.WaitHandle.WaitOne();
                 }
             }
             catch (Exception ex)
