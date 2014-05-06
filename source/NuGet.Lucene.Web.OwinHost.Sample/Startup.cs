@@ -26,8 +26,8 @@ namespace NuGet.Lucene.Web.OwinHost.Sample
     {
         public void Configuration(IAppBuilder app)
         {
+            EnvironmentUtility.SetRunningFromCommandLine();
             SignatureConversions.AddConversions(app);
-
             Start(app, CreateContainer());
         }
 
