@@ -58,18 +58,19 @@ namespace NuGet.Lucene.Web.Tests.Formatters
         {
             requestBody = CreateMultipartStream(content, incomplete);
             this.content = new StreamContent(requestBody);
-            this.content.Headers.Add("Content-Type", "multipart/form-data; boundary=----ExampleBoundary");
+            this.content.Headers.ContentType = new MediaTypeHeaderValue("multipart/form-data");
+            this.content.Headers.ContentType.Parameters.Add(new NameValueHeaderValue("boundary", "ExampleBoundary"));
         }
 
         private Stream CreateMultipartStream(string content, bool incomplete)
         {
             const string template = @"
-------ExampleBoundary
+--ExampleBoundary
 Content-Disposition: form-data; name=""package""; filename=""package""
 Content-Type: application/octet-stream
 
 {0}
-------ExampleBoundary--{1}";
+--ExampleBoundary--{1}";
 
             var message = string.Format(template, content, incomplete ? "" : Environment.NewLine);
 

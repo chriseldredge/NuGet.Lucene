@@ -9,6 +9,12 @@ namespace NuGet.Lucene.Web.Tests
     [TestFixture]
     public class MirroringPackageRepositoryFactoryTests
     {
+		[SetUp]
+		public void SetUp()
+		{
+			EnvironmentUtility.SetRunningFromCommandLine();
+		}
+
         [Test]
         public void CreateWithoutOrigin()
         {
