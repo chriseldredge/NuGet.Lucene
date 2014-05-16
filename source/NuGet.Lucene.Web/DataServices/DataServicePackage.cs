@@ -30,6 +30,7 @@ namespace NuGet.Lucene.Web.DataServices
             Description = package.Description;
             Summary = package.Summary;
             ReleaseNotes = package.ReleaseNotes;
+            Language = package.Language;
             Tags = package.Tags;
             PackageHash = package.PackageHash;
             PackageHashAlgorithm = package.PackageHashAlgorithm;
@@ -63,6 +64,7 @@ namespace NuGet.Lucene.Web.DataServices
             Description = package.Description;
             Summary = package.Summary;
             ReleaseNotes = package.ReleaseNotes;
+            Language = package.Language;
             Tags = package.Tags;
             PackageHash = package.PackageHash;
             PackageHashAlgorithm = package.PackageHashAlgorithm;
@@ -118,6 +120,8 @@ namespace NuGet.Lucene.Web.DataServices
         public string Summary { get; set; }
 
         public string ReleaseNotes { get; set; }
+
+        public string Language { get; set; }
 
         public DateTime Created { get; set; }
 
