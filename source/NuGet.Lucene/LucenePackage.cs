@@ -100,7 +100,7 @@ namespace NuGet.Lucene
         [Field(Analyzer = typeof(PorterStemAnalyzer))]
         public string ReleaseNotes { get; set; }
 
-        [Field(IndexMode.NotIndexed)]
+        [Field(IndexMode.NotIndexed, Store = StoreMode.Yes)]
         public string Language { get; set; }
 
         [Field(Analyzer = typeof(PorterStemAnalyzer))]
