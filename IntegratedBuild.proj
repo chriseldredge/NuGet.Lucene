@@ -1,28 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<PropertyGroup>
+		<SolutionDir>$(MSBuildProjectDirectory)/source/</SolutionDir>
 		<VersionPrefix>2.9.4</VersionPrefix>
+		<TestsEnabled>true</TestsEnabled>
+	</PropertyGroup>
+
+	<PropertyGroup Condition=" '$(APPVEYOR)' != '' ">
+		<VersionControlInfo>$(APPVEYOR_REPO_COMMIT) ($(APPVEYOR_REPO_BRANCH))</VersionControlInfo>
+		<BuildNumber>$(APPVEYOR_BUILD_NUMBER)</BuildNumber>
+	</PropertyGroup>
+
+	<PropertyGroup Condition=" '$(TRAVIS)' == 'true' ">
+		<VersionControlInfo>$(TRAVIS_COMMIT) ($(TRAVIS_BRANCH))</VersionControlInfo>
+		<BuildNumber>$(TRAVIS_BUILD_NUMBER)</BuildNumber>
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<SolutionDir>$(MSBuildProjectDirectory)/source/</SolutionDir>
-
-		<VersionControlInfo Condition=" '$(TRAVIS)' == 'true' ">$(TRAVIS_COMMIT) ($(TRAVIS_BRANCH))</VersionControlInfo>
 		<VersionControlInfo Condition=" '$(VersionControlInfo)' == '' ">(unknown version control revision)</VersionControlInfo>
-
-		<BuildNumber Condition=" '$(TRAVIS)' == 'true' ">$(TRAVIS_BUILD_NUMBER)</BuildNumber>
 		<BuildNumber Condition=" '$(BuildNumber)' == '' ">0</BuildNumber>
-
 		<AssemblyVersion>$(VersionPrefix).$(BuildNumber)</AssemblyVersion>
-
-		<VersionSuffix Condition=" '$(TRAVIS)' == 'true' ">build$(BuildNumber)</VersionSuffix>
-
+		<VersionSuffix>build$(BuildNumber)</VersionSuffix>
 		<PackageVersion>$(VersionPrefix)</PackageVersion>
 		<PackageVersion Condition=" '$(VersionSuffix)' != '' ">$(PackageVersion)-$(VersionSuffix)</PackageVersion>
-
 		<AssemblyInformationalVersion>$(PackageVersion) $(VersionControlInfo)</AssemblyInformationalVersion>
-
-		<TestsEnabled>true</TestsEnabled>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -80,7 +81,6 @@
 		<Message Text="AssemblyVersion: $(AssemblyVersion)"/>
 		<Message Text="AssemblyInformationalVersion: $(AssemblyInformationalVersion)"/>
 		<Copy SourceFiles="build/VersionInfo.cs" DestinationFiles="build/artifacts/VersionInfo-$(BuildNumber).cs"/>
-		<Message Text="To repeat this build: git checkout $(TRAVIS_COMMIT); msbuild /p:TRAVIS=true,TRAVIS_COMMIT=$(TRAVIS_COMMIT),TRAVIS_BRANCH=$(TRAVIS_BRANCH),TRAVIS_BUILD_NUMBER=$(TRAVIS_BUILD_NUMBER)"/>
 	</Target>
 
 	<Import Project="NuGet.targets"/>
