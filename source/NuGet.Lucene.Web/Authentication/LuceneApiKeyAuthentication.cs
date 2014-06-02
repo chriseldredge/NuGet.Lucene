@@ -1,7 +1,9 @@
 ﻿using System.Linq;
 using System.Security.Authentication;
+using System.Security.Claims;
 using System.Security.Principal;
 using System.Web;
+using Microsoft.Owin;
 
 namespace NuGet.Lucene.Web.Authentication
 {
@@ -11,7 +13,7 @@ namespace NuGet.Lucene.Web.Authentication
 
         public UserStore Store { get; set; }
 
-        public IPrincipal AuthenticateRequest(HttpRequestBase request)
+        public ClaimsIdentity AuthenticateRequest(IOwinRequest request)
         {
             var clientKey = request.Headers[ApiKeyHeader];
 
@@ -23,8 +25,11 @@ namespace NuGet.Lucene.Web.Authentication
             {
                 throw new AuthenticationException("Invalid API key.");
             }
-
-            return new GenericPrincipal(new GenericIdentity(user.Username, "NuGet Api Key Authentication"), user.Roles.ToArray());
+            
+            return new ClaimsIdentity(
+                new GenericIdentity(user.Username, typeof(LuceneApiKeyAuthentication).Name),
+                user.Roles.Select(r => new Claim(ClaimsIdentity.DefaultRoleClaimType, r)));
+            
         }
     }
 }

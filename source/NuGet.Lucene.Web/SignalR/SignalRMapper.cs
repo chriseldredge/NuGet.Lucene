@@ -6,10 +6,9 @@ namespace NuGet.Lucene.Web.SignalR
 {
     public class SignalRMapper
     {
-        public HubConfiguration HubConfiguration { get; set; }
         public NuGetWebApiRouteMapper ApiRouteMapper { get; set; }
 
-        public void MapSignalR(IAppBuilder app)
+        public void MapSignalR(IAppBuilder app, HubConfiguration hubConfiguration)
         {
             app.Map("/" + ApiRouteMapper.SignalrRoutePath, map =>
             {
@@ -17,7 +16,7 @@ namespace NuGet.Lucene.Web.SignalR
                 {
                     map.UseCors(CorsOptions.AllowAll);
                 }
-                map.RunSignalR(HubConfiguration);
+                map.RunSignalR(hubConfiguration);
             });
         }
     }

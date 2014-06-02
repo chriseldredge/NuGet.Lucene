@@ -1,10 +1,10 @@
-﻿using System.Security.Principal;
-using System.Web;
+﻿using System.Security.Claims;
+using Microsoft.Owin;
 
 namespace NuGet.Lucene.Web.Authentication
 {
     public interface IApiKeyAuthentication
     {
-        IPrincipal AuthenticateRequest(HttpRequestBase request);
+        ClaimsIdentity AuthenticateRequest(IOwinRequest request);
     }
 }

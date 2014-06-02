@@ -47,8 +47,15 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\AspNet.WebApi.HtmlMicrodataFormatter.2.4.2\lib\net40\AspNet.WebApi.HtmlMicrodataFormatter.dll</HintPath>
     </Reference>
-    <Reference Include="Autofac">
-      <HintPath>..\packages\Autofac.3.3.1\lib\net40\Autofac.dll</HintPath>
+    <Reference Include="Autofac, Version=3.4.0.0, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Autofac.3.4.0\lib\net40\Autofac.dll</HintPath>
+    </Reference>
+    <Reference Include="Autofac.Integration.SignalR">
+      <HintPath>..\packages\Autofac.SignalR2.3.0.2\lib\net45\Autofac.Integration.SignalR.dll</HintPath>
+    </Reference>
+    <Reference Include="Autofac.Integration.WebApi">
+      <HintPath>..\packages\Autofac.WebApi2.3.3.0\lib\net45\Autofac.Integration.WebApi.dll</HintPath>
     </Reference>
     <Reference Include="Common.Logging, Version=2.1.2.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -179,9 +186,12 @@
     <Compile Include="Models\PackageVersionSummary.cs" />
     <Compile Include="Models\UpdateUserAttributes.cs" />
     <Compile Include="Models\UserAttributes.cs" />
-    <Compile Include="Modules\AnonymousPackageManagerModule.cs" />
-    <Compile Include="Modules\LocalRequestAuthenticationModule.cs" />
-    <Compile Include="Modules\RoleMappingAuthenticationModule.cs" />
+    <Compile Include="Modules\AnonymousPackageManagerMiddleware.cs" />
+    <Compile Include="Modules\AuthenticationHandlerBase.cs" />
+    <Compile Include="Modules\DefaultAuthenticationOptions.cs" />
+    <Compile Include="Modules\LocalRequestAuthenticationMiddleware.cs" />
+    <Compile Include="Modules\RoleMappingAuthenticationMiddleware.cs" />
+    <Compile Include="Modules\UserStoreAuthenticationHandler.cs" />
     <Compile Include="NuGetUserAgentConstraint.cs" />
     <Compile Include="NuGetWebApiModule.cs" />
     <Compile Include="Authentication\IApiKeyAuthentication.cs" />
@@ -196,8 +206,7 @@
     <Compile Include="Formatters\MultipartFormDataMediaFormatter.cs" />
     <Compile Include="MessageHandlers\CrossOriginMessageHandler.cs" />
     <Compile Include="Models\PackageSpec.cs" />
-    <Compile Include="Modules\ApiKeyAuthenticationModule.cs" />
-    <Compile Include="Modules\HttpModule.cs" />
+    <Compile Include="Modules\ApiKeyAuthenticationMiddleware.cs" />
     <Compile Include="NuGetWebApiODataModelBuilder.cs" />
     <Compile Include="OData\Formatter\Serialization\DefaultStreamAwareEntityTypeSerializer.cs" />
     <Compile Include="OData\Formatter\Serialization\ODataPackageDefaultStreamAwareEntityTypeSerializer.cs" />
@@ -218,12 +227,13 @@
     <Compile Include="RouteNames.cs" />
     <Compile Include="SemanticVersionConstraint.cs" />
     <Compile Include="ReusableCancellationTokenSource.cs" />
+    <Compile Include="SignalR\AutofacHubConfiguration.cs" />
     <Compile Include="SignalR\Hubs\StatusHub.cs" />
-    <Compile Include="SignalR\Hubs\StatusHubProvider.cs" />
     <Compile Include="SignalR\SelectiveCamelCaseContractResolver.cs" />
     <Compile Include="SignalR\SignalRLoggingModule.cs" />
     <Compile Include="SignalR\SignalRMapper.cs" />
     <Compile Include="SignalR\SignalRModule.cs" />
+    <Compile Include="SignalR\StatusHubUpdateBroadcaster.cs" />
     <Compile Include="SimpleParameterInfo.cs" />
     <Compile Include="Symbols\ISymbolSource.cs" />
     <Compile Include="Symbols\SymbolSource.cs" />
@@ -233,6 +243,7 @@
     <Compile Include="UserStore.cs" />
     <Compile Include="Util\DynamicUtils.cs" />
     <Compile Include="Util\ICache.cs" />
+    <Compile Include="Util\OwinRequestExtensions.cs" />
     <Compile Include="Util\PackageExtensions.cs" />
     <Compile Include="Util\TaskUtils.cs" />
     <Compile Include="Util\UrlHelperExtensions.cs" />

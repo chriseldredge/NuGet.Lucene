@@ -1,4 +1,5 @@
 ﻿using System;
+using Common.Logging;
 using Microsoft.Owin.Hosting;
 using System.Threading;
 
@@ -8,10 +9,11 @@ namespace NuGet.Lucene.Web.OwinHost.Sample
     {
         static void Main(string[] args)
         {
-            const string baseAddress = "http://localhost:9000/";
+            const string baseAddress = "http://*:9001/";
 
             var cancelToken = new CancellationTokenSource();
 
+            Console.TreatControlCAsInput = false;
             Console.CancelKeyPress += (_, __) => cancelToken.Cancel();
 
             try
@@ -24,20 +26,11 @@ namespace NuGet.Lucene.Web.OwinHost.Sample
             }
             catch (Exception ex)
             {
-                WriteExceptionChain(ex);
+                LogManager.GetCurrentClassLogger().Fatal(m => m(ex.Message), ex);
             }
+
             Console.WriteLine("Press enter to quit.");
             Console.ReadLine();
-        }
-
-        private static void WriteExceptionChain(Exception ex)
-        {
-            while (ex != null)
-            {
-                Console.Error.WriteLine("{0}: {1}", ex.GetType().FullName, ex.Message);
-                Console.Error.WriteLine(ex.StackTrace);
-                ex = ex.InnerException;
-            }
         }
     }
 }

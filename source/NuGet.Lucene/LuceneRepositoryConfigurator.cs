@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using Common.Logging;
 using Lucene.Net.Linq;
 using Lucene.Net.Store;
@@ -9,7 +8,7 @@ using Version = Lucene.Net.Util.Version;
 
 namespace NuGet.Lucene
 {
-    public class LuceneRepositoryConfigurator : IDisposable
+    public class LuceneRepositoryConfigurator : ILuceneRepositoryConfigurator
     {
         /// <summary>
         /// Directory to hold nupkg files that will be indexed by Lucene.

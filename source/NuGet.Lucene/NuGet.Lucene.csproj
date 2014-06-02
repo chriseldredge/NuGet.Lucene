@@ -93,6 +93,7 @@
       <Link>Properties\VersionInfo.cs</Link>
     </Compile>
     <Compile Include="FastZipPackage.cs" />
+    <Compile Include="ILuceneRepositoryConfigurator.cs" />
     <Compile Include="LuceneRepositoryConfigurator.cs" />
     <Compile Include="Mapping\CachingVersionConverter.cs" />
     <Compile Include="GroupingPackagePathResolver.cs" />

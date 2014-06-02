@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,17 +8,20 @@ using System.Web.Http.Description;
 using System.Web.Http.ExceptionHandling;
 using AspNet.WebApi.HtmlMicrodataFormatter;
 using Autofac;
-using Autofac.Integration.WebApi;
 using Common.Logging;
+using Microsoft.AspNet.SignalR;
+using Microsoft.AspNet.SignalR.Infrastructure;
 using Microsoft.Owin;
+using Microsoft.Owin.Diagnostics;
 using Microsoft.Owin.Infrastructure;
+using Microsoft.Owin.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
-using NuGet.Lucene.Web.Controllers;
 using NuGet.Lucene.Web.Filters;
 using NuGet.Lucene.Web.Formatters;
 using NuGet.Lucene.Web.MessageHandlers;
+using NuGet.Lucene.Web.SignalR;
 using Owin;
 
 namespace NuGet.Lucene.Web.OwinHost.Sample
@@ -28,6 +32,12 @@ namespace NuGet.Lucene.Web.OwinHost.Sample
         {
             EnvironmentUtility.SetRunningFromCommandLine();
             SignatureConversions.AddConversions(app);
+
+            app.UseErrorPage(new ErrorPageOptions
+            {
+                ShowExceptionDetails = true,
+                ShowSourceCode = true
+            });
             Start(app, CreateContainer());
         }
 
@@ -63,21 +73,33 @@ namespace NuGet.Lucene.Web.OwinHost.Sample
         {
             var builder = new ContainerBuilder();
             builder.RegisterModule<NuGetWebApiModule>();
-            //container.RegisterModule<SignalRModule>();
-
-            builder.RegisterApiControllers(typeof (IndexingController).Assembly).PropertiesAutowired();
+            builder.RegisterModule<SignalRModule>();
 
             return builder.Build();
         }
 
         private static void RegisterServices(IContainer container, IAppBuilder app, HttpConfiguration config)
         {
+            var listener = (HttpListener)app.Properties["System.Net.HttpListener"];
+            listener.AuthenticationSchemes = AuthenticationSchemes.IntegratedWindowsAuthentication | AuthenticationSchemes.Anonymous;
+            
             var apiMapper = container.Resolve<NuGetWebApiRouteMapper>();
             apiMapper.MapApiRoutes(config);
             apiMapper.MapODataRoutes(config);
 
-            //var signalRMapper = container.Resolve<SignalRMapper>();
-            //signalRMapper.MapSignalR(app);
+            var signalRMapper = container.Resolve<SignalRMapper>();
+            var hubConfiguration = AutofacHubConfiguration.CreateHubConfiguration(container);
+            signalRMapper.MapSignalR(app, hubConfiguration);
+
+            var statusHubBroadcaster = new StatusHubUpdateBroadcaster
+            {
+                ConnectionManager = hubConfiguration.Resolver.Resolve<IConnectionManager>(),
+                Repository = container.Resolve<ILucenePackageRepository>()
+            };
+
+            statusHubBroadcaster.Start();
+
+            container.CurrentScopeEnding += (s, e) => statusHubBroadcaster.Dispose();
         }
 
         private static void ConfigureWebApi(HttpConfiguration config)

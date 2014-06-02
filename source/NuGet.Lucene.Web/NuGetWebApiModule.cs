@@ -5,10 +5,12 @@ using System.IO;
 using System.Linq;
 using System.Web.Hosting;
 using Autofac;
+using Autofac.Integration.WebApi;
 using Lucene.Net.Linq;
 using Lucene.Net.Store;
 using NuGet.Lucene.Web.Authentication;
 using NuGet.Lucene.Web.Models;
+using NuGet.Lucene.Web.Modules;
 using NuGet.Lucene.Web.Symbols;
 using Version = Lucene.Net.Util.Version;
 
@@ -21,27 +23,19 @@ namespace NuGet.Lucene.Web
 
         protected override void Load(ContainerBuilder builder)
         {
-            var cfg = new LuceneRepositoryConfigurator
-                {
-                    EnablePackageFileWatcher = GetFlagFromAppSetting("enablePackageFileWatcher", true),
-                    GroupPackageFilesById = GetFlagFromAppSetting("groupPackageFilesById", true),
-                    LuceneIndexPath = MapPathFromAppSetting("lucenePath", "~/App_Data/Lucene"),
-                    PackagePath = MapPathFromAppSetting("packagesPath", "~/App_Data/Packages")
-                };
-
-            cfg.Initialize();
-
             var routeMapper = new NuGetWebApiRouteMapper(RoutePathPrefix);
-            var mirroringPackageRepository = MirroringPackageRepositoryFactory.Create(
-                cfg.Repository, PackageMirrorTargetUrl, PackageMirrorTimeout, AlwaysCheckMirror);
+            var configurator = InitializeRepositoryConfigurator();
             var userStore = InitializeUserStore();
+            var repository = configurator.Repository;
+            var mirroringPackageRepository = MirroringPackageRepositoryFactory.Create(
+                repository, PackageMirrorTargetUrl, PackageMirrorTimeout, AlwaysCheckMirror);
+
+            builder.RegisterInstance(configurator);
+            builder.RegisterInstance(repository);
 
             builder.RegisterInstance(routeMapper);
-            builder.RegisterInstance(cfg.Repository).As<ILucenePackageRepository>();
-            //RegisterInstance(cfg.Repository).OnDeactivation(_ => cfg.Dispose());
             builder.RegisterInstance(mirroringPackageRepository).As<IMirroringPackageRepository>();
-            builder.RegisterInstance(cfg.Provider).As<LuceneDataProvider>();
-            builder.RegisterInstance(userStore).As<UserStore>();
+            builder.RegisterInstance(userStore);
 
             var symbolsPath = MapPathFromAppSetting("symbolsPath", "~/App_Data/Symbols");
             builder.RegisterInstance(new SymbolSource { SymbolsPath = symbolsPath }).As<ISymbolSource>();
@@ -51,44 +45,57 @@ namespace NuGet.Lucene.Web
                 ToolPath = MapPathFromAppSetting("debuggingToolsPath", "")
             });
 
-            LoadAuthentication(builder);
+            LoadAuthMiddleware(builder);
 
             var tokenSource = new ReusableCancellationTokenSource();
             builder.RegisterInstance(tokenSource);
 
-            //TODO: this should move to somewhere else.
-            var repository = cfg.Repository;
+            builder.RegisterApiControllers(typeof (NuGetWebApiModule).Assembly).PropertiesAutowired();
 
+            //TODO: this should move to somewhere else.
             if (GetFlagFromAppSetting("synchronizeOnStart", true))
             {
                 repository.SynchronizeWithFileSystem(tokenSource.Token);    
             }
         }
 
-        public virtual void LoadAuthentication(ContainerBuilder builder)
+        protected virtual ILuceneRepositoryConfigurator InitializeRepositoryConfigurator()
         {
-            builder.Register(_ => new LuceneApiKeyAuthentication()).As<IApiKeyAuthentication>();
-            /*
-            Bind<IHttpModule>().To<ApiKeyAuthenticationModule>();
-
-            if (AllowAnonymousPackageChanges)
+            var cfg = new LuceneRepositoryConfigurator
             {
-                Bind<IHttpModule>().To<AnonymousPackageManagerModule>();
-            }
+                EnablePackageFileWatcher = GetFlagFromAppSetting("enablePackageFileWatcher", true),
+                GroupPackageFilesById = GetFlagFromAppSetting("groupPackageFilesById", true),
+                LuceneIndexPath = MapPathFromAppSetting("lucenePath", "~/App_Data/Lucene"),
+                PackagePath = MapPathFromAppSetting("packagesPath", "~/App_Data/Packages")
+            };
+
+            cfg.Initialize();
+
+            return cfg;
+        }
+
+        protected virtual void LoadAuthMiddleware(ContainerBuilder builder)
+        {
+            builder.RegisterType<LuceneApiKeyAuthentication>().As<IApiKeyAuthentication>().PropertiesAutowired();
+            builder.RegisterType<ApiKeyAuthenticationMiddleware>().InstancePerRequest().PropertiesAutowired();
 
             if (HandleLocalRequestsAsAdmin)
             {
-                Bind<IHttpModule>().To<LocalRequestAuthenticationModule>();
+                builder.RegisterType<LocalRequestAuthenticationMiddleware>().InstancePerRequest().PropertiesAutowired();
+            }
+
+            if (AllowAnonymousPackageChanges)
+            {
+                builder.RegisterType<AnonymousPackageManagerMiddleware>().InstancePerRequest().PropertiesAutowired();
             }
 
             if (RoleMappingsEnabled)
             {
-                Bind<IHttpModule>().To<RoleMappingAuthenticationModule>();
+                builder.RegisterType<RoleMappingAuthenticationMiddleware>().InstancePerRequest().PropertiesAutowired();
             }
-             * */
         }
 
-        public virtual UserStore InitializeUserStore()
+        protected virtual UserStore InitializeUserStore()
         {
             var usersDataProvider = InitializeUsersDataProvider();
             var userStore = new UserStore(usersDataProvider)
@@ -100,7 +107,7 @@ namespace NuGet.Lucene.Web
             return userStore;
         }
 
-        public virtual LuceneDataProvider InitializeUsersDataProvider()
+        protected virtual LuceneDataProvider InitializeUsersDataProvider()
         {
             var usersIndexPath = Path.Combine(MapPathFromAppSetting("lucenePath", "~/App_Data/Lucene"), "Users");
             var directoryInfo = new DirectoryInfo(usersIndexPath);

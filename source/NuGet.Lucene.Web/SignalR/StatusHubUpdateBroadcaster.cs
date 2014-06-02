@@ -1,21 +1,16 @@
 using System;
 using System.Reactive.Linq;
 using Microsoft.AspNet.SignalR.Infrastructure;
+using NuGet.Lucene.Web.SignalR.Hubs;
 
-namespace NuGet.Lucene.Web.SignalR.Hubs
+namespace NuGet.Lucene.Web.SignalR
 {
-    /*
-    public class StatusHubProvider : IStartable
+    public class StatusHubUpdateBroadcaster : IDisposable
     {
         public ILucenePackageRepository Repository { get; set; }
         public IConnectionManager ConnectionManager { get; set; }
 
         private IDisposable statusObservable;
-
-        public StatusHub CreateInstance(IContext context)
-        {
-            return new StatusHub();
-        }
 
         public void Start()
         {
@@ -26,11 +21,13 @@ namespace NuGet.Lucene.Web.SignalR.Hubs
                 .Subscribe(status => hub.Clients.All.updateStatus(status));
         }
 
-        public void Stop()
+        public void Dispose()
         {
-            statusObservable.Dispose();
-            statusObservable = null;
+            if (statusObservable != null)
+            {
+                statusObservable.Dispose();
+                statusObservable = null;
+            }
         }
     }
-    */
 }
