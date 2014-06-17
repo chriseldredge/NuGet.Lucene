@@ -52,18 +52,28 @@
 		<MSBuild Projects="source/NuGet.Lucene.sln" Targets="Build" Properties="Configuration=Release;RestorePackages=false"/>
 	</Target>
 
-	<Target Name="Test" Condition=" '$(TestsEnabled)' == 'true' ">
-		<ItemGroup>
-			<NUnitRunner Include="$(SolutionDir)packages\NUnit.Runners.*\tools\nunit-console.exe"/>
-		</ItemGroup>
-		<PropertyGroup>
-			<NUnitRunner>%(NUnitRunner.Identity)</NUnitRunner>
-		</PropertyGroup>
+	<Target Name="Test" Condition=" '$(TestsEnabled)' == 'true' " DependsOnTargets="ResolveNUnitCommand">
 		<ItemGroup>
 			<TestAssembly Include="$(SolutionDir)NuGet.Lucene.Tests/bin/Debug/NuGet.Lucene.Tests.dll"/>
 			<TestAssembly Include="$(SolutionDir)NuGet.Lucene.Web.Tests/bin/Debug/NuGet.Lucene.Web.Tests.dll"/>
 		</ItemGroup>
-		<Exec Command="&quot;$(NUnitRunner)&quot; @(TestAssembly -> '&quot;%(FullPath)&quot;', ' ') -noshadow"/>
+		<Exec Command="$(NUnitCommand) @(TestAssembly -> '&quot;%(FullPath)&quot;', ' ') -noshadow"/>
+	</Target>
+
+	<Target Name="ResolveNUnitCommand">
+		<ItemGroup Condition=" '$(APPVEYOR)' == '' ">
+			<NUnitRunner Include="$(SolutionDir)packages\NUnit.Runners.*\tools\nunit-console.exe"/>
+		</ItemGroup>
+		<CreateProperty Value="%(NUnitRunner.Identity)" Condition=" '$(APPVEYOR)' == '' ">
+			<Output TaskParameter="Value" PropertyName="NUnitRunner"/>
+		</CreateProperty>
+		<CreateProperty Value="nunit-console.exe" Condition=" '$(APPVEYOR)' != '' ">
+			<Output TaskParameter="Value" PropertyName="NUnitRunner"/>
+		</CreateProperty>
+		<PropertyGroup>
+			<NUnitCommand Condition=" '$(OS)' == 'Windows_NT' ">&quot;$(NUnitRunner)&quot;</NUnitCommand>
+			<NUnitCommand Condition=" '$(OS)' != 'Windows_NT' ">mono --runtime=v4.0.30319 &quot;$(NUnitRunner)&quot;</NUnitCommand>
+		</PropertyGroup>
 	</Target>
 
 	<Target Name="Package">
