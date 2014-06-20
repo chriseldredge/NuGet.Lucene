@@ -50,12 +50,12 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="bin\Release\NuGet.Lucene.dll" target="lib\net451"/>
-    <file src="bin\Release\NuGet.Lucene.pdb" target="lib\net451"/>
-    <file src="bin\Release\NuGet.Lucene.xml" target="lib\net451"/>
-    <file src="bin\Release40\NuGet.Lucene.dll" target="lib\net40"/>
-    <file src="bin\Release40\NuGet.Lucene.pdb" target="lib\net40"/>
-    <file src="bin\Release40\NuGet.Lucene.xml" target="lib\net40"/>
+    <file src="bin\$Configuration$\NuGet.Lucene.dll" target="lib\net451"/>
+    <file src="bin\$Configuration$\NuGet.Lucene.pdb" target="lib\net451"/>
+    <file src="bin\$Configuration$\NuGet.Lucene.xml" target="lib\net451"/>
+    <file src="bin\$Configuration$\NuGet.Lucene.dll" target="lib\net40"/>
+    <file src="bin\$Configuration$\NuGet.Lucene.pdb" target="lib\net40"/>
+    <file src="bin\$Configuration$\NuGet.Lucene.xml" target="lib\net40"/>
     <file src="**\*.cs" target="src"/>
   </files>
 </package>
