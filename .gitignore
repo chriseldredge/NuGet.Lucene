@@ -1,6 +1,5 @@
 /build/
-/Release/
-/source/packages/
+/packages/
 App_Data/
 _NCrunch*
 *.ncrunch*
@@ -9,5 +8,3 @@ _NCrunch*
 bin/
 obj/
 _ReSharper.*
-TestResult.xml
-NuGet.exe

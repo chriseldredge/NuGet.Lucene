@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Bootstrap" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup Label="Version">
+        <VersionPrefix>3.0.0</VersionPrefix>
+        <VersionSuffix>alpha</VersionSuffix>
+    </PropertyGroup>
+
+    <PropertyGroup Label="Settings">
+        <SolutionFile>NuGet.Lucene.sln</SolutionFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <NUnitTestAssembly Include="source\NuGet.Lucene.Tests\bin\Debug\NuGet.Lucene.Tests.dll"/>
+        <NUnitTestAssembly Include="source\NuGet.Lucene.Web.Tests\bin\Debug\NuGet.Lucene.Web.Tests.dll"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <NuSpecTarget Include="source\NuGet.Lucene\NuGet.Lucene.nuspec"/>
+        <NuSpecTarget Include="source\NuGet.Lucene.Web\NuGet.Lucene.Web.csproj"/>
+    </ItemGroup>
+  
+    <ItemGroup>
+        <NuGetPackConfiguration Include="Prerelease">
+            <Version>$(PackageVersionWithBuildNumber)</Version>
+            <Properties>Configuration=Debug;PackageVersion=$(PackageVersionWithBuildNumber)</Properties>
+        </NuGetPackConfiguration>
+        <NuGetPackConfiguration Include="Release">
+            <Version>$(PackageVersion)</Version>
+            <Properties>Configuration=Release;PackageVersion=$(PackageVersion)</Properties>
+        </NuGetPackConfiguration>
+    </ItemGroup>
+
+    <PropertyGroup Label="FeatureFlags">
+        <GenerateVersionInfoEnabled>true</GenerateVersionInfoEnabled>
+        <NUnitEnabled>true</NUnitEnabled>
+        <NuGetPackEnabled>true</NuGetPackEnabled>
+    </PropertyGroup>
+</Project>
