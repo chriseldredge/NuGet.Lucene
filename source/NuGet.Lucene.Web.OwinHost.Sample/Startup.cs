@@ -32,12 +32,6 @@ namespace NuGet.Lucene.Web.OwinHost.Sample
         {
             EnvironmentUtility.SetRunningFromCommandLine();
             SignatureConversions.AddConversions(app);
-
-            app.UseErrorPage(new ErrorPageOptions
-            {
-                ShowExceptionDetails = true,
-                ShowSourceCode = true
-            });
             Start(app, CreateContainer());
         }
 
@@ -47,6 +41,15 @@ namespace NuGet.Lucene.Web.OwinHost.Sample
             RegisterServices(container, app, config);
             ConfigureWebApi(config);
             RegisterShutdownCallback(app, container);
+
+            if (NuGetWebApiModule.ShowExceptionDetails)
+            {
+                app.UseErrorPage(new ErrorPageOptions
+                {
+                    ShowExceptionDetails = true,
+                    ShowSourceCode = true
+                });
+            }
 
             app.UseAutofacMiddleware(container);
             app.UseAutofacWebApi(config);
