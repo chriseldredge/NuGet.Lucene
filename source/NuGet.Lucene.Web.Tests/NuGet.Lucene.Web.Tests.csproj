@@ -149,6 +149,13 @@
     <Compile Include="Formatters\MultipartFormDataMediaFormatterTests.cs" />
     <Compile Include="Formatters\PackageFormDataMediaFormatterTests.cs" />
     <Compile Include="CrossOriginMessageHandlerTests.cs" />
+    <Compile Include="Middleware\AnonymousPackageManagerMiddlewareTests.cs" />
+    <Compile Include="Middleware\ApiKeyAuthenticationMiddlewareTests.cs" />
+    <Compile Include="Middleware\AuthenticationHandlerBaseTests.cs" />
+    <Compile Include="Middleware\AuthenticationMiddlewareBaseTests.cs" />
+    <Compile Include="Middleware\AuthenticationMiddlewareTestBase.cs" />
+    <Compile Include="Middleware\LocalRequestAuthenticationMiddlewareTest.cs" />
+    <Compile Include="Middleware\RoleMappingAuthenticationMiddlewareTests.cs" />
     <Compile Include="MirroringPackageRepositoryFactoryTests.cs" />
     <Compile Include="Models\ODataPackageTests.cs" />
     <Compile Include="Models\MirroringPackageRepositoryTests.cs" />

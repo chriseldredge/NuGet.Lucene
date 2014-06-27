@@ -10,7 +10,7 @@ using Lucene.Net.Linq;
 using Lucene.Net.Store;
 using NuGet.Lucene.Web.Authentication;
 using NuGet.Lucene.Web.Models;
-using NuGet.Lucene.Web.Modules;
+using NuGet.Lucene.Web.Middleware;
 using NuGet.Lucene.Web.Symbols;
 using Version = Lucene.Net.Util.Version;
 

@@ -1,43 +1,51 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
-using System.Security.Claims;
 using System.Security.Principal;
 using System.Threading.Tasks;
 using Microsoft.Owin;
-using Microsoft.Owin.Security;
-using Microsoft.Owin.Security.Infrastructure;
 using NuGet.Lucene.Web.Authentication;
 
-namespace NuGet.Lucene.Web.Modules
+namespace NuGet.Lucene.Web.Middleware
 {
-    public class RoleMappingAuthenticationMiddleware : AuthenticationMiddleware<DefaultAuthenticationOptions>
+    public class RoleMappingAuthenticationMiddleware : AuthenticationMiddlewareBase
     {
         public UserStore Store { get; set; }
+        private readonly NameValueCollection roleMappings;
 
         public RoleMappingAuthenticationMiddleware(OwinMiddleware next)
-            : base(next, new DefaultAuthenticationOptions(typeof(RoleMappingAuthenticationMiddleware).Name))
+            : this(next, NuGetWebApiModule.RoleMappings)
         {
         }
 
-        protected override AuthenticationHandler<DefaultAuthenticationOptions> CreateHandler()
+        public RoleMappingAuthenticationMiddleware(OwinMiddleware next, NameValueCollection roleMappings)
+            : base(next)
         {
-            return new RoleMappingAuthenticationHandler(Store);
+            this.roleMappings = roleMappings;
+        }
+
+        protected override AuthenticationHandlerBase CreateHandler()
+        {
+            return new RoleMappingAuthenticationHandler(this);
         }
 
         private class RoleMappingAuthenticationHandler : UserStoreAuthenticationHandler
         {
-            private static string[] Empty = new String[0];
+            private static readonly string[] Empty = new String[0];
+            private readonly RoleMappingAuthenticationMiddleware outer;
 
-            public RoleMappingAuthenticationHandler(UserStore store) : base(store)
+            public RoleMappingAuthenticationHandler(RoleMappingAuthenticationMiddleware outer)
+                : base(outer.Store)
             {
+                this.outer = outer;
             }
 
-            protected override Task<AuthenticationTicket> AuthenticateCoreAsync()
+            protected override Task AuthenticateCoreAsync()
             {
                 if (!IsAuthenticated)
                 {
-                    return EmptyTicket();
+                    return completedTask;
                 }
 
                 var apiUser = store.FindByUsername(CurrentUsername);
@@ -61,21 +69,17 @@ namespace NuGet.Lucene.Web.Modules
 
                 if (implicitGrants.Any())
                 {
-                    var identity = new ClaimsIdentity(
-                        new GenericIdentity(CurrentUsername, typeof(RoleMappingAuthenticationMiddleware).Name),
-                        implicitGrants.Select(g => new Claim(ClaimsIdentity.DefaultRoleClaimType, g)));
-                    return Task.FromResult(new AuthenticationTicket(identity, new AuthenticationProperties()));
+                    Request.User = new SupplementalRolePrincipalWrapper(Request.User, apiUser.Roles);
                 }
 
-                return EmptyTicket();
+                return completedTask;
             }
 
             private IEnumerable<string> GetUserRoles(IPrincipal user, IEnumerable<string> missingRoles)
             {
-                var roleMappings = NuGetWebApiModule.RoleMappings;
                 return missingRoles.Where(role =>
                 {
-                    var aliases = (roleMappings.Get(role) ?? "")
+                    var aliases = (outer.roleMappings.Get(role) ?? "")
                         .Split(new[] {","}, StringSplitOptions.RemoveEmptyEntries)
                         .Select(s => s.Trim());
 

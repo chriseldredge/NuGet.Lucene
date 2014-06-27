@@ -1,4 +1,4 @@
-namespace NuGet.Lucene.Web.Modules
+namespace NuGet.Lucene.Web.Middleware
 {
     public abstract class UserStoreAuthenticationHandler : AuthenticationHandlerBase
     {

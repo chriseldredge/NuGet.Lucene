@@ -1,29 +1,26 @@
 ﻿using System.Linq;
-using System.Security.Claims;
 using System.Security.Principal;
 using System.Threading.Tasks;
 using Microsoft.Owin;
-using Microsoft.Owin.Security;
-using Microsoft.Owin.Security.Infrastructure;
 using NuGet.Lucene.Web.Util;
 
-namespace NuGet.Lucene.Web.Modules
+namespace NuGet.Lucene.Web.Middleware
 {
     /// <summary>
     /// When request originates from a local network address,
     /// authenticate the user as <c>"LocalAdministrator"</c>
     /// and grant all roles in <see cref="RoleNames.All"/>.
     /// </summary>
-    public class LocalRequestAuthenticationMiddleware : AuthenticationMiddleware<DefaultAuthenticationOptions>
+    public class LocalRequestAuthenticationMiddleware : AuthenticationMiddlewareBase
     {
         public UserStore Store { get; set; }
 
         public LocalRequestAuthenticationMiddleware(OwinMiddleware next)
-            : base(next, new DefaultAuthenticationOptions(typeof(LocalRequestAuthenticationMiddleware).Name))
+            : base(next)
         {
         }
 
-        protected override AuthenticationHandler<DefaultAuthenticationOptions> CreateHandler()
+        protected override AuthenticationHandlerBase CreateHandler()
         {
             return new LocalRequestAuthenticationHandler(Store);
         }
@@ -35,18 +32,17 @@ namespace NuGet.Lucene.Web.Modules
             {
             }
 
-            protected override Task<AuthenticationTicket> AuthenticateCoreAsync()
+            protected override Task AuthenticateCoreAsync()
             {
                 if (IsAuthenticated || !Request.IsLocal())
                 {
-                    return EmptyTicket();
+                    return completedTask;
                 }
 
                 var identity = new GenericIdentity(store.LocalAdministratorUsername, typeof(LocalRequestAuthenticationMiddleware).Name);
-                var claims = RoleNames.All.Select(r => new Claim(identity.RoleClaimType, r));
-                var id = new ClaimsIdentity(identity, claims);
-                var ticket = new AuthenticationTicket(id, new AuthenticationProperties());
-                return Task.FromResult(ticket);
+                Request.User = new GenericPrincipal(identity, RoleNames.All.ToArray());
+
+                return completedTask;
             }
 
         }
