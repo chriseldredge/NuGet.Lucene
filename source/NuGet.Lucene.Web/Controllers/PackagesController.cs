@@ -8,6 +8,7 @@ using System.Net.Mime;
 using System.Threading.Tasks;
 using System.Web.Http;
 using AspNet.WebApi.HtmlMicrodataFormatter;
+using Lucene.Net.Linq;
 using NuGet.Lucene.Util;
 using NuGet.Lucene.Web.Models;
 using NuGet.Lucene.Web.Symbols;
@@ -157,20 +158,31 @@ namespace NuGet.Lucene.Web.Controllers
                 SortDirection = order
             };
 
-            var queryable = LuceneRepository.Search(criteria).LatestOnly(includePrerelease);
+            LuceneQueryStatistics stats = null;
+            var queryable = LuceneRepository.Search(criteria).CaptureStatistics(s => stats = s).LatestOnly(includePrerelease);
 
-            var totalHits = queryable.Count();
             var hits = queryable.Skip(offset).Take(count).ToList();
 
             dynamic result = new ExpandoObject();
+
+            // criteria
             result.Query = query;
             result.IncludePrerelease = includePrerelease;
-            result.TotalHits = totalHits;
-            result.Hits = hits;
-            result.Offset = offset;
+            result.TotalHits = stats.TotalHits;
             result.OriginFilter = originFilter;
             result.Sort = sort;
             result.Order = order;
+
+            // statistics
+            result.Offset = stats.SkippedHits;
+            result.Count = stats.RetrievedDocuments;
+            result.ElapsedPreparationTime = stats.ElapsedPreparationTime;
+            result.ElapsedSearchTime = stats.ElapsedSearchTime;
+            result.ElapsedRetrievalTime = stats.ElapsedRetrievalTime;
+            result.ComputedQuery = stats.Query.ToString().Replace("`\b\u0000\u0000\u0000\u0001", "true").Replace("`\b\u0000\u0000\u0000\u0000", "false");
+
+            // hits
+            result.Hits = hits;
             return result;
         }
 
