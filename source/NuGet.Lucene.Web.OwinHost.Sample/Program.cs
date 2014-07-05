@@ -12,26 +12,21 @@ namespace NuGet.Lucene.Web.OwinHost.Sample
             var log = LogManager.GetCurrentClassLogger();
             const string baseAddress = "http://*:9001/";
 
-            var cancelToken = new CancellationTokenSource();
-
-            Console.TreatControlCAsInput = false;
-            Console.CancelKeyPress += (_, __) => cancelToken.Cancel();
-
             try
             {
                 using (WebApp.Start<Startup>(baseAddress))
                 {
                     Console.WriteLine("Listening on " + baseAddress + ". Press <ctrl>+c to stop listening.");
-                    cancelToken.Token.WaitHandle.WaitOne();
+                    Console.WriteLine("Press enter to stop.");
+                    Console.ReadLine();
                 }
             }
             catch (Exception ex)
             {
                 log.Fatal(m => m(ex.Message), ex);
+                Console.WriteLine("Press enter to quit.");
+                Console.ReadLine();
             }
-
-            Console.WriteLine("Press enter to quit.");
-            Console.ReadLine();
         }
     }
 }
