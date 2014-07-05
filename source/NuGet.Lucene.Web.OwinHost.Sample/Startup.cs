@@ -14,7 +14,6 @@ using Microsoft.AspNet.SignalR.Infrastructure;
 using Microsoft.Owin;
 using Microsoft.Owin.Diagnostics;
 using Microsoft.Owin.Infrastructure;
-using Microsoft.Owin.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
@@ -103,6 +102,8 @@ namespace NuGet.Lucene.Web.OwinHost.Sample
             statusHubBroadcaster.Start();
 
             container.CurrentScopeEnding += (s, e) => statusHubBroadcaster.Dispose();
+
+            Swashbuckle.Bootstrapper.Init(config);
         }
 
         private static void ConfigureWebApi(HttpConfiguration config)
