@@ -9,6 +9,7 @@ namespace NuGet.Lucene.Web.OwinHost.Sample
     {
         static void Main(string[] args)
         {
+            var log = LogManager.GetCurrentClassLogger();
             const string baseAddress = "http://*:9001/";
 
             var cancelToken = new CancellationTokenSource();
@@ -26,7 +27,7 @@ namespace NuGet.Lucene.Web.OwinHost.Sample
             }
             catch (Exception ex)
             {
-                LogManager.GetCurrentClassLogger().Fatal(m => m(ex.Message), ex);
+                log.Fatal(m => m(ex.Message), ex);
             }
 
             Console.WriteLine("Press enter to quit.");
