@@ -25,7 +25,7 @@ namespace NuGet.Lucene.Web.Tests.Middleware
         {
             store = new UserStore(new LuceneDataProvider(new RAMDirectory(), Version.LUCENE_30));
             mappings = new NameValueCollection();
-            middleware = new RoleMappingAuthenticationMiddleware(next, mappings) {Store = store};
+            middleware = new RoleMappingAuthenticationMiddleware(next) {Store = store, Settings = new NuGetWebApiSettings(NuGetWebApiSettings.DefaultAppSettingPrefix, new NameValueCollection(), mappings)};
             domainAdminUser = new ApiUserPrincipal(new GenericIdentity("T-Rex"), new [] {"Domain Administrators"});
         }
 

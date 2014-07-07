@@ -36,12 +36,14 @@ namespace NuGet.Lucene.Web.OwinHost.Sample
 
         private static void Start(IAppBuilder app, IContainer container)
         {
+            var settings = container.Resolve<INuGetWebApiSettings>();
+
             var config = new HttpConfiguration();
             RegisterServices(container, app, config);
-            ConfigureWebApi(config);
+            ConfigureWebApi(config, settings);
             RegisterShutdownCallback(app, container);
-
-            if (NuGetWebApiModule.ShowExceptionDetails)
+            
+            if (settings.ShowExceptionDetails)
             {
                 app.UseErrorPage(new ErrorPageOptions
                 {
@@ -62,7 +64,6 @@ namespace NuGet.Lucene.Web.OwinHost.Sample
 
             if (token != CancellationToken.None)
             {
-                //TODO: does not dispose lucene objects
                 token.Register(container.Dispose);
             }
             else
@@ -89,8 +90,9 @@ namespace NuGet.Lucene.Web.OwinHost.Sample
             apiMapper.MapApiRoutes(config);
             apiMapper.MapODataRoutes(config);
 
+            var settings = container.Resolve<INuGetWebApiSettings>();
             var signalRMapper = container.Resolve<SignalRMapper>();
-            var hubConfiguration = AutofacHubConfiguration.CreateHubConfiguration(container);
+            var hubConfiguration = AutofacHubConfiguration.CreateHubConfiguration(container, settings);
             signalRMapper.MapSignalR(app, hubConfiguration);
 
             var statusHubBroadcaster = new StatusHubUpdateBroadcaster
@@ -106,13 +108,13 @@ namespace NuGet.Lucene.Web.OwinHost.Sample
             Swashbuckle.Bootstrapper.Init(config);
         }
 
-        private static void ConfigureWebApi(HttpConfiguration config)
+        private static void ConfigureWebApi(HttpConfiguration config, INuGetWebApiSettings settings)
         {
-            config.IncludeErrorDetailPolicy = NuGetWebApiModule.ShowExceptionDetails
+            config.IncludeErrorDetailPolicy = settings.ShowExceptionDetails
                 ? IncludeErrorDetailPolicy.Always
                 : IncludeErrorDetailPolicy.Default;
 
-            config.MessageHandlers.Add(new CrossOriginMessageHandler(NuGetWebApiModule.EnableCrossDomainRequests));
+            config.MessageHandlers.Add(new CrossOriginMessageHandler(settings.EnableCrossDomainRequests));
             config.Filters.Add(new ExceptionLoggingFilter());
 
             var documentation = new HtmlDocumentation();

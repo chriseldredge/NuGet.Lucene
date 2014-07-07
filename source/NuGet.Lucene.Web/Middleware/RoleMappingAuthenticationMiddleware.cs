@@ -12,33 +12,27 @@ namespace NuGet.Lucene.Web.Middleware
     public class RoleMappingAuthenticationMiddleware : AuthenticationMiddlewareBase
     {
         public UserStore Store { get; set; }
-        private readonly NameValueCollection roleMappings;
+        public INuGetWebApiSettings Settings { get; set; }
 
         public RoleMappingAuthenticationMiddleware(OwinMiddleware next)
-            : this(next, NuGetWebApiModule.RoleMappings)
-        {
-        }
-
-        public RoleMappingAuthenticationMiddleware(OwinMiddleware next, NameValueCollection roleMappings)
             : base(next)
         {
-            this.roleMappings = roleMappings;
         }
 
         protected override AuthenticationHandlerBase CreateHandler()
         {
-            return new RoleMappingAuthenticationHandler(this);
+            return new RoleMappingAuthenticationHandler(Store, Settings.RoleMappings);
         }
 
         private class RoleMappingAuthenticationHandler : UserStoreAuthenticationHandler
         {
             private static readonly string[] Empty = new String[0];
-            private readonly RoleMappingAuthenticationMiddleware outer;
+            private readonly NameValueCollection roleMappings;
 
-            public RoleMappingAuthenticationHandler(RoleMappingAuthenticationMiddleware outer)
-                : base(outer.Store)
+            public RoleMappingAuthenticationHandler(UserStore store, NameValueCollection roleMappings)
+                : base(store)
             {
-                this.outer = outer;
+                this.roleMappings = roleMappings;
             }
 
             protected override Task AuthenticateCoreAsync()
@@ -79,7 +73,7 @@ namespace NuGet.Lucene.Web.Middleware
             {
                 return missingRoles.Where(role =>
                 {
-                    var aliases = (outer.roleMappings.Get(role) ?? "")
+                    var aliases = (roleMappings.Get(role) ?? "")
                         .Split(new[] {","}, StringSplitOptions.RemoveEmptyEntries)
                         .Select(s => s.Trim());
 

@@ -9,25 +9,25 @@ namespace NuGet.Lucene.Web.SignalR
 {
     public class AutofacHubConfiguration
     {
-        public static HubConfiguration CreateHubConfiguration(ILifetimeScope lifetimeScope)
+        public static HubConfiguration CreateHubConfiguration(ILifetimeScope lifetimeScope, INuGetWebApiSettings settings)
         {
             var hubConfiguration = new HubConfiguration
             {
-                EnableDetailedErrors = NuGetWebApiModule.ShowExceptionDetails,
-                EnableJSONP = NuGetWebApiModule.EnableCrossDomainRequests,
+                EnableDetailedErrors = settings.ShowExceptionDetails,
+                EnableJSONP = settings.EnableCrossDomainRequests,
                 Resolver = new AutofacDependencyResolver(lifetimeScope)
             };
 
             var pipeline = hubConfiguration.Resolver.Resolve<IHubPipeline>();
             pipeline.AddModule(new SignalRLoggingModule());
 
-            var settings = new JsonSerializerSettings
+            var jsonSettings = new JsonSerializerSettings
             {
                 ContractResolver = new SelectiveCamelCaseContractResolver(),
                 Converters = { new StringEnumConverter() },
             };
 
-            var jsonNetSerializer = JsonSerializer.Create(settings);
+            var jsonNetSerializer = JsonSerializer.Create(jsonSettings);
 
             hubConfiguration.Resolver.Register(typeof(JsonSerializer), () => jsonNetSerializer);
 

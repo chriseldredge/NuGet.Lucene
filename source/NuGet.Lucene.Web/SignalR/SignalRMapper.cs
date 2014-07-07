@@ -7,12 +7,13 @@ namespace NuGet.Lucene.Web.SignalR
     public class SignalRMapper
     {
         public NuGetWebApiRouteMapper ApiRouteMapper { get; set; }
+        public INuGetWebApiSettings Settings { get; set; }
 
         public void MapSignalR(IAppBuilder app, HubConfiguration hubConfiguration)
         {
             app.Map("/" + ApiRouteMapper.SignalrRoutePath, map =>
             {
-                if (NuGetWebApiModule.EnableCrossDomainRequests)
+                if (Settings.EnableCrossDomainRequests)
                 {
                     map.UseCors(CorsOptions.AllowAll);
                 }

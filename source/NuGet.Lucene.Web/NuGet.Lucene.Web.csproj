@@ -171,6 +171,7 @@
     <Compile Include="Formatters\NuGetHtmlMicrodataFormatter.cs" />
     <Compile Include="Formatters\PackageHtmlSerializer.cs" />
     <Compile Include="Formatters\PackageSummaryListSerializer.cs" />
+    <Compile Include="INuGetWebApiSettings.cs" />
     <Compile Include="Models\DelegatingPackageRepository.cs" />
     <Compile Include="Models\KeyChangeRequest.cs" />
     <Compile Include="Models\MirroringPackageRepository.cs" />
@@ -201,6 +202,8 @@
     <Compile Include="Models\PackageSpec.cs" />
     <Compile Include="Middleware\ApiKeyAuthenticationMiddleware.cs" />
     <Compile Include="NuGetWebApiODataModelBuilder.cs" />
+    <Compile Include="NuGetWebApiSettings.cs" />
+    <Compile Include="NuGetWebApiWebHostSettings.cs" />
     <Compile Include="OData\Formatter\Serialization\DefaultStreamAwareEntityTypeSerializer.cs" />
     <Compile Include="OData\Formatter\Serialization\ODataPackageDefaultStreamAwareEntityTypeSerializer.cs" />
     <Compile Include="OData\Formatter\Serialization\ODataPackageDefaultStreamAwareSerializerProvider.cs" />

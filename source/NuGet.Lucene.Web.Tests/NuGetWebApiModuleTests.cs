@@ -70,7 +70,7 @@ namespace NuGet.Lucene.Web.Tests
             public Mock<ILuceneRepositoryConfigurator> Configurator { get; private set; }
             public Mock<ILucenePackageRepository> Repository { get; private set; }
 
-            protected override ILuceneRepositoryConfigurator InitializeRepositoryConfigurator()
+            protected override ILuceneRepositoryConfigurator InitializeRepositoryConfigurator(INuGetWebApiSettings settings)
             {
                 Configurator = new Mock<ILuceneRepositoryConfigurator>();
                 Repository = new Mock<ILucenePackageRepository>();
@@ -78,7 +78,7 @@ namespace NuGet.Lucene.Web.Tests
                 return Configurator.Object;
             }
 
-            protected override UserStore InitializeUserStore()
+            protected override UserStore InitializeUserStore(INuGetWebApiSettings settings)
             {
                 return new UserStore(null);
             }
