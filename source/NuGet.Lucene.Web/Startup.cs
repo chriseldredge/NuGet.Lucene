@@ -1,5 +1,3 @@
-﻿using System.IO;
-using System.Net;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,27 +21,38 @@ using NuGet.Lucene.Web.MessageHandlers;
 using NuGet.Lucene.Web.SignalR;
 using Owin;
 
-namespace NuGet.Lucene.Web.OwinHost.Sample
+namespace NuGet.Lucene.Web
 {
     public class Startup
     {
+        public INuGetWebApiSettings Settings { get; set; }
+
         public void Configuration(IAppBuilder app)
         {
-            EnvironmentUtility.SetRunningFromCommandLine();
+            SetNuGetNotRunningInVisualStudio();
             SignatureConversions.AddConversions(app);
+            Settings = CreateSettings();
             Start(app, CreateContainer());
         }
 
-        private static void Start(IAppBuilder app, IContainer container)
+        protected virtual INuGetWebApiSettings CreateSettings()
         {
-            var settings = container.Resolve<INuGetWebApiSettings>();
+            return new NuGetWebApiSettings();
+        }
 
-            var config = new HttpConfiguration();
-            RegisterServices(container, app, config);
-            ConfigureWebApi(config, settings);
-            RegisterShutdownCallback(app, container);
-            
-            if (settings.ShowExceptionDetails)
+        protected virtual void SetNuGetNotRunningInVisualStudio()
+        {
+            // wherein "Command Line" means anything other than Visual Studio:
+            EnvironmentUtility.SetRunningFromCommandLine();
+        }
+
+        protected virtual void Start(IAppBuilder app, IContainer container)
+        {
+            var config = CreateHttpConfiguration();
+
+            ConfigureWebApi(config);
+
+            if (Settings.ShowExceptionDetails)
             {
                 app.UseErrorPage(new ErrorPageOptions
                 {
@@ -55,9 +64,19 @@ namespace NuGet.Lucene.Web.OwinHost.Sample
             app.UseAutofacMiddleware(container);
             app.UseAutofacWebApi(config);
             app.UseWebApi(config);
+
+            RegisterServices(container, app, config);
+            
+            RegisterShutdownCallback(app, container);
+        }
+    
+        protected virtual HttpConfiguration CreateHttpConfiguration()
+        {
+            var config = new HttpConfiguration();
+            return config;
         }
 
-        private static void RegisterShutdownCallback(IAppBuilder app, IContainer container)
+        protected virtual void RegisterShutdownCallback(IAppBuilder app, IContainer container)
         {
             var context = new OwinContext(app.Properties);
             var token = context.Get<CancellationToken>("host.OnAppDisposing");
@@ -72,27 +91,25 @@ namespace NuGet.Lucene.Web.OwinHost.Sample
             }
         }
 
-        private static IContainer CreateContainer()
+        protected virtual IContainer CreateContainer()
         {
             var builder = new ContainerBuilder();
-            builder.RegisterModule<NuGetWebApiModule>();
+            builder.RegisterModule(new NuGetWebApiModule(Settings));
             builder.RegisterModule<SignalRModule>();
 
             return builder.Build();
         }
 
-        private static void RegisterServices(IContainer container, IAppBuilder app, HttpConfiguration config)
+        protected virtual void RegisterServices(IContainer container, IAppBuilder app, HttpConfiguration config)
         {
-            var listener = (HttpListener)app.Properties["System.Net.HttpListener"];
-            listener.AuthenticationSchemes = AuthenticationSchemes.IntegratedWindowsAuthentication | AuthenticationSchemes.Anonymous;
-            
             var apiMapper = container.Resolve<NuGetWebApiRouteMapper>();
+
+            apiMapper.MapNuGetClientRedirectRoutes(config);
             apiMapper.MapApiRoutes(config);
             apiMapper.MapODataRoutes(config);
 
-            var settings = container.Resolve<INuGetWebApiSettings>();
             var signalRMapper = container.Resolve<SignalRMapper>();
-            var hubConfiguration = AutofacHubConfiguration.CreateHubConfiguration(container, settings);
+            var hubConfiguration = AutofacHubConfiguration.CreateHubConfiguration(container, Settings);
             signalRMapper.MapSignalR(app, hubConfiguration);
 
             var statusHubBroadcaster = new StatusHubUpdateBroadcaster
@@ -102,31 +119,24 @@ namespace NuGet.Lucene.Web.OwinHost.Sample
             };
 
             statusHubBroadcaster.Start();
-
             container.CurrentScopeEnding += (s, e) => statusHubBroadcaster.Dispose();
-
-            Swashbuckle.Bootstrapper.Init(config);
         }
 
-        private static void ConfigureWebApi(HttpConfiguration config, INuGetWebApiSettings settings)
+        protected virtual void ConfigureWebApi(HttpConfiguration config)
         {
-            config.IncludeErrorDetailPolicy = settings.ShowExceptionDetails
+            config.IncludeErrorDetailPolicy = Settings.ShowExceptionDetails
                 ? IncludeErrorDetailPolicy.Always
                 : IncludeErrorDetailPolicy.Default;
 
-            config.MessageHandlers.Add(new CrossOriginMessageHandler(settings.EnableCrossDomainRequests));
+            config.MessageHandlers.Add(new CrossOriginMessageHandler(Settings.EnableCrossDomainRequests));
             config.Filters.Add(new ExceptionLoggingFilter());
 
             var documentation = new HtmlDocumentation();
-            documentation.Load(Directory.GetFiles(".", "*.xml", SearchOption.TopDirectoryOnly));
+            documentation.Load();
             config.Services.Replace(typeof(IDocumentationProvider), new WebApiHtmlDocumentationProvider(documentation));
-            config.Services.Replace(typeof(IExceptionHandler), new ExceptionHandler());
+            config.Services.Replace(typeof(IExceptionHandler), new LoggingExceptionHandler());
 
-            var formatter = new NuGetHtmlMicrodataFormatter();
-            formatter.SupportedMediaTypes.Add(new MediaTypeWithQualityHeaderValue("application/xml"));
-            formatter.SupportedMediaTypes.Add(new MediaTypeWithQualityHeaderValue("text/xml"));
-            formatter.Settings.Indent = true;
-            formatter.Title = "Klondike API";
+            var formatter = CreateMicrodataFormatter();
 
             config.Formatters.Add(formatter);
             config.Formatters.Remove(config.Formatters.XmlFormatter);
@@ -137,12 +147,19 @@ namespace NuGet.Lucene.Web.OwinHost.Sample
             config.Formatters.JsonFormatter.SerializerSettings.Formatting = Formatting.Indented;
         }
 
-        private class ExceptionHandler : IExceptionHandler
+        protected virtual NuGetHtmlMicrodataFormatter CreateMicrodataFormatter()
+        {
+            var formatter = new NuGetHtmlMicrodataFormatter();
+            formatter.SupportedMediaTypes.Add(new MediaTypeWithQualityHeaderValue("application/xml"));
+            formatter.SupportedMediaTypes.Add(new MediaTypeWithQualityHeaderValue("text/xml"));
+            return formatter;
+        }
+
+        private class LoggingExceptionHandler : IExceptionHandler
         {
             public Task HandleAsync(ExceptionHandlerContext context, CancellationToken cancellationToken)
             {
-                UnhandledExceptionLogger.LogException(context.Exception);
-                return Task.FromResult(0);
+                return Task.Factory.StartNew(() => UnhandledExceptionLogger.LogException(context.Exception), cancellationToken);
             }
         }
     }

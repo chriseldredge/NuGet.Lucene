@@ -48,19 +48,21 @@ namespace NuGet.Lucene.Web
                                 routeTemplate,
                                 new { },
                                 new { userAgent = new NuGetUserAgentConstraint() },
-                                new RedirectHandler(RouteNames.Packages.Feed) { AppendTrailingSlash = true });
+                                new ODataRedirectHandler(RouteNames.Packages.Feed));
 
+            // redirect e.g. PUT /api/odata to PUT /api/packages
             config.Routes.MapHttpRoute(RouteNames.Redirect.Upload,
                                 ODataRoutePath,
                                 new { },
                                 new { method = new HttpMethodConstraint(HttpMethod.Put) },
                                 new RedirectHandler(RouteNames.Packages.Upload));
 
+            // redirect e.g. DELETE /api/odata/Foo/1.0 to DELETE /api/packages/Foo/1.0
             config.Routes.MapHttpRoute(RouteNames.Redirect.Delete,
                                 ODataRoutePath + "/{id}/{version}",
                                 new { },
                                 new { method = new HttpMethodConstraint(HttpMethod.Delete) },
-                                new DeletePackageRedirectHandler());
+                                new RedirectHandler(RouteNames.Packages.Delete));
         }
 
         public void MapApiRoutes(HttpConfiguration config)
@@ -150,7 +152,7 @@ namespace NuGet.Lucene.Web
 
             routes.MapHttpRoute(RouteNames.Packages.Info,
                                 pathPrefix + "packages/{id}/{version}",
-                                new { controller = "Packages", action = "GetPackageInfo", version = "" },
+                                new { controller = "Packages", action = "GetPackageInfo", version = RouteParameter.Optional },
                                 new { httpMethod = new HttpMethodConstraint(HttpMethod.Get), version = new OptionalSemanticVersionConstraint() });
             
             routes.MapHttpRoute(RouteNames.Packages.Delete,

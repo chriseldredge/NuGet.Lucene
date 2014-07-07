@@ -41,14 +41,19 @@ namespace NuGet.Lucene.Web.Tests
         [Test]
         [TestCase("api/packages/Sample", "")]
         [TestCase("api/packages/Sample/0.9", "0.9")]
-        public void GetPackageInfo(string uri, object version)
+        public void GetPackageInfo(string uri, string version)
         {
-            Assert.That(routes, HasRouteFor(uri)
+            var constraint = HasRouteFor(uri)
                 .WithController("Packages")
                 .WithAction("GetPackageInfo")
-                .WithRouteValue("id", "Sample")
-                .WithRouteValue("version", version));
-        }
+                .WithRouteValue("id", "Sample");
 
+            if (!string.IsNullOrEmpty(version))
+            {
+                constraint = constraint.WithRouteValue("version", version);
+            }
+
+            Assert.That(routes, constraint);
+        }
     }
 }

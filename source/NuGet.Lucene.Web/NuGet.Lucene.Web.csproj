@@ -45,12 +45,19 @@
       <HintPath>..\..\packages\Autofac.3.5.0\lib\net40\Autofac.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Autofac.Integration.Owin">
+      <HintPath>..\..\packages\Autofac.Owin.3.0.1\lib\net45\Autofac.Integration.Owin.dll</HintPath>
+    </Reference>
     <Reference Include="Autofac.Integration.SignalR">
       <HintPath>..\..\packages\Autofac.SignalR2.3.0.2\lib\net45\Autofac.Integration.SignalR.dll</HintPath>
     </Reference>
     <Reference Include="Autofac.Integration.WebApi">
       <HintPath>..\..\packages\Autofac.WebApi2.3.3.3\lib\net45\Autofac.Integration.WebApi.dll</HintPath>
       <Private>True</Private>
+    </Reference>
+    <Reference Include="Autofac.Integration.WebApi.Owin, Version=3.0.0.0, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\packages\Autofac.WebApi2.Owin.3.0.1\lib\net45\Autofac.Integration.WebApi.Owin.dll</HintPath>
     </Reference>
     <Reference Include="Common.Logging.Core">
       <HintPath>..\..\packages\Common.Logging.Core.2.2.0\lib\net40\Common.Logging.Core.dll</HintPath>
@@ -87,6 +94,9 @@
     <Reference Include="Microsoft.Owin.Cors, Version=2.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\packages\Microsoft.Owin.Cors.2.1.0\lib\net45\Microsoft.Owin.Cors.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Diagnostics">
+      <HintPath>..\..\packages\Microsoft.Owin.Diagnostics.2.1.0\lib\net40\Microsoft.Owin.Diagnostics.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Owin.Security, Version=2.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -148,6 +158,9 @@
       <HintPath>..\..\packages\Microsoft.AspNet.WebApi.OData.5.2.0\lib\net45\System.Web.Http.OData.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.Web.Http.Owin">
+      <HintPath>..\..\packages\Microsoft.AspNet.WebApi.Owin.5.2.0\lib\net45\System.Web.Http.Owin.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="WindowsBase" />
@@ -167,7 +180,6 @@
     <Compile Include="Controllers\PackagesODataController.cs" />
     <Compile Include="Controllers\SourceFilesController.cs" />
     <Compile Include="Controllers\SymbolsController.cs" />
-    <Compile Include="DeletePackageRedirectHandler.cs" />
     <Compile Include="Formatters\NuGetHtmlMicrodataFormatter.cs" />
     <Compile Include="Formatters\PackageHtmlSerializer.cs" />
     <Compile Include="Formatters\PackageSummaryListSerializer.cs" />
@@ -204,6 +216,7 @@
     <Compile Include="NuGetWebApiODataModelBuilder.cs" />
     <Compile Include="NuGetWebApiSettings.cs" />
     <Compile Include="NuGetWebApiWebHostSettings.cs" />
+    <Compile Include="ODataRedirectHandler.cs" />
     <Compile Include="OData\Formatter\Serialization\DefaultStreamAwareEntityTypeSerializer.cs" />
     <Compile Include="OData\Formatter\Serialization\ODataPackageDefaultStreamAwareEntityTypeSerializer.cs" />
     <Compile Include="OData\Formatter\Serialization\ODataPackageDefaultStreamAwareSerializerProvider.cs" />
@@ -231,6 +244,7 @@
     <Compile Include="SignalR\SignalRModule.cs" />
     <Compile Include="SignalR\StatusHubUpdateBroadcaster.cs" />
     <Compile Include="SimpleParameterInfo.cs" />
+    <Compile Include="Startup.cs" />
     <Compile Include="Symbols\ISymbolSource.cs" />
     <Compile Include="Symbols\SymbolSource.cs" />
     <Compile Include="Symbols\SymbolSourceMapper.cs" />

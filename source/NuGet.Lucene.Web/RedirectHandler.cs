@@ -13,23 +13,10 @@ namespace NuGet.Lucene.Web
     public class RedirectHandler : HttpMessageHandler
     {
         protected readonly string routeName;
-        protected readonly object routeValues;
-
-        /// <summary>
-        /// When true, append a trailing slash to the resolved URL if one
-        /// is not already present.
-        /// </summary>
-        public bool AppendTrailingSlash { get; set; }
 
         public RedirectHandler(string routeName)
-            : this(routeName, new { })
-        {
-        }
-
-        public RedirectHandler(string routeName, object routeValues)
         {
             this.routeName = routeName;
-            this.routeValues = routeValues;
         }
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -41,12 +28,19 @@ namespace NuGet.Lucene.Web
 
         protected virtual Uri GetRedirectUri(HttpRequestMessage request)
         {
-            var url = new UrlHelper(request).Link(routeName, routeValues);
-            if (AppendTrailingSlash && !url.EndsWith("/"))
+            var url = GetRedirectLink(request);
+
+            if (url == null)
             {
-                url = url + "/";
+                throw new InvalidOperationException(string.Format("No route named {0} matched request.", routeName));
             }
+
             return new Uri(url);
+        }
+
+        protected virtual string GetRedirectLink(HttpRequestMessage request)
+        {
+            return new UrlHelper(request).Link(routeName, request.GetRouteData().Values);
         }
     }
 }

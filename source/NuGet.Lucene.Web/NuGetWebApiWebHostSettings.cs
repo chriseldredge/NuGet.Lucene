@@ -1,4 +1,5 @@
-﻿using System.Web.Hosting;
+﻿using System.IO;
+using System.Web.Hosting;
 
 namespace NuGet.Lucene.Web
 {
@@ -6,8 +7,10 @@ namespace NuGet.Lucene.Web
     {
         protected override string MapPathFromAppSetting(string key, string defaultValue)
         {
-            var value = base.MapPathFromAppSetting(key, defaultValue);
-            return HostingEnvironment.MapPath(value);
+            var path = base.GetAppSetting(key, defaultValue);
+            if (string.IsNullOrEmpty(path)) return path;
+            if (Path.IsPathRooted(path)) return path;
+            return HostingEnvironment.MapPath(path);
         }
     }
 }
