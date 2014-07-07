@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Net.Http;
 using System.Web.Http;
+using System.Web.Http.OData.Extensions;
 using System.Web.Http.OData.Formatter;
 using System.Web.Http.OData.Formatter.Deserialization;
 using System.Web.Http.OData.Routing.Conventions;
@@ -199,7 +200,7 @@ namespace NuGet.Lucene.Web
 
             conventions = conventions.Select(c => new ControllerAliasingODataRoutingConvention(c, "Packages", "PackagesOData")).Cast<IODataRoutingConvention>().ToList();
             
-            config.Routes.MapODataRoute(
+            config.Routes.MapODataServiceRoute(
                 RouteNames.Packages.Feed,
                 ODataRoutePath,
                 builder.Model,

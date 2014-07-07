@@ -22,7 +22,7 @@ namespace NuGet.Lucene.Web.Controllers
     {
         public IMirroringPackageRepository Repository { get; set; }
 
-        [Queryable(PageSize = 100, HandleNullPropagation = HandleNullPropagationOption.False)]
+        [EnableQuery(PageSize = 100, HandleNullPropagation = HandleNullPropagationOption.False)]
         public IQueryable<ODataPackage> Get()
         {
             return Repository.GetPackages().Select(p => p.ToODataPackage()).AsQueryable();
@@ -56,7 +56,7 @@ namespace NuGet.Lucene.Web.Controllers
 
         [HttpPost]
         [HttpGet]
-        [Queryable(PageSize = 100, HandleNullPropagation = HandleNullPropagationOption.False)]
+        [EnableQuery(PageSize = 100, HandleNullPropagation = HandleNullPropagationOption.False)]
         public IQueryable<ODataPackage> Search(
             [FromODataUri] string searchTerm,
             [FromODataUri] string targetFramework,
@@ -97,7 +97,7 @@ namespace NuGet.Lucene.Web.Controllers
 
         [HttpPost]
         [HttpGet]
-        [Queryable(PageSize = 100, HandleNullPropagation = HandleNullPropagationOption.False)]
+        [EnableQuery(PageSize = 100, HandleNullPropagation = HandleNullPropagationOption.False)]
         public IHttpActionResult FindPackagesById([FromODataUri] string id)
         {
             if (string.IsNullOrWhiteSpace(id))
@@ -112,7 +112,7 @@ namespace NuGet.Lucene.Web.Controllers
 
         [HttpPost]
         [HttpGet]
-        [Queryable(PageSize = 100, HandleNullPropagation = HandleNullPropagationOption.False)]
+        [EnableQuery(PageSize = 100, HandleNullPropagation = HandleNullPropagationOption.False)]
         public IHttpActionResult GetUpdates(
             [FromODataUri] string packageIds,
             [FromODataUri] string versions,
