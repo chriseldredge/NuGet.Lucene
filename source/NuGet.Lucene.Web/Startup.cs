@@ -107,6 +107,7 @@ namespace NuGet.Lucene.Web
             apiMapper.MapNuGetClientRedirectRoutes(config);
             apiMapper.MapApiRoutes(config);
             apiMapper.MapODataRoutes(config);
+            apiMapper.MapSymbolSourceRoutes(config);
 
             var signalRMapper = container.Resolve<SignalRMapper>();
             var hubConfiguration = AutofacHubConfiguration.CreateHubConfiguration(container, Settings);

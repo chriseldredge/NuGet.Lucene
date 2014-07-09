@@ -44,7 +44,7 @@ namespace NuGet.Lucene.Web
             builder.RegisterInstance(userStore);
 
             var symbolsPath = settings.SymbolsPath;
-            builder.RegisterInstance(new SymbolSource { SymbolsPath = symbolsPath }).As<ISymbolSource>();
+            builder.RegisterInstance(new SymbolSource { SymbolsPath = symbolsPath }).As<ISymbolSource>().PropertiesAutowired();
             builder.RegisterInstance(new SymbolTools
             {
                 SymbolPath = symbolsPath,
