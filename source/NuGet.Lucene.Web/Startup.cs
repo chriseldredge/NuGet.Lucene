@@ -11,6 +11,7 @@ using Microsoft.AspNet.SignalR;
 using Microsoft.AspNet.SignalR.Infrastructure;
 using Microsoft.Owin;
 using Microsoft.Owin.Diagnostics;
+using Microsoft.Owin.Extensions;
 using Microsoft.Owin.Infrastructure;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -25,6 +26,7 @@ namespace NuGet.Lucene.Web
 {
     public class Startup
     {
+        protected SignalRMapper signalRMapper;
         public INuGetWebApiSettings Settings { get; set; }
 
         public void Configuration(IAppBuilder app)
@@ -60,10 +62,11 @@ namespace NuGet.Lucene.Web
                     ShowSourceCode = true
                 });
             }
-
+            
             app.UseAutofacMiddleware(container);
             app.UseAutofacWebApi(config);
             app.UseWebApi(config);
+            RegisterSignalR(container, app);
 
             RegisterServices(container, app, config);
             
@@ -72,8 +75,7 @@ namespace NuGet.Lucene.Web
     
         protected virtual HttpConfiguration CreateHttpConfiguration()
         {
-            var config = new HttpConfiguration();
-            return config;
+            return new HttpConfiguration();
         }
 
         protected virtual void RegisterShutdownCallback(IAppBuilder app, IContainer container)
@@ -108,8 +110,11 @@ namespace NuGet.Lucene.Web
             apiMapper.MapApiRoutes(config);
             apiMapper.MapODataRoutes(config);
             apiMapper.MapSymbolSourceRoutes(config);
+        }
 
-            var signalRMapper = container.Resolve<SignalRMapper>();
+        protected virtual void RegisterSignalR(IContainer container, IAppBuilder app)
+        {
+            signalRMapper = container.Resolve<SignalRMapper>();
             var hubConfiguration = AutofacHubConfiguration.CreateHubConfiguration(container, Settings);
             signalRMapper.MapSignalR(app, hubConfiguration);
 
