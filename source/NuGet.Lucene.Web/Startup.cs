@@ -68,6 +68,8 @@ namespace NuGet.Lucene.Web
             app.UseWebApi(config);
             RegisterSignalR(container, app);
 
+            app.UseStageMarker(PipelineStage.MapHandler);
+
             RegisterServices(container, app, config);
             
             RegisterShutdownCallback(app, container);
