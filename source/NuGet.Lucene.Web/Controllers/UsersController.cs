@@ -82,6 +82,12 @@ namespace NuGet.Lucene.Web.Controllers
         [Authorize(Roles = RoleNames.AccountAdministrator)]
         public HttpResponseMessage Post(string username, [FromBody]UpdateUserAttributes attributes)
         {
+            if (string.IsNullOrEmpty(attributes.RenameTo))
+            {
+                // assume null roles means remove all roles
+                attributes.Roles = attributes.Roles ?? new string[0];
+            }
+
             Audit("Update user {0} with roles [{1}]", username, string.Join(", ", attributes.Roles ?? new string[0]));
 
             try

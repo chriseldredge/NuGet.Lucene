@@ -1,14 +1,15 @@
+using System;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Security.Principal;
 using Lucene.Net.Linq;
 using Lucene.Net.Store;
-using Lucene.Net.Util;
 using NuGet.Lucene.Web.Authentication;
 using NuGet.Lucene.Web.Controllers;
 using NuGet.Lucene.Web.Models;
 using NUnit.Framework;
+using Version = Lucene.Net.Util.Version;
 
 namespace NuGet.Lucene.Web.Tests.Controllers
 {
@@ -136,6 +137,20 @@ namespace NuGet.Lucene.Web.Tests.Controllers
                 controller.Post("b", new UpdateUserAttributes { RenameTo = "B", Overwrite = false });
 
                 Assert.That(store.All.Select(u => u.Username).ToArray(), Is.EquivalentTo(new[] { "B" }));
+            }
+
+            [Test]
+            public void UpdateUserClearsRoles()
+            {
+                const string key = "key";
+                var roles = new[] { "role1" };
+
+                store.Add(new ApiUser { Username = "A", Key = key, Roles = roles });
+
+                controller.Post("A", new UpdateUserAttributes { Overwrite = true });
+
+                Assert.That(store.All.Select(u => u.Username).ToArray(), Is.EquivalentTo(new[] { "A" }));
+                Assert.That(store.All.Single().Roles, Is.EquivalentTo(new String[0]));
             }
         }
 
