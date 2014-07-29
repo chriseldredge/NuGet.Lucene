@@ -13,7 +13,7 @@ namespace NuGet.Lucene.Mapping
 
         public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
         {
-            return 1 == (int) value ? true : false;
+            return value is int && (1 == (int) value);
         }
 
         public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType)
