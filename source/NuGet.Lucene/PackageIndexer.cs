@@ -243,8 +243,6 @@ namespace NuGet.Lucene
 
             while (!pendingUpdates.IsCompleted)
             {
-                items.Clear();
-
                 try
                 {
                     pendingUpdates.TakeAvailable(items, InfiniteTimeSpan);
@@ -256,6 +254,7 @@ namespace NuGet.Lucene
                 if (items.Any())
                 {
                     ApplyUpdates(items);
+                    items.Clear();
                 }
             }
 
