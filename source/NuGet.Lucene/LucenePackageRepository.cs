@@ -100,8 +100,7 @@ namespace NuGet.Lucene
             };
 
             client.Headers.Add(RepositoryOperationNames.OperationHeaderName, RepositoryOperationNames.Mirror);
-            client.DownloadFileAsync(dataPackage.DownloadUrl, path);
-
+            await client.DownloadFileTaskAsync(dataPackage.DownloadUrl, path);
             await (tcs.Task.ContinueWith(_ => client.Dispose()));
 
             var lucenePackage = LoadFromFileSystem(path);
