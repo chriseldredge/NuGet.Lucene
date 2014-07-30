@@ -87,22 +87,9 @@ namespace NuGet.Lucene
             }
 
             var client = new WebClient();
-            client.DownloadFileCompleted += (s, e) =>
-            {
-                if (e.Error != null)
-                {
-                    tcs.SetException(e.Error);
-                }
-                else
-                {
-                    tcs.SetResult(e);
-                }
-            };
 
             client.Headers.Add(RepositoryOperationNames.OperationHeaderName, RepositoryOperationNames.Mirror);
-            client.DownloadFileAsync(dataPackage.DownloadUrl, path);
-
-            await (tcs.Task.ContinueWith(_ => client.Dispose()));
+            await client.DownloadFileTaskAsync(dataPackage.DownloadUrl, path);
 
             var lucenePackage = LoadFromFileSystem(path);
             lucenePackage.OriginUrl = dataPackage.DownloadUrl;

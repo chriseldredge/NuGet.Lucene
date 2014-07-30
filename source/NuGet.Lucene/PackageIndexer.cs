@@ -149,7 +149,7 @@ namespace NuGet.Lucene
                 await TaskEx.Run(() => differences = IndexDifferenceCalculator.FindDifferences(
                     FileSystem, PackageRepository.LucenePackages, cancellationToken, UpdateSynchronizationStatus), cancellationToken);
 
-                await TaskEx.Run(() => SynchronizeIndexWithFileSystem(differences, cancellationToken));
+                await TaskEx.Run(() => SynchronizeIndexWithFileSystem(differences, cancellationToken), cancellationToken);
             }
             finally
             {
@@ -243,8 +243,6 @@ namespace NuGet.Lucene
 
             while (!pendingUpdates.IsCompleted)
             {
-                items.Clear();
-
                 try
                 {
                     pendingUpdates.TakeAvailable(items, InfiniteTimeSpan);
@@ -256,6 +254,7 @@ namespace NuGet.Lucene
                 if (items.Any())
                 {
                     ApplyUpdates(items);
+                    items.Clear();
                 }
             }
 
