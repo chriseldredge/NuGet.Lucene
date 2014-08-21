@@ -9,8 +9,6 @@ namespace NuGet.Lucene.Web.Symbols
 {
     public class SymbolSource : ISymbolSource
     {
-        public const string TempSubFolderName = "DecompressTemp";
-
         public string SymbolsPath { get; set; }
         public SymbolTools SymbolTools { get; set; }
 
@@ -28,7 +26,7 @@ namespace NuGet.Lucene.Web.Symbols
 
         public bool AreSymbolsPresentFor(IPackageName package)
         {
-            return (KeepSourcesCompressed && File.Exists(GetNupkgPath(package)))
+            return File.Exists(GetNupkgPath(package))
                 || Directory.Exists(GetUnzippedPackagePath(package));
         }
 
@@ -194,7 +192,7 @@ namespace NuGet.Lucene.Web.Symbols
 
         public virtual string GetNupkgPath(IPackageName package)
         {
-            return Path.Combine(SymbolsPath, package.Id + "." + package.Version + ".nupkg");
+            return Path.Combine(SymbolsPath, package.Id, package.Id + "." + package.Version + ".nupkg");
         }
 
         /// <summary>
@@ -207,10 +205,9 @@ namespace NuGet.Lucene.Web.Symbols
             return Path.Combine(SymbolsPath, package.Id, package.Version.ToString());
         }
 
-
         protected virtual string GetTempFolderPathForPackage(IPackageName package)
         {
-            return Path.Combine(SymbolsPath, TempSubFolderName, package.Id + "." + package.Version.ToString());
+            return Path.Combine(SymbolsPath, package.Id + "-" + package.Version + ".tmp");
         }
 
         /// <summary>
@@ -220,8 +217,7 @@ namespace NuGet.Lucene.Web.Symbols
         /// <returns>An IDisposable that deletes the folder when disposed</returns>
         protected TempFolder CreateTempFolderForPackage(IPackageName package)
         {
-            var path = GetTempFolderPathForPackage(package);
-            return new TempFolder(path);
+            return new TempFolder(GetTempFolderPathForPackage(package));
         }
     }
 }
