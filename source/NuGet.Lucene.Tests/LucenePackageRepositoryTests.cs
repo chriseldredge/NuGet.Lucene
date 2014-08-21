@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
+using System.Text;
 using System.Threading.Tasks;
 using Moq;
 using NUnit.Framework;
@@ -91,8 +92,8 @@ namespace NuGet.Lucene.Tests
             {
                 var package = SetUpConvertPackage();
 
-                package.Object.Authors = new[] {"a", " b"};
-                package.Object.Owners = new[] {"c", " d"};
+                package.SetupGet(p => p.Authors).Returns(new[] {"a", " b"});
+                package.SetupGet(p => p.Owners).Returns(new[] { "c", " d" });
 
                 var result = repository.Convert(package.Object);
 
@@ -115,8 +116,10 @@ namespace NuGet.Lucene.Tests
             public void DetectsInvalidModifiedTime()
             {
                 var package = SetUpConvertPackage();
+                Assert.That(package.Object.Version, Is.Not.Null);
                 fileSystem.Setup(fs => fs.GetLastModified(It.IsAny<string>()))
                     .Returns(new DateTime(1601, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc));
+                Assert.That(package.Object.Version, Is.Not.Null);
                 var result = repository.Convert(package.Object);
 
                 Assert.That(result.Published, Is.EqualTo(result.Created));
@@ -125,12 +128,18 @@ namespace NuGet.Lucene.Tests
             [Test]
             public void Files()
             {
-                var package = SetUpConvertPackage();
                 var file1 = new Mock<IPackageFile>();
-                file1.Setup(f => f.Path).Returns("path1");
-                package.Object.Files = new[] {file1.Object};
+                file1.SetupGet(f => f.Path).Returns("path1");
 
-                var result = repository.Convert(package.Object);
+                var package = new PackageWithFiles
+                {
+                    Id = "Sample",
+                    Version = new SemanticVersion("1.0"),
+                    Files = new[] {file1.Object}
+                };
+
+                fileSystem.Setup(fs => fs.OpenFile(It.IsAny<string>())).Returns(new MemoryStream());
+                var result = repository.Convert(package);
 
                 Assert.That(result.Files, Is.Not.Null, "Files");
                 Assert.That(result.Files.ToArray(), Is.EquivalentTo(new[] {"path1"}));
@@ -141,9 +150,9 @@ namespace NuGet.Lucene.Tests
             {
                 var package = SetUpConvertPackage();
 
-                package.Object.IconUrl = new Uri("http://ICON_URL_HERE_OR_DELETE_THIS_LINE");
-                package.Object.LicenseUrl = new Uri("http://LICENSE_URL_HERE_OR_DELETE_THIS_LINE");
-                package.Object.ProjectUrl = new Uri("http://PROJECT_URL_HERE_OR_DELETE_THIS_LINE");
+                package.SetupGet(p => p.IconUrl).Returns(new Uri("http://ICON_URL_HERE_OR_DELETE_THIS_LINE"));
+                package.SetupGet(p => p.LicenseUrl).Returns(new Uri("http://LICENSE_URL_HERE_OR_DELETE_THIS_LINE"));
+                package.SetupGet(p => p.ProjectUrl).Returns(new Uri("http://PROJECT_URL_HERE_OR_DELETE_THIS_LINE"));
 
                 var result = repository.Convert(package.Object);
 
@@ -272,26 +281,47 @@ namespace NuGet.Lucene.Tests
             }
         }
 
-        private Mock<PackageWithFiles> SetUpConvertPackage()
+        private Mock<IPackage> SetUpConvertPackage()
         {
-            var package = new Mock<PackageWithFiles>();
-
-            package.Object.Id = "Sample";
-            package.Object.Version = new SemanticVersion("1.0");
-            package.Object.DependencySets = new List<PackageDependencySet>();
+            var package = new Mock<IPackage>().SetupAllProperties();
+            package.SetupGet(p => p.Id).Returns("Sample");
+            package.SetupGet(p => p.Version).Returns(new SemanticVersion("1.0"));
+            package.SetupGet(p => p.DependencySets).Returns(new List<PackageDependencySet>());
 
             package.Setup(p => p.GetSupportedFrameworks()).Returns(new[] {VersionUtility.ParseFrameworkName("net40")});
             fileSystem.Setup(fs => fs.OpenFile(It.IsAny<string>())).Returns(new MemoryStream());
             package.Setup(p => p.GetStream()).Returns(new MemoryStream());
+            Assert.That(package.Object.Version, Is.Not.Null);
             return package;
         }
 
-        public abstract class PackageWithFiles : LocalPackage
+        public class PackageWithFiles : LocalPackage
         {
             public IEnumerable<IPackageFile> Files { get;  set; }
+
+            public PackageWithFiles()
+            {
+                DependencySets = Enumerable.Empty<PackageDependencySet>();
+            }
+
             protected sealed override IEnumerable<IPackageFile> GetFilesBase()
             {
                 return Files ?? new IPackageFile[0];
+            }
+
+            public override Stream GetStream()
+            {
+                return new MemoryStream();
+            }
+
+            protected override IEnumerable<IPackageAssemblyReference> GetAssemblyReferencesCore()
+            {
+                return Enumerable.Empty<IPackageAssemblyReference>();
+            }
+
+            public override IEnumerable<FrameworkName> GetSupportedFrameworks()
+            {
+                return Enumerable.Empty<FrameworkName>();
             }
         }
 
