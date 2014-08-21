@@ -64,6 +64,7 @@ information when enabled. Default: false.
 * NuGet.Lucene.Web:lucenePath Location where Lucene index files are stored (may be a virtual path). Default: ~/App_Data/Lucene
 * NuGet.Lucene.Web:symbolsPath Location where symbol package contents are stored (may be a virtual path). Default: ~/App_Data/Symbols
 * NuGet.Lucene.Web:DebuggingToolsPath Location where Debugging Tools for Windows is installed. Used for processing symbol packages. No default.
+* NuGet.Lucene.Web:keepSourcesCompressed flag indicating if symbol packages should be eagerly unzipped or if source files should only be unzipped on demand. Default: true
 * NuGet.Lucene.Web:enablePackageFileWatcher flag indicating if a file system watcher should monitor the packages path for changes to keep the index in sync. Use this setting if any external process adds or removes package files. Default: true
 * NuGet.Lucene.Web:synchronizeOnStart when true, scans the packagesPath and compares nupkg files with the Lucene index and updates the Lucene index to match the file system. This setting enables the Lucene index to be kept in sync when package files change while the web app isn't running. Default: true
 * NuGet.Lucene.Web:groupPackageFilesById when true, package files are stored into subdirectories by package ID. When false, all packages are stored in the top-level packages path. Default: true

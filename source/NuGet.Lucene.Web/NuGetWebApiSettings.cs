@@ -114,6 +114,14 @@ namespace NuGet.Lucene.Web
             }
         }
 
+        public bool KeepSourcesCompressed
+        {
+            get
+            {
+                return GetFlagFromAppSetting("keepSourcesCompressed", true);
+            }
+        }
+
         public bool SynchronizeOnStart
         {
             get

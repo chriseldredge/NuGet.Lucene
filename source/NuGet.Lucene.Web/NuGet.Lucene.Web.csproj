@@ -258,6 +258,7 @@
     <Compile Include="Util\OwinRequestExtensions.cs" />
     <Compile Include="Util\PackageExtensions.cs" />
     <Compile Include="Util\TaskUtils.cs" />
+    <Compile Include="Util\TempFolder.cs" />
     <Compile Include="Util\UrlHelperExtensions.cs" />
     <None Include="app.config" />
     <None Include="readme.markdown" />

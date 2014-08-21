@@ -39,5 +39,6 @@ namespace NuGet.Lucene.Web
         // Options
         bool SynchronizeOnStart { get; }
         bool EnablePackageFileWatcher { get; }
+        bool KeepSourcesCompressed { get; }
     }
 }
