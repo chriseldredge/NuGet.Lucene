@@ -176,10 +176,10 @@ namespace NuGet.Lucene.Web
 
             if (path.StartsWith("~/"))
             {
-                return Path.Combine(Environment.CurrentDirectory, path.Replace("~/", ""));
+                path = Path.Combine(Environment.CurrentDirectory, path.Replace("~/", ""));
             }
 
-            return path;
+            return path.Replace('/', Path.DirectorySeparatorChar);
         }
 
         protected internal virtual string GetAppSetting(string key, string defaultValue)
