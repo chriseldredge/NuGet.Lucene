@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reactive.Disposables;
 using System.Threading.Tasks;
 using NuGet.Lucene.Web.Util;
 
 namespace NuGet.Lucene.Web.Symbols
 {
-    public class SymbolSource : ISymbolSource {
+    public class SymbolSource : ISymbolSource
+    {
         public const string TempSubFolderName = "DecompressTemp";
 
         public string SymbolsPath { get; set; }
@@ -28,31 +28,40 @@ namespace NuGet.Lucene.Web.Symbols
 
         public bool AreSymbolsPresentFor(IPackageName package)
         {
-            return (KeepSourcesCompressed && File.Exists(GetNupkgPath(package))) 
+            return (KeepSourcesCompressed && File.Exists(GetNupkgPath(package)))
                 || Directory.Exists(GetUnzippedPackagePath(package));
         }
 
         public async Task AddSymbolsAsync(IPackage package, string symbolSourceUri)
         {
             // Copy the package unmodified to the target path if KeepSourcesCompressed is true
-            if (KeepSourcesCompressed) {
+            if (KeepSourcesCompressed)
+            {
                 await CopyNupkgToTargetPathAsync(package);
-            } else {
+            }
+            else
+            {
                 await UnzipPackageAsync(package);
             }
             await ProcessSymbolsAsync(package, symbolSourceUri);
         }
 
-        protected async Task<bool> CopyNupkgToTargetPathAsync(IPackage package) {
+        protected async Task<bool> CopyNupkgToTargetPathAsync(IPackage package)
+        {
             var targetFile = new FileInfo(GetNupkgPath(package));
-            try {
-                if(targetFile.Directory != null && !targetFile.Directory.Exists) targetFile.Directory.Create();
-                using (var sourceStream = package.GetStream()) {
-                    using (var targetStream = targetFile.Open(FileMode.Create, FileAccess.Write)) {
+            try
+            {
+                if (targetFile.Directory != null && !targetFile.Directory.Exists) targetFile.Directory.Create();
+                using (var sourceStream = package.GetStream())
+                {
+                    using (var targetStream = targetFile.Open(FileMode.Create, FileAccess.Write))
+                    {
                         await sourceStream.CopyToAsync(targetStream);
                     }
                 }
-            } catch (IOException ex) {
+            }
+            catch (IOException ex)
+            {
                 return false;
             }
             return true;
@@ -61,12 +70,14 @@ namespace NuGet.Lucene.Web.Symbols
         public Task RemoveSymbolsAsync(IPackageName package)
         {
             var nupkgPath = GetNupkgPath(package);
-            if (File.Exists(nupkgPath)) {
+            if (File.Exists(nupkgPath))
+            {
                 File.Delete(nupkgPath);
             }
 
             var folderPath = GetUnzippedPackagePath(package);
-            if (Directory.Exists(folderPath)) {
+            if (Directory.Exists(folderPath))
+            {
                 Directory.Delete(folderPath, recursive: true);
             }
 
@@ -85,7 +96,8 @@ namespace NuGet.Lucene.Web.Symbols
             return File.Open(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read);
         }
 
-        public Stream OpenPackageSourceFile(IPackageName package, string relativePath) {
+        public Stream OpenPackageSourceFile(IPackageName package, string relativePath)
+        {
             relativePath = relativePath.Replace('/', Path.DirectorySeparatorChar);
 
             // Try to return the source file from its uncompressed location
@@ -98,15 +110,19 @@ namespace NuGet.Lucene.Web.Symbols
             Stream ret = OpenFile(Path.Combine(parts));
 
             if (ret != null) return ret;
-            
+
             // If the file wasn't found uncompressed and KeepSourcesCompressed is true, fall back to the nupkg file
             var packagePath = GetNupkgPath(package);
-            if (KeepSourcesCompressed && File.Exists(packagePath)) {
-                try {
+            if (KeepSourcesCompressed && File.Exists(packagePath))
+            {
+                try
+                {
                     var packageFile = new ZipPackage(packagePath);
                     var file = packageFile.GetFiles().SingleOrDefault(f => f.Path.Equals(Path.Combine("src", relativePath), StringComparison.InvariantCultureIgnoreCase));
                     return file != null ? file.GetStream() : null;
-                } catch (IOException ex) {
+                }
+                catch (IOException ex)
+                {
                     return null;
                 }
             }
@@ -146,9 +162,11 @@ namespace NuGet.Lucene.Web.Symbols
         {
             var files = package.GetLibFiles().Where(f => f.Path.EndsWith("pdb", StringComparison.InvariantCultureIgnoreCase));
 
-            using (var tempFolder = CreateTempFolderForPackage(package)) {
-                
-                foreach (var file in files) {
+            using (var tempFolder = CreateTempFolderForPackage(package))
+            {
+
+                foreach (var file in files)
+                {
                     var filePath = Path.Combine(tempFolder.Path, file.Path);
                     var fileDir = Path.GetDirectoryName(filePath);
 
@@ -186,7 +204,8 @@ namespace NuGet.Lucene.Web.Symbols
             }
         }
 
-        public virtual string GetNupkgPath(IPackageName package) {
+        public virtual string GetNupkgPath(IPackageName package)
+        {
             return Path.Combine(SymbolsPath, package.Id + "." + package.Version.ToString() + ".nupkg");
         }
 
@@ -201,7 +220,8 @@ namespace NuGet.Lucene.Web.Symbols
         }
 
 
-        protected virtual string GetTempFolderPathForPackage(IPackageName package) {
+        protected virtual string GetTempFolderPathForPackage(IPackageName package)
+        {
             return Path.Combine(SymbolsPath, TempSubFolderName, package.Id + "." + package.Version.ToString());
         }
 
@@ -210,7 +230,8 @@ namespace NuGet.Lucene.Web.Symbols
         /// </summary>
         /// <param name="package"></param>
         /// <returns>An IDisposable that deletes the folder when disposed</returns>
-        protected TempFolder CreateTempFolderForPackage(IPackageName package) {
+        protected TempFolder CreateTempFolderForPackage(IPackageName package)
+        {
             var path = GetTempFolderPathForPackage(package);
             return new TempFolder(path);
         }

@@ -52,9 +52,10 @@ namespace NuGet.Lucene.Web
             Bind<UserStore>().ToConstant(userStore);
 
             var symbolsPath = MapPathFromAppSetting("symbolsPath", "~/App_Data/Symbols");
-            Bind<ISymbolSource>().ToConstant(new SymbolSource {
+            Bind<ISymbolSource>().ToConstant(new SymbolSource
+            {
                 SymbolsPath = symbolsPath,
-                KeepSourcesCompressed = GetFlagFromAppSetting("keepSourcesCompressed", false)
+                KeepSourcesCompressed = GetFlagFromAppSetting("keepSourcesCompressed", true)
             });
             Bind<SymbolTools>().ToConstant(new SymbolTools
             {
