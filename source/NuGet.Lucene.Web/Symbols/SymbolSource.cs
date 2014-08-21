@@ -46,25 +46,22 @@ namespace NuGet.Lucene.Web.Symbols
             await ProcessSymbolsAsync(package, symbolSourceUri);
         }
 
-        protected async Task<bool> CopyNupkgToTargetPathAsync(IPackage package)
+        protected async Task CopyNupkgToTargetPathAsync(IPackage package)
         {
             var targetFile = new FileInfo(GetNupkgPath(package));
-            try
+
+            if (targetFile.Directory != null && !targetFile.Directory.Exists)
             {
-                if (targetFile.Directory != null && !targetFile.Directory.Exists) targetFile.Directory.Create();
-                using (var sourceStream = package.GetStream())
+                targetFile.Directory.Create();
+            }
+            
+            using (var sourceStream = package.GetStream())
+            {
+                using (var targetStream = targetFile.Open(FileMode.Create, FileAccess.Write))
                 {
-                    using (var targetStream = targetFile.Open(FileMode.Create, FileAccess.Write))
-                    {
-                        await sourceStream.CopyToAsync(targetStream);
-                    }
+                    await sourceStream.CopyToAsync(targetStream);
                 }
             }
-            catch (IOException ex)
-            {
-                return false;
-            }
-            return true;
         }
 
         public Task RemoveSymbolsAsync(IPackageName package)
@@ -107,27 +104,19 @@ namespace NuGet.Lucene.Web.Symbols
                 "src",
                 relativePath
             };
-            Stream ret = OpenFile(Path.Combine(parts));
 
-            if (ret != null) return ret;
+            var stream = OpenFile(Path.Combine(parts));
 
-            // If the file wasn't found uncompressed and KeepSourcesCompressed is true, fall back to the nupkg file
+            if (stream != null) return stream;
+
+            // If the file wasn't found uncompressed look for it in symbol package zip file
             var packagePath = GetNupkgPath(package);
-            if (KeepSourcesCompressed && File.Exists(packagePath))
-            {
-                try
-                {
-                    var packageFile = new ZipPackage(packagePath);
-                    var file = packageFile.GetFiles().SingleOrDefault(f => f.Path.Equals(Path.Combine("src", relativePath), StringComparison.InvariantCultureIgnoreCase));
-                    return file != null ? file.GetStream() : null;
-                }
-                catch (IOException ex)
-                {
-                    return null;
-                }
-            }
+            if (!File.Exists(packagePath)) return null;
 
-            return null;
+            var srcPath = Path.Combine("src", relativePath);
+            var packageFile = new ZipPackage(packagePath);
+            var file = packageFile.GetFiles().SingleOrDefault(f => f.Path.Equals(srcPath, StringComparison.InvariantCultureIgnoreCase));
+            return file != null ? file.GetStream() : null;
         }
 
         public async Task UnzipPackageAsync(IPackage package)
@@ -164,7 +153,6 @@ namespace NuGet.Lucene.Web.Symbols
 
             using (var tempFolder = CreateTempFolderForPackage(package))
             {
-
                 foreach (var file in files)
                 {
                     var filePath = Path.Combine(tempFolder.Path, file.Path);
@@ -206,7 +194,7 @@ namespace NuGet.Lucene.Web.Symbols
 
         public virtual string GetNupkgPath(IPackageName package)
         {
-            return Path.Combine(SymbolsPath, package.Id + "." + package.Version.ToString() + ".nupkg");
+            return Path.Combine(SymbolsPath, package.Id + "." + package.Version + ".nupkg");
         }
 
         /// <summary>
