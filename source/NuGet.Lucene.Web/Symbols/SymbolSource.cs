@@ -192,7 +192,7 @@ namespace NuGet.Lucene.Web.Symbols
 
         public virtual string GetNupkgPath(IPackageName package)
         {
-            return Path.Combine(SymbolsPath, package.Id, package.Id + "." + package.Version + ".nupkg");
+            return Path.Combine(SymbolsPath, package.Id, package.Id + "." + package.Version + ".symbols.nupkg");
         }
 
         /// <summary>
