@@ -56,18 +56,18 @@ namespace NuGet.Lucene
             get { return LucenePackageSource ?? base.Source; }
         }
 
-        public async Task AddPackageAsync(IPackage package)
+        public async Task AddPackageAsync(IPackage package, CancellationToken cancellationToken)
         {
             Log.Info(m => m("Adding package {0} {1} to file system", package.Id, package.Version));
 
-            var lucenePackage = await AddPackageToFileSystemAsync(package);
+            var lucenePackage = await AddPackageToFileSystemAsync(package, cancellationToken);
 
             Log.Info(m => m("Indexing package {0} {1}", package.Id, package.Version));
 
-            await Indexer.AddPackage(lucenePackage);
+            await Indexer.AddPackageAsync(lucenePackage, cancellationToken);
         }
 
-        private async Task<LucenePackage> AddPackageToFileSystemAsync(IPackage package)
+        private async Task<LucenePackage> AddPackageToFileSystemAsync(IPackage package, CancellationToken cancellationToken)
         {
             var dataPackage = package as DataServicePackage;
 
@@ -79,13 +79,13 @@ namespace NuGet.Lucene
 
             var parent = PathResolver.GetInstallPath(package);
             var path = Path.Combine(parent, PathResolver.GetPackageFileName(package));
-            var tcs = new TaskCompletionSource<object>();
 
             if (!Directory.Exists(parent))
             {
                 Directory.CreateDirectory(parent);
             }
 
+            //TODO: replace with System.Http client and use cancellation token
             var client = new WebClient();
 
             client.Headers.Add(RepositoryOperationNames.OperationHeaderName, RepositoryOperationNames.Mirror);
@@ -99,13 +99,13 @@ namespace NuGet.Lucene
 
         public override void AddPackage(IPackage package)
         {
-            var task = TaskEx.Run(() => AddPackageAsync(package));
+            var task = AddPackageAsync(package, CancellationToken.None);
             task.Wait();
         }
 
-        public async Task IncrementDownloadCount(IPackage package)
+        public async Task IncrementDownloadCountAsync(IPackage package, CancellationToken cancellationToken)
         {
-            await Indexer.IncrementDownloadCount(package);
+            await Indexer.IncrementDownloadCountAsync(package, cancellationToken);
         }
 
         private void UpdatePackageCount(IQueryable<LucenePackage> packages)
@@ -115,9 +115,9 @@ namespace NuGet.Lucene
             Log.Info(m => m("Refreshing index. Package count: " + packageCount));
         }
 
-        public async Task RemovePackageAsync(IPackage package)
+        public async Task RemovePackageAsync(IPackage package, CancellationToken cancellationToken)
         {
-            var task = Indexer.RemovePackage(package);
+            var task = Indexer.RemovePackageAsync(package, cancellationToken);
 
             base.RemovePackage(package);
 
@@ -126,9 +126,7 @@ namespace NuGet.Lucene
         
         public override void RemovePackage(IPackage package)
         {
-            var task = TaskEx.Run(() => RemovePackageAsync(package));
-            
-            task.Wait();
+            RemovePackageAsync(package, CancellationToken.None).Wait();
         }
 
         public override IQueryable<IPackage> GetPackages()
@@ -288,7 +286,8 @@ namespace NuGet.Lucene
 
         public Task SynchronizeWithFileSystem(CancellationToken cancellationToken)
         {
-            return Indexer.SynchronizeIndexWithFileSystem(cancellationToken);
+            Log.Info(m => m("Synchronizing packages with filesystem."));
+            return Indexer.SynchronizeIndexWithFileSystemAsync(cancellationToken);
         }
 
         public RepositoryInfo GetStatus()

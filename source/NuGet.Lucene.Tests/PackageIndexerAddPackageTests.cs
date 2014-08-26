@@ -23,7 +23,7 @@ namespace NuGet.Lucene.Tests
         [Test]
         public async void AddPackage()
         {
-            await indexer.AddPackage(MakeSamplePackage("Sample.Package", "1.0"));
+            await indexer.AddPackageAsync(MakeSamplePackage("Sample.Package", "1.0"));
 
             Assert.AreEqual(1, datasource.Count());
         }
@@ -31,7 +31,7 @@ namespace NuGet.Lucene.Tests
         [Test]
         public async void AddPackage_SetIsLatestVersion()
         {
-            await indexer.AddPackage(MakeSamplePackage("Sample.Package", "1.0"));
+            await indexer.AddPackageAsync(MakeSamplePackage("Sample.Package", "1.0"));
 
             Assert.True(datasource.First().IsLatestVersion, "IsLatestVersion");
         }
@@ -39,8 +39,8 @@ namespace NuGet.Lucene.Tests
         [Test]
         public async void AddPackage_PreRelease_SetIsAbsoluteLatestVersion()
         {
-            await indexer.AddPackage(MakeSamplePackage("Sample.Package", "1.0"));
-            await indexer.AddPackage(MakeSamplePackage("Sample.Package", "2.0-pre"));
+            await indexer.AddPackageAsync(MakeSamplePackage("Sample.Package", "1.0"));
+            await indexer.AddPackageAsync(MakeSamplePackage("Sample.Package", "2.0-pre"));
 
             var newest = datasource.Single(p => p.Version == new StrictSemanticVersion("2.0-pre"));
             var latestNonPreRelease = datasource.Single(p => p.Version == new StrictSemanticVersion("1.0"));
@@ -54,8 +54,8 @@ namespace NuGet.Lucene.Tests
         [Test]
         public void AddPackage_MultipleVersions_UnsetIsLatestVersion()
         {
-            var t1 = indexer.AddPackage(MakeSamplePackage("Sample.Package", "1.0"));
-            var t2 = indexer.AddPackage(MakeSamplePackage("Sample.Package", "1.1"));
+            var t1 = indexer.AddPackageAsync(MakeSamplePackage("Sample.Package", "1.0"));
+            var t2 = indexer.AddPackageAsync(MakeSamplePackage("Sample.Package", "1.1"));
 
             Task.WaitAll(t1, t2);
 
@@ -71,7 +71,7 @@ namespace NuGet.Lucene.Tests
             var replacement = MakeSamplePackage("Sample.Package", "1.0");
             replacement.Published = new DateTimeOffset(DateTime.UtcNow);
 
-            await indexer.AddPackage(replacement);
+            await indexer.AddPackageAsync(replacement);
 
             Assert.AreEqual(datasource.Single().Published, replacement.Published);
         }
@@ -84,7 +84,7 @@ namespace NuGet.Lucene.Tests
             package.VersionDownloadCount = versionDownloadCount;
             InsertPackage(package);
 
-            await indexer.AddPackage(package);
+            await indexer.AddPackageAsync(package);
 
             Assert.AreEqual(versionDownloadCount, datasource.First().VersionDownloadCount);
         }
@@ -97,7 +97,7 @@ namespace NuGet.Lucene.Tests
             package.DownloadCount = downloadCount;
             InsertPackage(package);
 
-            await indexer.AddPackage(package);
+            await indexer.AddPackageAsync(package);
 
             Assert.AreEqual(downloadCount, datasource.First().DownloadCount);
         }
@@ -105,8 +105,8 @@ namespace NuGet.Lucene.Tests
         [Test]
         public void AddPackage_NoneExisting_NewVersion_ZerosVersionDownloadCount()
         {
-            var t1 = indexer.AddPackage(MakeSamplePackage("Sample.Package", "1.0"));
-            var t2 = indexer.AddPackage(MakeSamplePackage("Sample.Package", "1.1"));
+            var t1 = indexer.AddPackageAsync(MakeSamplePackage("Sample.Package", "1.0"));
+            var t2 = indexer.AddPackageAsync(MakeSamplePackage("Sample.Package", "1.1"));
 
             Task.WaitAll(t1, t2);
 
@@ -121,7 +121,7 @@ namespace NuGet.Lucene.Tests
             existing.VersionDownloadCount = 199;
             InsertPackage(existing);
 
-            await indexer.AddPackage(MakeSamplePackage("Sample.Package", "1.1"));
+            await indexer.AddPackageAsync(MakeSamplePackage("Sample.Package", "1.1"));
             Assert.AreEqual(0, datasource.Single(p => p.Version == new StrictSemanticVersion("1.1")).VersionDownloadCount);
         }
 
@@ -133,7 +133,7 @@ namespace NuGet.Lucene.Tests
             existing.DownloadCount = downloadCount;
             InsertPackage(existing);
 
-            await indexer.AddPackage(MakeSamplePackage("Sample.Package", "1.1"));
+            await indexer.AddPackageAsync(MakeSamplePackage("Sample.Package", "1.1"));
             Assert.AreEqual(downloadCount, datasource.Single(p => p.Version == new StrictSemanticVersion("1.1")).DownloadCount);
         }
 

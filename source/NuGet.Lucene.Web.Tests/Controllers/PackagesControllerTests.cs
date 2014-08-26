@@ -6,10 +6,12 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
 using Moq;
 using NuGet.Lucene.Web.Symbols;
+using NuGet.Lucene.Web.Util;
 using NUnit.Framework;
 using NuGet.Lucene.Web.Controllers;
 using NuGet.Lucene.Web.Models;
@@ -22,6 +24,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
         private Mock<ILucenePackageRepository> luceneRepository;
         private Mock<IMirroringPackageRepository> mirroringRepository;
         private Mock<ISymbolSource> symbolSource;
+        private Mock<ITaskRunner> taskRunner;
         private List<LucenePackage> packages;
         private Task completeTask;
         private static readonly StrictSemanticVersion SampleVersion = new StrictSemanticVersion("1.0");
@@ -45,11 +48,14 @@ namespace NuGet.Lucene.Web.Tests.Controllers
             luceneRepository = new Mock<ILucenePackageRepository>();
             mirroringRepository = new Mock<IMirroringPackageRepository>();
             symbolSource = new Mock<ISymbolSource>();
+            taskRunner = new Mock<ITaskRunner>();
+
             return new PackagesController
             {
                 LuceneRepository = luceneRepository.Object,
                 MirroringRepository = mirroringRepository.Object,
-                SymbolSource = symbolSource.Object
+                SymbolSource = symbolSource.Object,
+                TaskRunner = taskRunner.Object
             };
         }
 
@@ -155,11 +161,11 @@ namespace NuGet.Lucene.Web.Tests.Controllers
         [Test]
         public async Task PutPackage()
         {
-            luceneRepository.Setup(r => r.AddPackageAsync(package)).Returns(completeTask);
+            luceneRepository.Setup(r => r.AddPackageAsync(package, CancellationToken.None)).Returns(completeTask);
 
             var result = await controller.PutPackage(package);
 
-            luceneRepository.Verify(r => r.AddPackageAsync(package));
+            luceneRepository.Verify(r => r.AddPackageAsync(package, CancellationToken.None));
 
             Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.Created));
             Assert.That(result.Headers.Location, Is.EqualTo(new Uri("http://localhost/api/packages/Sample/1.0")));
@@ -169,8 +175,8 @@ namespace NuGet.Lucene.Web.Tests.Controllers
         public async Task PutPackageCannotBeNull()
         {
             var result = await controller.PutPackage(null);
-            
-            luceneRepository.Verify(r => r.AddPackageAsync(It.IsAny<IPackage>()), Times.Never());
+
+            luceneRepository.Verify(r => r.AddPackageAsync(It.IsAny<IPackage>(), It.IsAny<CancellationToken>()), Times.Never());
 
             Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
         }
@@ -180,7 +186,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
         {
             var result = await controller.DeletePackage(null);
 
-            luceneRepository.Verify(r => r.RemovePackageAsync(It.IsAny<IPackage>()), Times.Never());
+            luceneRepository.Verify(r => r.RemovePackageAsync(It.IsAny<IPackage>(), It.IsAny<CancellationToken>()), Times.Never());
 
             Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
         }
@@ -190,7 +196,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
         {
             var result = await controller.DeletePackage("", "1.0");
 
-            luceneRepository.Verify(r => r.RemovePackageAsync(It.IsAny<IPackage>()), Times.Never());
+            luceneRepository.Verify(r => r.RemovePackageAsync(It.IsAny<IPackage>(), It.IsAny<CancellationToken>()), Times.Never());
 
             Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
         }
@@ -202,7 +208,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
 
             var result = await controller.DeletePackage(package.Id, package.Version.ToString());
 
-            luceneRepository.Verify(r => r.AddPackageAsync(It.IsAny<IPackage>()), Times.Never());
+            luceneRepository.Verify(r => r.AddPackageAsync(It.IsAny<IPackage>(), It.IsAny<CancellationToken>()), Times.Never());
 
             Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
         }
@@ -211,7 +217,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
         public async Task DeletePackage()
         {
             luceneRepository.Setup(r => r.FindPackage(package.Id, package.Version.SemanticVersion)).Returns(package);
-            luceneRepository.Setup(r => r.RemovePackageAsync(package)).Returns(Task.FromResult(""));
+            luceneRepository.Setup(r => r.RemovePackageAsync(package, CancellationToken.None)).Returns(Task.FromResult(""));
             symbolSource.Setup(s => s.RemoveSymbolsAsync(package)).Returns(Task.FromResult(true));
 
             var result = await controller.DeletePackage(package.Id, package.Version.ToString());

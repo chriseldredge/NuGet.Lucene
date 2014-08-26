@@ -1,3 +1,5 @@
+using System.Threading;
+using System.Threading.Tasks;
 using Lucene.Net.Linq;
 using NUnit.Framework;
 
@@ -21,11 +23,16 @@ namespace NuGet.Lucene.Tests
 
         public class TestablePackageIndexer : PackageIndexer
         {
-            public ISession<LucenePackage> FakeSession { get; set; } 
+            public ISession<LucenePackage> FakeSession { get; set; }
 
             protected internal override ISession<LucenePackage> OpenSession()
             {
                 return FakeSession ?? base.OpenSession();
+            }
+
+            public Task AddPackageAsync(LucenePackage makeSamplePackage)
+            {
+                return AddPackageAsync(makeSamplePackage, CancellationToken.None);
             }
         }
     }

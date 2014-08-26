@@ -76,7 +76,7 @@ namespace NuGet.Lucene.Tests
             var lucenePackage = new LucenePackage(fileSystem.Object);
 
             loader.Setup(ld => ld.LoadFromIndex(@"Sample.1.0.nupkg")).Returns(lucenePackage);
-            indexer.Setup(idx => idx.RemovePackage(lucenePackage)).Throws(exception);
+            indexer.Setup(idx => idx.RemovePackageAsync(lucenePackage, CancellationToken.None)).Throws(exception);
             log.Setup(l => l.Error(exception)).Verifiable();
 
             await watcher.OnPackageDeleted("Sample.1.0.nupkg");
@@ -126,7 +126,7 @@ namespace NuGet.Lucene.Tests
             const string dir = @"c:\sample\dir";
 
             fileSystem.Setup(fs => fs.GetFiles(dir, "*.nupkg", true)).Returns(new[] { "Sample.1.0.nupkg" });
-            indexer.Setup(idx => idx.SynchronizeIndexWithFileSystem(CancellationToken.None));
+            indexer.Setup(idx => idx.SynchronizeIndexWithFileSystemAsync(CancellationToken.None));
 
             watcher.OnDirectoryMoved(Path.GetDirectoryName(dir));
 
@@ -152,7 +152,7 @@ namespace NuGet.Lucene.Tests
             var lucenePackage = new LucenePackage(fileSystem.Object);
             loader.Setup(ld => ld.LoadFromIndex(@".\" + filename)).Returns((LucenePackage)null).Verifiable();
             loader.Setup(ld => ld.LoadFromFileSystem(@".\" + filename)).Returns(lucenePackage).Verifiable();
-            indexer.Setup(idx => idx.AddPackage(lucenePackage)).Returns(Task.FromResult<object>(null)).Verifiable();
+            indexer.Setup(idx => idx.AddPackageAsync(lucenePackage, CancellationToken.None)).Returns(Task.FromResult<object>(null)).Verifiable();
         }
 
         private void SetupPackageIsNotModified(string filename)
@@ -161,14 +161,14 @@ namespace NuGet.Lucene.Tests
 
             loader.Setup(ld => ld.LoadFromIndex(@".\" + filename)).Returns(lucenePackage).Verifiable();
             loader.Setup(ld => ld.LoadFromFileSystem(@".\" + filename)).Returns(lucenePackage).Verifiable();
-            indexer.Setup(idx => idx.AddPackage(lucenePackage)).Verifiable();
+            indexer.Setup(idx => idx.AddPackageAsync(lucenePackage, CancellationToken.None)).Verifiable();
         }
 
         private void SetupDeletePackage(string filename)
         {
             var lucenePackage = new LucenePackage(fileSystem.Object);
             loader.Setup(ld => ld.LoadFromIndex(@".\" + filename)).Returns(lucenePackage).Verifiable();
-            indexer.Setup(idx => idx.RemovePackage(lucenePackage)).Returns(Task.FromResult<object>(null)).Verifiable();
+            indexer.Setup(idx => idx.RemovePackageAsync(lucenePackage, CancellationToken.None)).Returns(Task.FromResult<object>(null)).Verifiable();
         }
     }
 

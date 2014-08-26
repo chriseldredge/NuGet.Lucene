@@ -16,10 +16,10 @@ namespace NuGet.Lucene
         /// </summary>
         IObservable<IndexingStatus> StatusChanged { get; }
 
-        Task SynchronizeIndexWithFileSystem(CancellationToken cancellationToken);
-        Task AddPackage(LucenePackage package);
-        Task RemovePackage(IPackage package);
-        Task IncrementDownloadCount(IPackage package);
+        Task SynchronizeIndexWithFileSystemAsync(CancellationToken cancellationToken);
+        Task AddPackageAsync(LucenePackage package, CancellationToken cancellationToken);
+        Task RemovePackageAsync(IPackage package, CancellationToken cancellationToken);
+        Task IncrementDownloadCountAsync(IPackage package, CancellationToken cancellationToken);
 
         void Optimize();
     }

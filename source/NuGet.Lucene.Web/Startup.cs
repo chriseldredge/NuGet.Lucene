@@ -1,3 +1,4 @@
+using System;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,7 +10,6 @@ using Autofac;
 using Common.Logging;
 using Microsoft.AspNet.SignalR;
 using Microsoft.AspNet.SignalR.Infrastructure;
-using Microsoft.Owin;
 using Microsoft.Owin.Diagnostics;
 using Microsoft.Owin.Extensions;
 using Microsoft.Owin.Infrastructure;
@@ -20,12 +20,17 @@ using NuGet.Lucene.Web.Filters;
 using NuGet.Lucene.Web.Formatters;
 using NuGet.Lucene.Web.MessageHandlers;
 using NuGet.Lucene.Web.SignalR;
+using NuGet.Lucene.Web.Util;
 using Owin;
 
 namespace NuGet.Lucene.Web
 {
     public class Startup
     {
+        private static readonly ILog Log = LogManager.GetLogger<Startup>();
+
+        protected readonly ManualResetEventSlim shutdownSignal = new ManualResetEventSlim(false);
+
         protected SignalRMapper signalRMapper;
         public INuGetWebApiSettings Settings { get; set; }
 
@@ -34,7 +39,12 @@ namespace NuGet.Lucene.Web
             SetNuGetNotRunningInVisualStudio();
             SignatureConversions.AddConversions(app);
             Settings = CreateSettings();
-            Start(app, CreateContainer());
+            Start(app, CreateContainer(app));
+        }
+
+        public bool WaitForShutdown(TimeSpan timeout)
+        {
+            return shutdownSignal.Wait(timeout);
         }
 
         protected virtual INuGetWebApiSettings CreateSettings()
@@ -72,32 +82,62 @@ namespace NuGet.Lucene.Web
 
             RegisterServices(container, app, config);
             
-            RegisterShutdownCallback(app, container);
+            RegisterShutdown(app, container);
+
+            StartIndexingIfConfigured(container);
         }
-    
+
         protected virtual HttpConfiguration CreateHttpConfiguration()
         {
             return new HttpConfiguration();
         }
 
-        protected virtual void RegisterShutdownCallback(IAppBuilder app, IContainer container)
+        protected virtual void RegisterShutdown(IAppBuilder app, IContainer container)
         {
-            var context = new OwinContext(app.Properties);
-            var token = context.Get<CancellationToken>("host.OnAppDisposing");
+            var token = app.GetHostAppDisposing();
 
-            if (token != CancellationToken.None)
+            if (token.CanBeCanceled)
             {
-                token.Register(container.Dispose);
+                token.Register(() => OnShutdown(container));
             }
             else
             {
-                LogManager.GetCurrentClassLogger().Warn(m => m("host.OnAppDisposing not available."));
+                Log.Warn(m => m("OWIN property host.OnAppDisposing not available."));
             }
         }
 
-        protected virtual IContainer CreateContainer()
+        private async void OnShutdown(IContainer container)
+        {
+            try
+            {
+                await ShutdownServices(container);
+            }
+            finally
+            {
+                shutdownSignal.Set();
+            }
+        }
+
+        protected virtual async Task ShutdownServices(IContainer container)
+        {
+            Log.Info(m => m("Received OnAppDisposing event from OWIN container."));
+
+            var taskRunner = container.Resolve<ITaskRunner>();
+            var pendingTasks = taskRunner.PendingTasks;
+            if (pendingTasks.Length > 0)
+            {
+                Log.Info(m => m("Waiting for {0} background tasks.", pendingTasks.Length));
+                await Task.WhenAll(pendingTasks);
+            }
+
+            Log.Info(m => m("Disposing Autofact application container."));
+            container.Dispose();
+        }
+
+        protected virtual IContainer CreateContainer(IAppBuilder app)
         {
             var builder = new ContainerBuilder();
+            builder.RegisterModule(new OwinAppLifecycleModule(app));
             builder.RegisterModule(new NuGetWebApiModule(Settings));
             builder.RegisterModule<SignalRModule>();
 
@@ -163,11 +203,38 @@ namespace NuGet.Lucene.Web
             return formatter;
         }
 
+        protected virtual void StartIndexingIfConfigured(IContainer container)
+        {
+            if (!Settings.SynchronizeOnStart) return;
+
+            var repository = container.Resolve<ILucenePackageRepository>();
+            var tcs = container.Resolve<StopSynchronizationCancellationTokenSource>();
+            var taskRunner = container.Resolve<ITaskRunner>();
+
+            taskRunner.QueueBackgroundWorkItem(async shutdownCancellationToken =>
+            {
+                using (shutdownCancellationToken.Register(tcs.Cancel))
+                {
+                    await repository.SynchronizeWithFileSystem(tcs.Token);
+                }
+            });
+        }
+
         private class LoggingExceptionHandler : IExceptionHandler
         {
+            private static readonly Task CompletedTask;
+
+            static LoggingExceptionHandler()
+            {
+                var tcs = new TaskCompletionSource<bool>();
+                tcs.SetResult(true);
+                CompletedTask = tcs.Task;
+            }
+
             public Task HandleAsync(ExceptionHandlerContext context, CancellationToken cancellationToken)
             {
-                return Task.Factory.StartNew(() => UnhandledExceptionLogger.LogException(context.Exception), cancellationToken);
+                UnhandledExceptionLogger.LogException(context.Exception);
+                return CompletedTask;
             }
         }
     }

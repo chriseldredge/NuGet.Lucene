@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Lucene.Net.Linq;
 using NUnit.Framework;
 
@@ -79,26 +80,26 @@ namespace NuGet.Lucene.Tests
         [Test]
         public void IncrementQueuesForLater()
         {
-            var task = indexer.IncrementDownloadCount(MakeSamplePackage(SampleId, SampleVersion1));
+            var task = indexer.IncrementDownloadCountAsync(MakeSamplePackage(SampleId, SampleVersion1), CancellationToken.None);
             Assert.AreEqual(task.IsCompleted, false);
         }
 
         [Test]
         public void IncrementThrowsOnBlankId()
         {
-            Assert.Throws<InvalidOperationException>(() => indexer.IncrementDownloadCount(MakeSamplePackage("", SampleVersion1)));
+            Assert.Throws<InvalidOperationException>(() => indexer.IncrementDownloadCountAsync(MakeSamplePackage("", SampleVersion1), CancellationToken.None));
         }
 
         [Test]
         public void IncrementThrowsOnNullId()
         {
-            Assert.Throws<InvalidOperationException>(() => indexer.IncrementDownloadCount(MakeSamplePackage(null, SampleVersion1)));
+            Assert.Throws<InvalidOperationException>(() => indexer.IncrementDownloadCountAsync(MakeSamplePackage(null, SampleVersion1), CancellationToken.None));
         }
 
         [Test]
         public void IncrementThrowsOnNullVersion()
         {
-            Assert.Throws<InvalidOperationException>(() => indexer.IncrementDownloadCount(MakeSamplePackage(SampleId, null)));
+            Assert.Throws<InvalidOperationException>(() => indexer.IncrementDownloadCountAsync(MakeSamplePackage(SampleId, null), CancellationToken.None));
         }
 
         private LucenePackage GetPackage(string id, string version)

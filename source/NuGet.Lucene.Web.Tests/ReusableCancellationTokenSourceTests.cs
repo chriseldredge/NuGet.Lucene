@@ -5,12 +5,12 @@ namespace NuGet.Lucene.Web.Tests
     [TestFixture]
     public class ReusableCancellationTokenSourceTests
     {
-        private ReusableCancellationTokenSource source;
+        private StopSynchronizationCancellationTokenSource source;
 
         [SetUp]
         public void SetUp()
         {
-            source = new ReusableCancellationTokenSource();
+            source = new StopSynchronizationCancellationTokenSource();
         }
 
         [Test]

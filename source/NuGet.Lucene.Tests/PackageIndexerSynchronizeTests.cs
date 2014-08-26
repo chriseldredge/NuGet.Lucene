@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Lucene.Net.Index;
 using Lucene.Net.Linq;
 using Lucene.Net.Search;
@@ -27,15 +28,15 @@ namespace NuGet.Lucene.Tests
         }
 
         [Test]
-        public void DoesNothingOnNoDifferences()
+        public async Task DoesNothingOnNoDifferences()
         {
-            indexer.SynchronizeIndexWithFileSystem(new IndexDifferences(Empty, Empty, Empty), CancellationToken.None);
+            await indexer.SynchronizeIndexWithFileSystemAsync(new IndexDifferences(Empty, Empty, Empty), CancellationToken.None);
 
             session.Verify();
         }
 
         [Test]
-        public void DeletesMissingPackages()
+        public async Task DeletesMissingPackages()
         {
             var missing = new[] {"A.nupkg", "B.nupkg"};
 
@@ -44,7 +45,7 @@ namespace NuGet.Lucene.Tests
             session.Setup(s => s.Delete(It.IsAny<Query[]>())).Callback((Query[] query) =>
                 deletedTerms.AddRange(query.Cast<TermQuery>().Select(q => q.Term)));
 
-            indexer.SynchronizeIndexWithFileSystem(new IndexDifferences(Empty, missing, Empty), CancellationToken.None);
+            await indexer.SynchronizeIndexWithFileSystemAsync(new IndexDifferences(Empty, missing, Empty), CancellationToken.None);
 
             session.Verify(s => s.Commit(), Times.AtLeastOnce());
 
@@ -52,7 +53,7 @@ namespace NuGet.Lucene.Tests
         }
 
         [Test]
-        public void AddsNewPackages()
+        public async Task AddsNewPackages()
         {
             var newPackages = new[] { "A.1.0.nupkg" };
 
@@ -63,13 +64,13 @@ namespace NuGet.Lucene.Tests
 
             session.Setup(s => s.Commit()).Verifiable();
 
-            indexer.SynchronizeIndexWithFileSystem(new IndexDifferences(newPackages, Empty, Empty), CancellationToken.None);
+            await indexer.SynchronizeIndexWithFileSystemAsync(new IndexDifferences(newPackages, Empty, Empty), CancellationToken.None);
 
             session.VerifyAll();
         }
 
         [Test]
-        public void ContinuesOnException()
+        public async Task ContinuesOnException()
         {
             var newPackages = new[] { "A.1.0.nupkg", "B.1.0.nupkg" };
 
@@ -82,7 +83,16 @@ namespace NuGet.Lucene.Tests
 
             session.Setup(s => s.Commit()).Verifiable();
 
-            indexer.SynchronizeIndexWithFileSystem(new IndexDifferences(newPackages, Empty, Empty), CancellationToken.None);
+            try
+            {
+                await
+                    indexer.SynchronizeIndexWithFileSystemAsync(new IndexDifferences(newPackages, Empty, Empty),
+                        CancellationToken.None);
+            }
+            catch (Exception ex)
+            {
+                Assert.That(ex.Message, Is.EqualTo("invalid package"));
+            }
 
             session.VerifyAll();
         }

@@ -1,7 +1,5 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
 using System.Net.Http;
-using System.Threading.Tasks;
 using System.Web.Http;
 using NuGet.Lucene.Web.Util;
 
@@ -28,9 +26,8 @@ namespace NuGet.Lucene.Web.Controllers
     public class IndexingController : ApiController
     {
         public ILucenePackageRepository Repository { get; set; }
-        public ReusableCancellationTokenSource CancellationTokenSource { get; set; }
-
-        public Action<Func<Task>, Action<Exception>> FireAndForget = TaskUtils.FireAndForget;
+        public StopSynchronizationCancellationTokenSource UserRequestedCancellationTokenSource { get; set; }
+        public ITaskRunner TaskRunner { get; set; }
 
         /// <summary>
         /// Retrieve information about current activity as well as some statistics
@@ -59,10 +56,18 @@ namespace NuGet.Lucene.Web.Controllers
             {
                 return Request.CreateResponse(HttpStatusCode.Conflict, "Synchronization is already in progress.");
             }
+            
+            TaskRunner.QueueBackgroundWorkItem(async cancellationToken =>
+            {
+                var registration = cancellationToken.Register(
+                    UserRequestedCancellationTokenSource.Cancel);
 
-            FireAndForget(() => Repository.SynchronizeWithFileSystem(
-                                    CancellationTokenSource.Token),
-                                    UnhandledExceptionLogger.LogException);
+                using (registration)
+                {
+                    await Repository.SynchronizeWithFileSystem(
+                        UserRequestedCancellationTokenSource.Token);
+                }
+            });
 
             return Request.CreateResponse(HttpStatusCode.OK);
         }
@@ -79,7 +84,7 @@ namespace NuGet.Lucene.Web.Controllers
         [Authorize(Roles = RoleNames.PackageManager)]
         public HttpResponseMessage Cancel()
         {
-            CancellationTokenSource.Cancel();
+            UserRequestedCancellationTokenSource.Cancel();
 
             return Request.CreateResponse(HttpStatusCode.OK);
         }

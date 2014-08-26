@@ -2,7 +2,7 @@
 
 namespace NuGet.Lucene.Web
 {
-    public class ReusableCancellationTokenSource
+    public class StopSynchronizationCancellationTokenSource
     {
         private readonly object sync = new object();
         private CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();

@@ -53,11 +53,9 @@ namespace NuGet.Lucene
                 .Select(groupByPath => groupByPath.Throttle(QuietTime))
                 .SelectMany(obs => obs);
             
-#pragma warning disable 4014 // Because this call is not awaited, execution of the current method continues before the call is completed.
-            fileObserver = modifiedFilesThrottledByPath.Subscribe(path => OnPackageModified(path));
-            fileWatcher.Deleted += (s, e) => OnPackageDeleted(e.FullPath);
-            fileWatcher.Renamed += (s, e) => OnPackageRenamed(e.OldFullPath, e.FullPath);
-#pragma warning restore 4014
+            fileObserver = modifiedFilesThrottledByPath.Subscribe(async path => await OnPackageModified(path));
+            fileWatcher.Deleted += async (s, e) => await OnPackageDeleted(e.FullPath);
+            fileWatcher.Renamed += async (s, e) => await OnPackageRenamed(e.OldFullPath, e.FullPath);
             fileWatcher.Error += OnFileWatcherError;
 
             fileWatcher.EnableRaisingEvents = true;
@@ -84,7 +82,7 @@ namespace NuGet.Lucene
                 return;
             }
 
-            Indexer.SynchronizeIndexWithFileSystem(CancellationToken.None);
+            Indexer.SynchronizeIndexWithFileSystemAsync(CancellationToken.None);
         }
 
         public async Task OnPackageModified(string fullPath)
@@ -136,7 +134,7 @@ namespace NuGet.Lucene
 
             if (package != null)
             {
-                await Indexer.AddPackage(package);
+                await Indexer.AddPackageAsync(package, CancellationToken.None);
             }
         }
 
@@ -145,7 +143,7 @@ namespace NuGet.Lucene
             var package = PackageRepository.LoadFromIndex(fullPath);
             if (package != null)
             {
-                await Indexer.RemovePackage(package);
+                await Indexer.RemovePackageAsync(package, CancellationToken.None);
             }
         }
 
@@ -162,7 +160,7 @@ namespace NuGet.Lucene
             if (e.GetException() is InternalBufferOverflowException)
             {
                 Log.Warn(m => m("InternalBufferOverflowException in FileSystemWatcher; forcing full synchronization."));
-                Indexer.SynchronizeIndexWithFileSystem(CancellationToken.None);
+                Indexer.SynchronizeIndexWithFileSystemAsync(CancellationToken.None);
             }
             else
             {

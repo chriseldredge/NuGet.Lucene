@@ -57,16 +57,9 @@ namespace NuGet.Lucene.Web
 
             LoadAuthMiddleware(builder, settings);
 
-            var tokenSource = new ReusableCancellationTokenSource();
-            builder.RegisterInstance(tokenSource);
+            builder.RegisterInstance(new StopSynchronizationCancellationTokenSource());
 
             builder.RegisterApiControllers(typeof (NuGetWebApiModule).Assembly).PropertiesAutowired();
-
-            //TODO: this should move to somewhere else.
-            if (settings.SynchronizeOnStart)
-            {
-                repository.SynchronizeWithFileSystem(tokenSource.Token);    
-            }
         }
 
         protected virtual ILuceneRepositoryConfigurator InitializeRepositoryConfigurator(INuGetWebApiSettings settings)

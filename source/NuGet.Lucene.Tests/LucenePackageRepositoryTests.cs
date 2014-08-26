@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Moq;
 using NUnit.Framework;
@@ -49,9 +50,9 @@ namespace NuGet.Lucene.Tests
             public async Task IncrementDownloadCount()
             {
                 var pkg = MakeSamplePackage("sample", "2.1");
-                indexer.Setup(i => i.IncrementDownloadCount(pkg)).Returns(Task.FromResult(true)).Verifiable();
+                indexer.Setup(i => i.IncrementDownloadCountAsync(pkg, CancellationToken.None)).Returns(Task.FromResult(true)).Verifiable();
 
-                await repository.IncrementDownloadCount(pkg);
+                await repository.IncrementDownloadCountAsync(pkg, CancellationToken.None);
 
                 indexer.Verify();
             }

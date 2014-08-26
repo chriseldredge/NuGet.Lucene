@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Mime;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
 using AspNet.WebApi.HtmlMicrodataFormatter;
@@ -24,6 +25,7 @@ namespace NuGet.Lucene.Web.Controllers
         public ILucenePackageRepository LuceneRepository { get; set; }
         public IMirroringPackageRepository MirroringRepository { get; set; }
         public ISymbolSource SymbolSource { get; set; }
+        public ITaskRunner TaskRunner { get; set; }
 
         /// <summary>
         /// Gets metadata about a package from the <c>nuspec</c> files and other
@@ -91,8 +93,8 @@ namespace NuGet.Lucene.Web.Controllers
             if (Request.Method == HttpMethod.Get)
             {
                 result.Content = new StreamContent(package.GetStream());
-                
-                TaskUtils.FireAndForget(() => LuceneRepository.IncrementDownloadCount(package), UnhandledExceptionLogger.LogException);
+
+                TaskRunner.QueueBackgroundWorkItem(cancellationToken => LuceneRepository.IncrementDownloadCountAsync(package, cancellationToken));
             }
             else
             {
@@ -207,7 +209,7 @@ namespace NuGet.Lucene.Web.Controllers
 
             Audit("Delete package {0} version {1}", id, version);
 
-            var task1 = LuceneRepository.RemovePackageAsync(package);
+            var task1 = LuceneRepository.RemovePackageAsync(package, CancellationToken.None);
             var task2 = SymbolSource.RemoveSymbolsAsync(package);
 
             await Task.WhenAll(task1, task2);
@@ -239,7 +241,7 @@ namespace NuGet.Lucene.Web.Controllers
             }
 
             Audit("Add package {0} version {1}", package.Id, package.Version);
-            await LuceneRepository.AddPackageAsync(package);
+            await LuceneRepository.AddPackageAsync(package, CancellationToken.None);
 
             var location = Url.Link(RouteNames.Packages.Info, new { id = package.Id, version = package.Version });
             result.Headers.Location = new Uri(location);

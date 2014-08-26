@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>NuGet.Lucene.Web.Tests</RootNamespace>
     <AssemblyName>NuGet.Lucene.Web.Tests</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -179,7 +179,7 @@
       <Name>NuGet.Lucene.Tests</Name>
     </ProjectReference>
     <ProjectReference Include="..\NuGet.Lucene.Web\NuGet.Lucene.Web.csproj">
-      <Project>{4BB603B3-C3A2-4584-A6AE-5547AB4B8C46}</Project>
+      <Project>{4bb603b3-c3a2-4584-a6ae-5547ab4b8c46}</Project>
       <Name>NuGet.Lucene.Web</Name>
     </ProjectReference>
     <ProjectReference Include="..\NuGet.Lucene\NuGet.Lucene.csproj">

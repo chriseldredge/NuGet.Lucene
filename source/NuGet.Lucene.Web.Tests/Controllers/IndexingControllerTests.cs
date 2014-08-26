@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
 using Moq;
+using NuGet.Lucene.Web.Util;
 using NUnit.Framework;
 using NuGet.Lucene.Web.Controllers;
 
@@ -11,6 +14,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
     public class IndexingControllerTests : ApiControllerTests<IndexingController>
     {
         private Mock<ILucenePackageRepository> repository;
+        private Mock<ITaskRunner> taskRunner;
 
         [SetUp]
         public void SetUp()
@@ -21,12 +25,13 @@ namespace NuGet.Lucene.Web.Tests.Controllers
         protected override IndexingController CreateController()
         {
             repository = new Mock<ILucenePackageRepository>();
+            taskRunner = new Mock<ITaskRunner>();
 
             return new IndexingController
                 {
                     Repository = repository.Object,
-                    CancellationTokenSource = new ReusableCancellationTokenSource(),
-                    FireAndForget = (func, error) => func()
+                    UserRequestedCancellationTokenSource = new StopSynchronizationCancellationTokenSource(),
+                    TaskRunner = taskRunner.Object
                 };
         }
 
@@ -43,7 +48,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
         [Test]
         public void Cancel()
         {
-            var token = controller.CancellationTokenSource.Token;
+            var token = controller.UserRequestedCancellationTokenSource.Token;
 
             controller.Cancel();
 
@@ -54,10 +59,12 @@ namespace NuGet.Lucene.Web.Tests.Controllers
         public void Synchronize()
         {
             repository.Setup(r => r.GetStatus()).Returns(CreateSampleStatus());
+            taskRunner.Setup(t => t.QueueBackgroundWorkItem(It.IsAny<Func<CancellationToken, Task>>()))
+                .Callback<Func<CancellationToken, Task>>(f => f(CancellationToken.None));
 
             var result = controller.Synchronize();
 
-            repository.Verify(r => r.SynchronizeWithFileSystem(controller.CancellationTokenSource.Token), Times.Once());
+            repository.Verify(r => r.SynchronizeWithFileSystem(controller.UserRequestedCancellationTokenSource.Token), Times.Once());
 
             Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.OK));
         }
@@ -69,7 +76,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
 
             var result = controller.Synchronize();
 
-            repository.Verify(r => r.SynchronizeWithFileSystem(controller.CancellationTokenSource.Token), Times.Never());
+            repository.Verify(r => r.SynchronizeWithFileSystem(controller.UserRequestedCancellationTokenSource.Token), Times.Never());
 
             Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.Conflict));
         }

@@ -131,7 +131,7 @@ namespace NuGet.Lucene
             }
         }
 
-        public async Task SynchronizeIndexWithFileSystem(CancellationToken cancellationToken)
+        public async Task SynchronizeIndexWithFileSystemAsync(CancellationToken cancellationToken)
         {
             lock (synchronizationStatusLock)
             {
@@ -146,10 +146,10 @@ namespace NuGet.Lucene
             {
                 IndexDifferences differences = null;
 
-                await TaskEx.Run(() => differences = IndexDifferenceCalculator.FindDifferences(
-                    FileSystem, PackageRepository.LucenePackages, cancellationToken, UpdateSynchronizationStatus), cancellationToken);
+                differences = IndexDifferenceCalculator.FindDifferences(
+                    FileSystem, PackageRepository.LucenePackages, cancellationToken, UpdateSynchronizationStatus);
 
-                await TaskEx.Run(() => SynchronizeIndexWithFileSystem(differences, cancellationToken), cancellationToken);
+                await SynchronizeIndexWithFileSystemAsync(differences, cancellationToken);
             }
             finally
             {
@@ -157,23 +157,23 @@ namespace NuGet.Lucene
             }
         }
 
-        public Task AddPackage(LucenePackage package)
+        public Task AddPackageAsync(LucenePackage package, CancellationToken cancellationToken)
         {
             var update = new Update(package, UpdateType.Add);
-            pendingUpdates.Add(update);
+            pendingUpdates.Add(update, cancellationToken);
             return update.Task;
         }
 
-        public Task RemovePackage(IPackage package)
+        public Task RemovePackageAsync(IPackage package, CancellationToken cancellationToken)
         {
             if (!(package is LucenePackage)) throw new ArgumentException("Package of type " + package.GetType() + " not supported.");
 
             var update = new Update((LucenePackage)package, UpdateType.Remove);
-            pendingUpdates.Add(update);
+            pendingUpdates.Add(update, cancellationToken);
             return update.Task;
         }
 
-        public Task IncrementDownloadCount(IPackage package)
+        public Task IncrementDownloadCountAsync(IPackage package, CancellationToken cancellationToken)
         {
             if (!(package is LucenePackage)) throw new ArgumentException("Package of type " + package.GetType() + " not supported.");
 
@@ -192,7 +192,7 @@ namespace NuGet.Lucene
             return update.Task;
         }
 
-        internal void SynchronizeIndexWithFileSystem(IndexDifferences diff, CancellationToken cancellationToken)
+        internal async Task SynchronizeIndexWithFileSystemAsync(IndexDifferences diff, CancellationToken cancellationToken)
         {
             if (diff.IsEmpty) return;
 
@@ -205,7 +205,7 @@ namespace NuGet.Lucene
                 cancellationToken.ThrowIfCancellationRequested();
                 var package = new LucenePackage(FileSystem) { Path = path };
                 var update = new Update(package, UpdateType.RemoveByPath);
-                pendingUpdates.Add(update);
+                pendingUpdates.Add(update, cancellationToken);
                 tasks.Enqueue(update.Task);
             }
             
@@ -217,24 +217,16 @@ namespace NuGet.Lucene
                 {
                     UpdateSynchronizationStatus(SynchronizationState.Indexing, Interlocked.Increment(ref i),
                                                 packagesToIndex);
-                    tasks.Enqueue(SynchronizePackage(p));
+                    tasks.Enqueue(SynchronizePackage(p, cancellationToken));
                 });
 
-            Task.WaitAll(tasks.ToArray(), cancellationToken);
+            await TaskEx.WhenAll(tasks.ToArray());
         }
 
-        private Task SynchronizePackage(string path)
+        private async Task SynchronizePackage(string path, CancellationToken cancellationToken)
         {
-            try
-            {
-                var package = PackageRepository.LoadFromFileSystem(path);
-                return AddPackage(package);
-            }
-            catch (Exception ex)
-            {
-                Log.Error("Failed to index package path: " + path, ex);
-                return TaskEx.FromResult(ex);
-            }
+            var package = PackageRepository.LoadFromFileSystem(path);
+            await AddPackageAsync(package, cancellationToken);
         }
         
         private void IndexUpdateLoop()

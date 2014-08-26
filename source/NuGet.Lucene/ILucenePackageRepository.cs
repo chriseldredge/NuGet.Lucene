@@ -10,12 +10,12 @@ namespace NuGet.Lucene
         /// <summary>
         /// Async implementation of <see cref="IPackageRepository.AddPackage"/>.
         /// </summary>
-        Task AddPackageAsync(IPackage package);
+        Task AddPackageAsync(IPackage package, CancellationToken cancellationToken);
 
         /// <summary>
         /// Async implementation of <see cref="IPackageRepository.RemovePackage"/>.
         /// </summary>
-        Task RemovePackageAsync(IPackage package);
+        Task RemovePackageAsync(IPackage package, CancellationToken cancellationToken);
 
         /// <summary>
         /// Scans the packages directory and compares it with
@@ -61,7 +61,7 @@ namespace NuGet.Lucene
         /// this package and the <see cref="LucenePackage.DownloadCount"/> for
         /// all packages with the same <see cref="LucenePackage.Id"/>.
         /// </summary>
-        Task IncrementDownloadCount(IPackage package);
+        Task IncrementDownloadCountAsync(IPackage package, CancellationToken cancellationToken);
 
         /// <summary>
         /// Overload of <see cref="IServiceBasedRepository.Search"/>
