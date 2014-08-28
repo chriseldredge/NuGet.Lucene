@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Runtime.Versioning;
@@ -434,7 +435,7 @@ namespace NuGet.Lucene.Tests
             protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
             {
                 onSendAsync(request, cancellationToken);
-                return Task.FromResult(new HttpResponseMessage());
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("the package contents")});
             }
         }
     }
