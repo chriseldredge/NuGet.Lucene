@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Net;
+using System.Net.Http.Headers;
 using System.Reactive.Linq;
 using System.Runtime.Versioning;
 using System.Threading;
@@ -77,24 +77,55 @@ namespace NuGet.Lucene
                 return Convert(package);
             }
 
-            var parent = PathResolver.GetInstallPath(package);
-            var path = Path.Combine(parent, PathResolver.GetPackageFileName(package));
+            return await DownloadDataServicePackage(dataPackage, cancellationToken);
+        }
+
+        private async Task<LucenePackage> DownloadDataServicePackage(DataServicePackage dataPackage, CancellationToken cancellationToken)
+        {
+            var parent = PathResolver.GetInstallPath(dataPackage);
+            var path = Path.Combine(parent, PathResolver.GetPackageFileName(dataPackage));
 
             if (!Directory.Exists(parent))
             {
                 Directory.CreateDirectory(parent);
             }
 
-            //TODO: replace with System.Http client and use cancellation token
-            var client = new WebClient();
+            var client = CreateHttpClient();
+            var assembly = typeof (LucenePackageRepository).Assembly;
+            client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue(assembly.GetName().Name,
+                assembly.GetName().Version.ToString()));
+            client.DefaultRequestHeaders.Add(RepositoryOperationNames.OperationHeaderName, RepositoryOperationNames.Mirror);
+            Stream stream;
+            using (cancellationToken.Register(client.CancelPendingRequests))
+            {
+                stream = await client.GetStreamAsync(dataPackage.DownloadUrl);
+            }
 
-            client.Headers.Add(RepositoryOperationNames.OperationHeaderName, RepositoryOperationNames.Mirror);
-            await client.DownloadFileTaskAsync(dataPackage.DownloadUrl, path);
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var fileStream = OpenFileWriteStream(path);
+            using (fileStream)
+            {
+                using (stream)
+                {
+                    await stream.CopyToAsync(fileStream, 4096, cancellationToken);
+                }
+            }
 
             var lucenePackage = LoadFromFileSystem(path);
             lucenePackage.OriginUrl = dataPackage.DownloadUrl;
             lucenePackage.IsMirrored = true;
             return lucenePackage;
+        }
+
+        protected virtual System.Net.Http.HttpClient CreateHttpClient()
+        {
+            return new System.Net.Http.HttpClient();
+        }
+
+        protected virtual Stream OpenFileWriteStream(string path)
+        {
+            return File.OpenWrite(path);
         }
 
         public override void AddPackage(IPackage package)

@@ -2,10 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Reflection;
 using System.Runtime.Versioning;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Lucene.Net.Messages;
 using Moq;
 using NUnit.Framework;
 
@@ -282,6 +284,63 @@ namespace NuGet.Lucene.Tests
             }
         }
 
+        public class AddDataServicePackageTests : LucenePackageRepositoryTests
+        {
+            [Test]
+            public async Task DownloadAndIndex()
+            {
+                var package = new FakeDataServicePackage(new Uri("http://example.com/packages/Foo/1.0"));
+                packagePathResolver.Setup(r => r.GetInstallPath(package)).Returns("Foo");
+                packagePathResolver.Setup(r => r.GetPackageFileName(package)).Returns("Foo.1.0.nupkg");
+                fileSystem.Setup(fs => fs.GetFullPath(It.IsAny<string>())).Returns<string>(s => s);
+                fileSystem.Setup(fs => fs.OpenFile(It.IsAny<string>())).Returns(new MemoryStream());
+
+                await repository.AddPackageAsync(package, CancellationToken.None);
+
+                indexer.Verify(i => i.AddPackageAsync(It.IsAny<LucenePackage>(), It.IsAny<CancellationToken>()), Times.Once);
+            }
+
+            [Test]
+            public async Task CancelDuringGetDownloadStream()
+            {
+                var package = new FakeDataServicePackage(new Uri("http://example.com/packages/Foo/1.0"));
+                packagePathResolver.Setup(r => r.GetInstallPath(package)).Returns("Foo");
+                packagePathResolver.Setup(r => r.GetPackageFileName(package)).Returns("Foo.1.0.nupkg");
+                var insideHandlerSignal = new ManualResetEventSlim(initialState: false);
+                var proceedFromHandlerSignal = new ManualResetEventSlim(initialState: false);
+                var exception = new TaskCanceledException("Fake");
+                repository.MessageHandler = new FakeHttpMessageHandler((req, token) =>
+                {
+                    insideHandlerSignal.Set();
+                    Assert.True(proceedFromHandlerSignal.Wait(TimeSpan.FromMilliseconds(500)), "Timeout waiting for proceedFromHandlerSignal");
+                    if (token.IsCancellationRequested)
+                    {
+                        throw exception;
+                    }
+                });
+
+                var cts = new CancellationTokenSource();
+
+                var cancelTask = Task.Run(() =>
+                {
+                    Assert.True(insideHandlerSignal.Wait(TimeSpan.FromMilliseconds(500)), "Timeout waiting for MessageHandler.SendAsync");
+                    cts.Cancel();
+                    proceedFromHandlerSignal.Set();
+                });
+
+                try
+                {
+                    await repository.AddPackageAsync(package, cts.Token);
+                    Assert.Fail("Expected TaskCanceledException");
+                }
+                catch (TaskCanceledException ex)
+                {
+                    Assert.That(ex, Is.SameAs(exception), "Expected spcific instance of TaskCanceledException");
+                }
+
+            }
+        }
+
         private Mock<IPackage> SetUpConvertPackage()
         {
             var package = new Mock<IPackage>().SetupAllProperties();
@@ -326,16 +385,56 @@ namespace NuGet.Lucene.Tests
             }
         }
 
+        class FakeDataServicePackage : DataServicePackage
+        {
+            public FakeDataServicePackage(Uri packageStreamUri)
+            {
+                var context = new Mock<IDataServiceContext>();
+                context.Setup(c => c.GetReadStreamUri(It.IsAny<object>())).Returns(packageStreamUri);
+                var prop = typeof(DataServicePackage).GetProperty("Context", BindingFlags.NonPublic | BindingFlags.Instance);
+                prop.SetValue(this, context.Object);
+            }
+        }
+
         public class TestableLucenePackageRepository : LucenePackageRepository
         {
+            public HttpMessageHandler MessageHandler { get; set; }
+
             public TestableLucenePackageRepository(IPackagePathResolver packageResolver, IFileSystem fileSystem)
                 : base(packageResolver, fileSystem)
             {
+                MessageHandler = new FakeHttpMessageHandler((req, cancel) => {});
             }
 
             protected override IPackage OpenPackage(string path)
             {
                 return new TestPackage(Path.GetFileNameWithoutExtension(path));
+            }
+
+            protected override Stream OpenFileWriteStream(string path)
+            {
+                return new MemoryStream();
+            }
+
+            protected override System.Net.Http.HttpClient CreateHttpClient()
+            {
+                return new System.Net.Http.HttpClient(MessageHandler);
+            }
+        }
+
+        public class FakeHttpMessageHandler : HttpMessageHandler
+        {
+            private readonly Action<HttpRequestMessage, CancellationToken> onSendAsync;
+
+            public FakeHttpMessageHandler(Action<HttpRequestMessage, CancellationToken> onSendAsync)
+            {
+                this.onSendAsync = onSendAsync;
+            }
+
+            protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+            {
+                onSendAsync(request, cancellationToken);
+                return Task.FromResult(new HttpResponseMessage());
             }
         }
     }

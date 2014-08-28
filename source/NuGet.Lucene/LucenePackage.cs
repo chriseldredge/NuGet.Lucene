@@ -255,7 +255,7 @@ namespace NuGet.Lucene
 
         public Stream GetStream()
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public override string ToString()
