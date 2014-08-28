@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Hosting;
@@ -24,7 +25,7 @@ namespace NuGet.Lucene.Web.Util
 
             if (HostingEnvironment.IsHosted)
             {
-                HostingEnvironment.QueueBackgroundWorkItem((Func<CancellationToken, Task>) invoker.Invoke);
+                QueueuHostedTask(invoker.Invoke);
             }
             else
             {
@@ -40,6 +41,34 @@ namespace NuGet.Lucene.Web.Util
                 {
                     return pendingTasks.ToArray();
                 }
+            }
+        }
+
+        /// <summary>
+        /// Uses reflection to invoke HostingEnvironment.QueueBackgroundWorkItem when
+        /// running on ASP.NET 4.5.2 or later or falls back to ThreadPool.QueueUserWorkItem
+        /// on older runtimes.
+        /// </summary>
+        private void QueueuHostedTask(Func<CancellationToken, Task> workItem)
+        {
+            var method = typeof(HostingEnvironment).GetMethod(
+                "QueueBackgroundWorkItem",
+                BindingFlags.Static | BindingFlags.Public,
+                null,
+                CallingConventions.Standard,
+                new[] { typeof(Func<CancellationToken, Task>) },
+                null);
+
+            if (method != null)
+            {
+                method.Invoke( /* static */ null, new object[] { workItem });
+            }
+            else
+            {
+                ThreadPool.QueueUserWorkItem(async _ =>
+                {
+                    await workItem(ShutdownToken);
+                });
             }
         }
 
