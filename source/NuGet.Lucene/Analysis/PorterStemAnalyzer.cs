@@ -3,7 +3,7 @@ using Lucene.Net.Analysis;
 using Lucene.Net.Analysis.Standard;
 using Lucene.Net.Util;
 
-namespace NuGet.Lucene
+namespace NuGet.Lucene.Analysis
 {
     public class PorterStemAnalyzer : StandardAnalyzer
     {

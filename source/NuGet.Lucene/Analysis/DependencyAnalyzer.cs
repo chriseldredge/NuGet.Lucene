@@ -2,7 +2,7 @@
 using Lucene.Net.Analysis;
 using Lucene.Net.Linq.Analysis;
 
-namespace NuGet.Lucene
+namespace NuGet.Lucene.Analysis
 {
     public class DependencyAnalyzer : CaseInsensitiveKeywordAnalyzer
     {

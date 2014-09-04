@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Packaging;
 using System.Linq;
 using System.Runtime.Versioning;
+using Common.Logging;
 
 namespace NuGet.Lucene
 {
@@ -38,10 +39,11 @@ namespace NuGet.Lucene
         public byte[] Hash { get; private set; }
         public Version MinClientVersion { get; private set; }
         public bool DevelopmentDependency { get; private set; }
+        public IEnumerable<IPackageFile> Files { get; private set; }
 
         public IEnumerable<IPackageFile> GetFiles()
         {
-            return new IPackageFile[0];
+            return Files;
         }
 
         public IEnumerable<FrameworkName> GetSupportedFrameworks()
@@ -75,6 +77,8 @@ namespace NuGet.Lucene
                 var part = package.GetPart(packageRelationship.TargetUri);
                 using (var stream2 = part.GetStream())
                     result.ReadManifest(stream2);
+
+                result.Files = package.GetParts().Select(p => new LucenePackageFile(p.Uri.OriginalString)).ToArray();
             }
 
             using (var stream = new FileStream(originalFilePath, FileMode.Open, FileAccess.Read))
@@ -113,7 +117,7 @@ namespace NuGet.Lucene
             Copyright = packageMetadata.Copyright;
             PackageAssemblyReferences = packageMetadata.PackageAssemblyReferences;
             DevelopmentDependency = packageMetadata.DevelopmentDependency;
-
+            
             if (string.IsNullOrEmpty(Tags))
                 return;
             Tags = " " + Tags + " ";

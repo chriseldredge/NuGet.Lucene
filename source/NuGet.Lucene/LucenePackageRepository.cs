@@ -208,6 +208,7 @@ namespace NuGet.Lucene
                                 (pkg.SearchTitle == criteria.SearchTerm).Boost(3) ||
                                 (pkg.Tags == criteria.SearchTerm).Boost(2) ||
                                 (pkg.Authors.Contains(criteria.SearchTerm) || pkg.Owners.Contains(criteria.SearchTerm)).Boost(2) ||
+                                (pkg.Files.Contains(criteria.SearchTerm)) ||
                                 (pkg.Summary == criteria.SearchTerm || pkg.Description == criteria.SearchTerm)).AllowSpecialCharacters()
                            select
                                pkg;
@@ -462,14 +463,8 @@ namespace NuGet.Lucene
             package.LastUpdated = GetLastModified(package, path);
             package.Published = package.LastUpdated;
             package.Path = path;
-
             package.SupportedFrameworks = sourcePackage.GetSupportedFrameworks().Select(VersionUtility.GetShortFrameworkName);
-
-            var localPackage = sourcePackage as LocalPackage;
-            if (localPackage != null)
-            {
-                package.Files = localPackage.GetFiles().Select(f => f.Path);
-            }
+            package.Files = sourcePackage.GetFiles().Select(f => f.Path).ToArray();
         }
 
         private DateTimeOffset GetLastModified(LucenePackage package, string path)

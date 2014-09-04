@@ -90,6 +90,9 @@
     <Compile Include="..\..\build\VersionInfo.cs" Condition="Exists('..\..\build\VersionInfo.cs')">
       <Link>Properties\VersionInfo.cs</Link>
     </Compile>
+    <Compile Include="Analysis\DependencyAnalyzer.cs" />
+    <Compile Include="Analysis\PathAnalyzer.cs" />
+    <Compile Include="Analysis\PorterStemAnalyzer.cs" />
     <Compile Include="FastZipPackage.cs" />
     <Compile Include="ILuceneRepositoryConfigurator.cs" />
     <Compile Include="LuceneRepositoryConfigurator.cs" />
@@ -97,7 +100,6 @@
     <Compile Include="GroupingPackagePathResolver.cs" />
     <Compile Include="NuGetCommonLoggingAdapter.cs" />
     <Compile Include="PackageOriginFilter.cs" />
-    <Compile Include="PorterStemAnalyzer.cs" />
     <Compile Include="SearchCriteria.cs" />
     <Compile Include="SearchSortField.cs" />
     <Compile Include="Util\CollectionExtensions.cs" />
@@ -113,7 +115,6 @@
     <Compile Include="Mapping\CachingSemanticVersionConverter.cs" />
     <Compile Include="Mapping\DateTimeOffsetToTicksConverter.cs" />
     <Compile Include="Mapping\PackageDependencySetConverter.cs" />
-    <Compile Include="DependencyAnalyzer.cs" />
     <Compile Include="PackageFileSystemWatcher.cs" />
     <Compile Include="PackageIndexer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

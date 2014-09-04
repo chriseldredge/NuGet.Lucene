@@ -231,7 +231,7 @@ namespace NuGet.Lucene.Tests
         public class SearchTests : LucenePackageRepositoryTests
         {
             [Test]
-            public void SearchById()
+            public void Id()
             {
                 InsertPackage("Foo.Bar", "1.0");
 
@@ -260,6 +260,66 @@ namespace NuGet.Lucene.Tests
                 var result = repository.Search(new SearchCriteria("thing"));
 
                 Assert.That(result.Select(r => r.Id).ToArray(), Is.EqualTo(new[] { "Foo.BarThingUpdater" }));
+            }
+
+            [Test]
+            public void FileName()
+            {
+                var pkg = MakeSamplePackage("Foo.Bar", "1.0");
+                pkg.Files = new[] {"/lib/net45/baz.dll"};
+                InsertPackage(pkg);
+
+                var result = repository.Search(new SearchCriteria("baz.dll"));
+
+                Assert.That(result.Select(r => r.Id).ToArray(), Is.EqualTo(new[] { "Foo.Bar" }));
+            }
+
+            [Test]
+            public void FileNameCaseInsensitive()
+            {
+                var pkg = MakeSamplePackage("Foo.Bar", "1.0");
+                pkg.Files = new[] { "/lib/net45/Baz.DLL" };
+                InsertPackage(pkg);
+
+                var result = repository.Search(new SearchCriteria("baz.dll"));
+
+                Assert.That(result.Select(r => r.Id).ToArray(), Is.EqualTo(new[] { "Foo.Bar" }));
+            }
+
+            [Test]
+            public void FileNameFullPath()
+            {
+                var pkg = MakeSamplePackage("Foo.Bar", "1.0");
+                pkg.Files = new[] { "/lib/net45/baz.dll" };
+                InsertPackage(pkg);
+
+                var result = repository.Search(new SearchCriteria("/lib/net45/baz.dll"));
+
+                Assert.That(result.Select(r => r.Id).ToArray(), Is.EqualTo(new[] { "Foo.Bar" }));
+            }
+
+            [Test]
+            public void FileNameNoExtension()
+            {
+                var pkg = MakeSamplePackage("Foo.Bar", "1.0");
+                pkg.Files = new[] { "/lib/net45/Biz.Baz.DLL" };
+                InsertPackage(pkg);
+
+                var result = repository.Search(new SearchCriteria("Biz.Baz"));
+
+                Assert.That(result.Select(r => r.Id).ToArray(), Is.EqualTo(new[] { "Foo.Bar" }));
+            }
+
+            [Test]
+            public void FileNamePartialMatch()
+            {
+                var pkg = MakeSamplePackage("Foo.Bar", "1.0");
+                pkg.Files = new[] { "/lib/net45/Biz.Baz.DLL" };
+                InsertPackage(pkg);
+
+                var result = repository.Search(new SearchCriteria("Baz"));
+
+                Assert.That(result.Select(r => r.Id).ToArray(), Is.EqualTo(new[] { "Foo.Bar" }));
             }
         }
 
