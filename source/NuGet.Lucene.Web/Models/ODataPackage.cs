@@ -47,6 +47,7 @@ namespace NuGet.Lucene.Web.Models
             DownloadCount = package.DownloadCount;
             VersionDownloadCount = package.VersionDownloadCount;
             DevelopmentDependency = package.DevelopmentDependency;
+            Score = package.Score;
             #endregion
         }
 
