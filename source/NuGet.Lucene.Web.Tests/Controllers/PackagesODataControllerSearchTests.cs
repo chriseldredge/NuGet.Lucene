@@ -9,20 +9,6 @@ namespace NuGet.Lucene.Web.Tests.Controllers
     public class PackagesODataControllerSearchTests : PackagesODataControllerTestBase
     {
         [Test]
-        public void SortsByScore()
-        {
-            var packages = new LucenePackage[0];
-            repo.Setup(r => r.Search("foo", new string[0], false)).Returns(packages.AsQueryable()).Verifiable();
-            var queryOptions = SetUpRequestWithOptions("/api/odata/Search()");
-            
-            var query = controller.Search("foo", "", includePrerelease: false, options: queryOptions);
-
-            repo.VerifyAll();
-
-            AssertOrderingBy(query, "result => result.Score()");
-        }
-
-        [Test]
         public void NoSortWhenOrderSpecified()
         {
             var packages = new LucenePackage[0];
@@ -32,10 +18,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
             var query = controller.Search("foo", "", includePrerelease: false, options: queryOptions);
 
             repo.VerifyAll();
-
-            AssertOrderingBy(query);
         }
-
 
         [Test]
         public async Task CountSearch()

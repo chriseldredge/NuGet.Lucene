@@ -56,7 +56,7 @@ namespace NuGet.Lucene.Web.Controllers
 
         [HttpPost]
         [HttpGet]
-        [EnableQuery(PageSize = 20, HandleNullPropagation = HandleNullPropagationOption.False)]
+        [EnableQuery(PageSize = 20, HandleNullPropagation = HandleNullPropagationOption.False, EnsureStableOrdering = false)]
         public IQueryable<ODataPackage> Search(
             [FromODataUri] string searchTerm,
             [FromODataUri] string targetFramework,
@@ -71,13 +71,6 @@ namespace NuGet.Lucene.Web.Controllers
             }
 
             var searchQuery = Repository.Search(searchTerm, targetFrameworks, includePrerelease);
-
-            if (options.OrderBy == null)
-            {
-                // If no explicit ordering was specified, a default ordering by key (Id, then Version) will be applied.
-                // Order by Score in this case to prevent default ordering from taking precendence.
-                searchQuery = searchQuery.OrderBy(result => result.Score());
-            }
 
             return from package in searchQuery select package.ToODataPackage();
         }
