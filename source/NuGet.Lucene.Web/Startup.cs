@@ -130,7 +130,7 @@ namespace NuGet.Lucene.Web
                 await Task.WhenAll(pendingTasks);
             }
 
-            Log.Info(m => m("Disposing Autofact application container."));
+            Log.Info(m => m("Disposing Autofac application container."));
             container.Dispose();
         }
 

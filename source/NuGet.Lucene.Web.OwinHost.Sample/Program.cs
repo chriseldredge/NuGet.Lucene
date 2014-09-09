@@ -42,6 +42,12 @@ namespace NuGet.Lucene.Web.OwinHost.Sample
 
         private void Start(IAppBuilder app)
         {
+            app.Use(async (ctx, next) =>
+            {
+                LogManager.GetLogger<Program>().Info(m => m("{0} {1}", ctx.Request.Method, ctx.Request.Uri));
+                await next();
+            });
+
             startup = new Startup();
             startup.Configuration(app);
 
