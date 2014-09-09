@@ -1,10 +1,16 @@
-﻿using System.Linq;
+﻿using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.Web.Http.OData.Query;
 using System.Web.Http.Results;
+using Lucene.Net.Linq;
+using Lucene.Net.Store;
+using Lucene.Net.Util;
 using Moq;
 using NuGet.Lucene.Tests;
 using NuGet.Lucene.Web.Models;
+using NuGet.Lucene.Web.Util;
 using NUnit.Framework;
 
 namespace NuGet.Lucene.Web.Tests.Controllers
@@ -28,6 +34,19 @@ namespace NuGet.Lucene.Web.Tests.Controllers
             var result = controller.Get();
 
             Assert.That(result.Count(), Is.EqualTo(packages.Count()));
+            repo.VerifyAll();
+        }
+
+        [Test]
+        public void GetPackagesSkipSelect()
+        {
+            var provider = new LuceneDataProvider(new RAMDirectory(), Version.LUCENE_30);
+            var options = SetUpRequestWithOptions("/api/odata/Packages?$select=Id&$skip=1");
+
+            var queryable = provider.AsQueryable(() => new LucenePackage(_ => new MemoryStream())).Select(x => x.ToODataPackage());
+            var result = options.ApplyTo(queryable, new ODataQuerySettings {HandleNullPropagation = HandleNullPropagationOption.False});
+            
+            Assert.That(result.OfType<object>().ToList().Count(), Is.EqualTo(0));
             repo.VerifyAll();
         }
 
