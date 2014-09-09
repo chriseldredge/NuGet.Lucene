@@ -22,7 +22,7 @@ namespace NuGet.Lucene.Web.Controllers
     {
         public IMirroringPackageRepository Repository { get; set; }
 
-        [EnableQuery(PageSize = 100, HandleNullPropagation = HandleNullPropagationOption.False)]
+        [EnableQuery(PageSize = 20, HandleNullPropagation = HandleNullPropagationOption.False)]
         public IQueryable<ODataPackage> Get()
         {
             return Repository.GetPackages().Select(p => p.ToODataPackage()).AsQueryable();
@@ -33,7 +33,7 @@ namespace NuGet.Lucene.Web.Controllers
             var queryResults = (IQueryable<ODataPackage>)options.ApplyTo(Get());
             var count = queryResults.Count();
 
-            return OkCount(count);    
+            return OkCount(count);
         }
 
         public IHttpActionResult Get([FromODataUri] string id, [FromODataUri] string version)
@@ -56,7 +56,7 @@ namespace NuGet.Lucene.Web.Controllers
 
         [HttpPost]
         [HttpGet]
-        [EnableQuery(PageSize = 100, HandleNullPropagation = HandleNullPropagationOption.False)]
+        [EnableQuery(PageSize = 20, HandleNullPropagation = HandleNullPropagationOption.False)]
         public IQueryable<ODataPackage> Search(
             [FromODataUri] string searchTerm,
             [FromODataUri] string targetFramework,
