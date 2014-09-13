@@ -27,7 +27,7 @@ namespace NuGet.Lucene.Web.Tests.Formatters
         }
 
         [Test]
-        public async void ThrowsOnNonMultipartContent()
+        public async Task ThrowsOnNonMultipartContent()
         {
             content.Headers.ContentType = new MediaTypeHeaderValue("application/something-weird");
             
