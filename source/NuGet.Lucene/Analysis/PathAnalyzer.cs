@@ -48,8 +48,6 @@ namespace NuGet.Lucene.Analysis
                     default:
                         return NextFileNamePart();
                 }
-                    
-                return false;
             }
 
             private bool SetTermToFileName()
