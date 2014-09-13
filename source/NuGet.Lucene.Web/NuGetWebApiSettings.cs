@@ -16,9 +16,13 @@ namespace NuGet.Lucene.Web
         private readonly NameValueCollection roleMappings;
 
         public NuGetWebApiSettings()
-            : this(DefaultAppSettingPrefix, ConfigurationManager.AppSettings, ConfigurationManager.GetSection("roleMappings") as NameValueCollection)
+            : this(DefaultAppSettingPrefix)
         {
-            
+        }
+
+        public NuGetWebApiSettings(string prefix)
+            : this(prefix, ConfigurationManager.AppSettings, ConfigurationManager.GetSection("roleMappings") as NameValueCollection)
+        {
         }
 
         public NuGetWebApiSettings(string prefix, NameValueCollection settings, NameValueCollection roleMappings)
