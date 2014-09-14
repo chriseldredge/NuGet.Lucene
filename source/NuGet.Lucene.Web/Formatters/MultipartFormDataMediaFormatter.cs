@@ -5,7 +5,6 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Formatting;
 using System.Net.Http.Headers;
-using System.Text;
 using System.Threading.Tasks;
 using System.Web.Http;
 
@@ -52,13 +51,14 @@ namespace NuGet.Lucene.Web.Formatters
         private static HttpContent ReplaceContent(HttpContent content, Stream multipartStream)
         {
             var replacement = new StreamContent(multipartStream);
-            replacement.Headers.ContentLength = multipartStream.Length;
             replacement.Headers.ContentType = content.Headers.ContentType;
             return replacement;
         }
 
         /// <summary>
         /// Manually parse malformed content header that does not quote boundary parameter value.
+        /// Fixes bug on mono where <see cref="HttpContentHeaders.ContentType"/> is null when
+        /// boundary parameter is not quoted.
         /// </summary>
         static MediaTypeHeaderValue ParseContentType(HttpContent content)
         {
@@ -97,45 +97,13 @@ namespace NuGet.Lucene.Web.Formatters
 
         /// <summary>
         /// Fixes the following non-compliant issues with nuget client (as of 2.8.2):
-        ///  * Ensure new line after at end of stream
         ///  * Ensure eol style is CRLF at ending boundary marker
         /// </summary>
         private async Task<Stream> FixIncompleteMultipartContent(HttpContent content)
         {
-            var capacity = (int) content.Headers.ContentLength.GetValueOrDefault(128000) + 2;
-            var buffer = new MemoryStream(capacity);
-
-            await content.CopyToAsync(buffer);
-
-            var bytes = buffer.GetBuffer();
-
-            if (bytes[buffer.Length - 2] != '\r' || bytes[buffer.Length - 1] != '\n')
-            {
-                buffer.Write(Encoding.ASCII.GetBytes("\r\n"), 0, 2);
-            }
-
-            var boundary = content.Headers.ContentType.Parameters.Single(p => p.Name == "boundary").Value;
-
-            var position = buffer.Length - boundary.Length - 6;
-            if (bytes[position] != '\r' && bytes[position+1] == '\n')
-            {
-                var oldCapacity = buffer.Capacity;
-                buffer.SetLength(buffer.Length + 1);
-                if (oldCapacity != buffer.Capacity)
-                {
-                    bytes = buffer.GetBuffer();
-                }
-
-                for (var i = buffer.Length - 1; i > position; i--)
-                {
-                    bytes[i] = bytes[i - 1];
-                }
-
-                bytes[position + 1] = (byte)'\r';
-            }
-            buffer.Seek(0, SeekOrigin.Begin);
-
-            return buffer;
+            var boundaryParam = content.Headers.ContentType.Parameters.Single(p => p.Name == "boundary");
+            var boundary = "--" + boundaryParam.Value.Trim('\'', '"');
+            return new MalformedMultipartFixingStream(await content.ReadAsStreamAsync(), boundary);
         }
 
         public override bool CanReadType(Type type)

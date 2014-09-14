@@ -183,6 +183,7 @@
     <Compile Include="Controllers\PackagesODataController.cs" />
     <Compile Include="Controllers\SourceFilesController.cs" />
     <Compile Include="Controllers\SymbolsController.cs" />
+    <Compile Include="Formatters\MalformedMultipartFixingStream.cs" />
     <Compile Include="Formatters\NuGetHtmlMicrodataFormatter.cs" />
     <Compile Include="Formatters\PackageHtmlSerializer.cs" />
     <Compile Include="Formatters\PackageSummaryListSerializer.cs" />
