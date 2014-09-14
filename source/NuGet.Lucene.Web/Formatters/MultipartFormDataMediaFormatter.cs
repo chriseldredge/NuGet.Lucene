@@ -60,12 +60,9 @@ namespace NuGet.Lucene.Web.Formatters
         }
 
         /// <summary>
-        /// The NuGet client does not include a new line after the final boundary marker
-        /// which causes <see cref="HttpContentMultipartExtensions.ReadAsMultipartAsync(HttpContent)"/>
-        /// to throw <see cref="IOException"/> "Unexpected end of MIME multipart stream.
-        /// MIME multipart message is not complete."
-        /// 
-        /// This method appends a newline to the request body when missing.
+        /// Fixes the following non-compliant issues with nuget client (as of 2.8.2):
+        ///  * Ensure new line after at end of stream
+        ///  * Ensure eol style is CRLF at ending boundary marker
         /// </summary>
         private async Task<Stream> FixIncompleteMultipartContent(HttpContent content)
         {
@@ -81,6 +78,25 @@ namespace NuGet.Lucene.Web.Formatters
                 buffer.Write(Encoding.ASCII.GetBytes("\r\n"), 0, 2);
             }
 
+            var boundary = content.Headers.ContentType.Parameters.Single(p => p.Name == "boundary").Value;
+
+            var position = buffer.Length - boundary.Length - 6;
+            if (bytes[position] != '\r' && bytes[position+1] == '\n')
+            {
+                var oldCapacity = buffer.Capacity;
+                buffer.SetLength(buffer.Length + 1);
+                if (oldCapacity != buffer.Capacity)
+                {
+                    bytes = buffer.GetBuffer();
+                }
+
+                for (var i = buffer.Length - 1; i > position; i--)
+                {
+                    bytes[i] = bytes[i - 1];
+                }
+
+                bytes[position + 1] = (byte)'\r';
+            }
             buffer.Seek(0, SeekOrigin.Begin);
 
             return buffer;
