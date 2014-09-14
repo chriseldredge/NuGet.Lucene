@@ -23,6 +23,8 @@ namespace NuGet.Lucene.Web.Formatters
 
         public override async Task<object> ReadFromStreamAsync(Type type, Stream readStream, HttpContent content, IFormatterLogger formatterLogger)
         {
+            content.Headers.ContentType = ParseContentType(content);
+
             if (!content.IsMimeMultipartContent())
             {
                 throw new HttpResponseException(HttpStatusCode.UnsupportedMediaType);
@@ -50,13 +52,47 @@ namespace NuGet.Lucene.Web.Formatters
         private static HttpContent ReplaceContent(HttpContent content, Stream multipartStream)
         {
             var replacement = new StreamContent(multipartStream);
-            
-            foreach (var header in content.Headers)
+            replacement.Headers.ContentLength = multipartStream.Length;
+            replacement.Headers.ContentType = content.Headers.ContentType;
+            return replacement;
+        }
+
+        /// <summary>
+        /// Manually parse malformed content header that does not quote boundary parameter value.
+        /// </summary>
+        static MediaTypeHeaderValue ParseContentType(HttpContent content)
+        {
+            var contentTypes = content.Headers.Where(h => h.Key == "Content-Type").ToArray();
+
+            if (contentTypes.Length == 0)
             {
-                replacement.Headers.Add(header.Key, header.Value);
+                return null;
             }
 
-            return replacement;
+            var contentType = contentTypes.Last();
+            var typeAndParameters = contentType.Value.First()
+                                        .Split(new[] {';'}, 2);
+
+            var header = new MediaTypeHeaderValue(typeAndParameters[0]);
+
+            if (typeAndParameters.Length == 1)
+            {
+                return header;
+            }
+
+            foreach (var param in typeAndParameters[1].Split(';'))
+            {
+                var kv = param.Split(new[] {'='}, 2);
+                var key = kv[0].Trim();
+                var value = kv[1].Trim();
+                if (value[0] != '"' && value[0] != '\'')
+                {
+                    value = '"' + value + '"';
+                }
+                header.Parameters.Add(new NameValueHeaderValue(key, value));
+            }
+
+            return header;
         }
 
         /// <summary>
