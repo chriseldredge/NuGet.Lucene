@@ -130,7 +130,7 @@ namespace NuGet.Lucene
 
         public override void AddPackage(IPackage package)
         {
-            var task = AddPackageAsync(package, CancellationToken.None);
+            var task = TaskEx.Run(async () => await AddPackageAsync(package, CancellationToken.None));
             task.Wait();
         }
 
@@ -157,7 +157,8 @@ namespace NuGet.Lucene
         
         public override void RemovePackage(IPackage package)
         {
-            RemovePackageAsync(package, CancellationToken.None).Wait();
+            var task = TaskEx.Run(async () => await RemovePackageAsync(package, CancellationToken.None));
+            task.Wait();
         }
 
         public override IQueryable<IPackage> GetPackages()
