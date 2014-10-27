@@ -135,6 +135,11 @@ namespace NuGet.Lucene.Web
                                 pathPrefix + "packages",
                                 new { controller = "Packages", action = "Search" },
                                 new { httpMethod = new HttpMethodConstraint(HttpMethod.Get, HttpMethod.Options) });
+
+            routes.MapHttpRoute(RouteNames.Packages.GetAvailableSearchFieldNames,
+                                pathPrefix + "packages/$searchable-fields",
+                                new { controller = "Packages", action = "GetAvailableSearchFieldNames" },
+                                new { httpMethod = new HttpMethodConstraint(HttpMethod.Get, HttpMethod.Options) });
             
             routes.MapHttpRoute(RouteNames.Packages.Upload,
                                 pathPrefix + "packages",

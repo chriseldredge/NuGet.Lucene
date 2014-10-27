@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -68,7 +69,17 @@ namespace NuGet.Lucene
         /// Overload of <see cref="IServiceBasedRepository.Search"/>
         /// using parameter object for better flexibility.
         /// </summary>
+        /// <exception cref="InvalidSearchCriteriaException">
+        /// When search criteria is invalid. For example, if
+        /// <see cref="SearchCriteria.Advanced"/> is <c>true</c>
+        /// and <see cref="SearchCriteria.SearchTerm"/> fails to parse.
+        /// </exception>
         IQueryable<IPackage> Search(SearchCriteria criteria);
+
+        /// <summary>
+        /// Get an enumeration of fields that can be queried using native Lucene queries.
+        /// </summary>
+        IEnumerable<string> GetAvailableSearchFieldNames();
 
         /// <summary>
         /// Requests that the Lucene index be optimized, forcing all segments

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,11 +10,12 @@ using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Common.Logging;
+using Lucene.Net.Index;
 using Lucene.Net.Linq;
 using NuGet.Lucene.IO;
+using Lucene.Net.QueryParsers;
 using NuGet.Lucene.Util;
 using LuceneDirectory = Lucene.Net.Store.Directory;
-
 #if NET_4_5
 using TaskEx=System.Threading.Tasks.Task;
 #endif
@@ -132,7 +133,7 @@ namespace NuGet.Lucene
                     {
                         lucenePackage = Convert(fastZipPackage);
                     }
-                    
+
                     return lucenePackage;
                 }
                 else
@@ -248,7 +249,7 @@ namespace NuGet.Lucene
 
             await task;
         }
-        
+
         public override void RemovePackage(IPackage package)
         {
             var task = TaskEx.Run(async () => await RemovePackageAsync(package, CancellationToken.None));
@@ -281,6 +282,11 @@ namespace NuGet.Lucene
             return LucenePackages.Where(p => p.Id == packageId);
         }
 
+        public IEnumerable<string> GetAvailableSearchFieldNames()
+        {
+            return LuceneDataProvider.GetIndexedPropertyNames<LucenePackage>();
+        }
+
         public IQueryable<IPackage> Search(string searchTerm, IEnumerable<string> targetFrameworks, bool allowPrereleaseVersions)
         {
             return Search(new SearchCriteria(searchTerm)
@@ -296,17 +302,7 @@ namespace NuGet.Lucene
 
             if (!string.IsNullOrEmpty(criteria.SearchTerm))
             {
-                packages = from
-                                pkg in packages
-                           where
-                                ((pkg.Id == criteria.SearchTerm || pkg.Title == criteria.SearchTerm).Boost(4) ||
-                                (pkg.SearchTitle == criteria.SearchTerm).Boost(3) ||
-                                (pkg.Tags == criteria.SearchTerm).Boost(2) ||
-                                (pkg.Authors.Contains(criteria.SearchTerm) || pkg.Owners.Contains(criteria.SearchTerm)).Boost(2) ||
-                                (pkg.Files.Contains(criteria.SearchTerm)) ||
-                                (pkg.Summary == criteria.SearchTerm || pkg.Description == criteria.SearchTerm)).AllowSpecialCharacters()
-                           select
-                               pkg;
+                packages = ApplySearchCriteria(criteria, packages);
             }
 
             if (!criteria.AllowPrereleaseVersions)
@@ -323,6 +319,38 @@ namespace NuGet.Lucene
             packages = ApplySort(criteria, packages);
 
             return packages;
+        }
+
+        protected virtual IQueryable<LucenePackage> ApplySearchCriteria(SearchCriteria criteria, IQueryable<LucenePackage> packages)
+        {
+            if (criteria.Advanced)
+            {
+                var queryParser = LuceneDataProvider.CreateQueryParser<LucenePackage>();
+                queryParser.DefaultSearchProperty = "SearchText";
+                queryParser.AllowLeadingWildcard = true;
+
+                try
+                {
+                    var query = queryParser.Parse(criteria.SearchTerm);
+                    return packages.Where(query);
+                }
+                catch (ParseException ex)
+                {
+                    throw new InvalidSearchCriteriaException("Failed to parse query", ex);
+                }
+            }
+
+            return from
+                pkg in packages
+                where
+                    ((pkg.Id == criteria.SearchTerm || pkg.Title == criteria.SearchTerm).Boost(4) ||
+                     (pkg.SearchTitle == criteria.SearchTerm).Boost(3) ||
+                     (pkg.Tags == criteria.SearchTerm).Boost(2) ||
+                     (pkg.Authors.Contains(criteria.SearchTerm) || pkg.Owners.Contains(criteria.SearchTerm)).Boost(2) ||
+                     (pkg.Files.Contains(criteria.SearchTerm)) ||
+                     (pkg.Summary == criteria.SearchTerm || pkg.Description == criteria.SearchTerm)).AllowSpecialCharacters()
+                select
+                    pkg;
         }
 
         private static IQueryable<LucenePackage> ApplySort(SearchCriteria criteria, IQueryable<LucenePackage> packages)
@@ -367,7 +395,7 @@ namespace NuGet.Lucene
 
             var targetFrameworkList = (targetFrameworks ?? Enumerable.Empty<FrameworkName>()).ToList();
             var versionConstraintList = (versionConstraints ?? Enumerable.Empty<IVersionSpec>()).ToList();
-            
+
             var results = new List<IPackage>();
             var i = 0;
 

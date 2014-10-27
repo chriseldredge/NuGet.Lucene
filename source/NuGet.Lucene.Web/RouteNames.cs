@@ -20,6 +20,7 @@
         public static class Packages
         {
             public const string Search = "Packages.Search";
+            public const string GetAvailableSearchFieldNames = "Packages.GetAvailableSearchFieldNames";
             public const string Upload = "Packages.Upload";
             public const string Delete = "Packages.Delete";
             public const string Info = "Packages.Info";

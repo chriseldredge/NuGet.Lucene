@@ -8,7 +8,7 @@ namespace NuGet.Lucene.Mapping
     {
         public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
         {
-            return sourceType == typeof(int);
+            return sourceType == typeof(bool);
         }
 
         public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)

@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
@@ -6,6 +7,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Mime;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
@@ -144,17 +146,29 @@ namespace NuGet.Lucene.Web.Controllers
         /// <param name="query">Search terms. May include special characters to support prefix,
         /// wildcard or phrase queries.
         /// </param>
+        /// <param name="advanced">Specify <c>true</c> to use advanced search syntax.</param>
         /// <param name="includePrerelease">Specify <c>true</c> to look for pre-release packages.</param>
+        /// <param name="latestOnly">Specify <c>true</c> to only search most recent package version or <c>false</c> to search all versions</param>
         /// <param name="offset">Number of results to skip, for pagination.</param>
         /// <param name="count">Number of results to return, for pagination.</param>
         /// <param name="originFilter">Limit result to mirrored or local packages, or both.</param>
         /// <param name="sort">Specify field to sort results on. Score (relevance) is default.</param>
         /// <param name="order">Sort order (default:ascending or descending)</param>
         [HttpGet]
-        public dynamic Search(string query = "", bool includePrerelease = false, int offset = 0, int count = 20, PackageOriginFilter originFilter = PackageOriginFilter.Any, SearchSortField sort = SearchSortField.Score, SearchSortDirection order = SearchSortDirection.Ascending)
+        public dynamic Search(
+            string query = "",
+            bool advanced = false,
+            bool includePrerelease = false,
+            bool latestOnly = true,
+            int offset = 0,
+            int count = 20,
+            PackageOriginFilter originFilter = PackageOriginFilter.Any,
+            SearchSortField sort = SearchSortField.Score,
+            SearchSortDirection order = SearchSortDirection.Ascending)
         {
             var criteria = new SearchCriteria(query)
             {
+                Advanced = advanced,
                 AllowPrereleaseVersions = includePrerelease,
                 PackageOriginFilter = originFilter,
                 SortField = sort,
@@ -162,9 +176,24 @@ namespace NuGet.Lucene.Web.Controllers
             };
 
             LuceneQueryStatistics stats = null;
-            var queryable = LuceneRepository.Search(criteria).CaptureStatistics(s => stats = s).LatestOnly(includePrerelease);
+            List<IPackage> hits;
 
-            var hits = queryable.Skip(offset).Take(count).ToList();
+            try
+            {
+                var queryable = LuceneRepository.Search(criteria).CaptureStatistics(s => stats = s);
+
+                if (latestOnly)
+                {
+                    queryable = queryable.LatestOnly(includePrerelease);
+                }
+
+                hits = queryable.Skip(offset).Take(count).ToList();
+            }
+            catch (InvalidSearchCriteriaException ex)
+            {
+                var message = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                return Request.CreateErrorResponse(HttpStatusCode.BadRequest, message);
+            }
 
             dynamic result = new ExpandoObject();
 
@@ -182,11 +211,22 @@ namespace NuGet.Lucene.Web.Controllers
             result.ElapsedPreparationTime = stats.ElapsedPreparationTime;
             result.ElapsedSearchTime = stats.ElapsedSearchTime;
             result.ElapsedRetrievalTime = stats.ElapsedRetrievalTime;
-            result.ComputedQuery = stats.Query.ToString().Replace("`\b\u0000\u0000\u0000\u0001", "true").Replace("`\b\u0000\u0000\u0000\u0000", "false");
+
+            var chars = stats.Query.ToString().Normalize(NormalizationForm.FormD);
+            result.ComputedQuery = new string(chars.Where(c => c < 0x7f && !char.IsControl(c)).ToArray());
 
             // hits
             result.Hits = hits;
             return result;
+        }
+
+        /// <summary>
+        /// Gets a list of fields that can be searched using the advanced search function.
+        /// </summary>
+        [HttpGet]
+        public IList<string> GetAvailableSearchFieldNames()
+        {
+            return LuceneRepository.GetAvailableSearchFieldNames().ToList();
         }
 
         /// <summary>
