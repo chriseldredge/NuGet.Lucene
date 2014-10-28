@@ -223,6 +223,7 @@ namespace NuGet.Lucene
         [Field(IndexMode.NotIndexed)]
         public Uri OriginUrl { get; set; }
 
+        [Field(Analyzer = typeof(BoolNormalizingAnalyzer))]
         public bool IsMirrored { get; set; }
         #endregion
     }

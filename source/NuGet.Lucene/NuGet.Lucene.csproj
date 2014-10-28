@@ -92,6 +92,7 @@
     <Compile Include="..\..\build\VersionInfo.cs" Condition="Exists('..\..\build\VersionInfo.cs')">
       <Link>Properties\VersionInfo.cs</Link>
     </Compile>
+    <Compile Include="Analysis\BoolNormalizingAnalyzer.cs" />
     <Compile Include="Analysis\DependencyAnalyzer.cs" />
     <Compile Include="Analysis\PathAnalyzer.cs" />
     <Compile Include="Analysis\PorterStemAnalyzer.cs" />
