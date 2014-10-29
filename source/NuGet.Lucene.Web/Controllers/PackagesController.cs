@@ -203,7 +203,7 @@ namespace NuGet.Lucene.Web.Controllers
 
             if (package == null)
             {
-                var message = string.Format("Package {0} version {1} not found.", id, version);
+                var message = string.Format("Package '{0}' version '{1}' not found.", id, version);
                 return Request.CreateErrorResponse(HttpStatusCode.NotFound, message);
             }
 

@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
 using Moq;
+using Newtonsoft.Json.Linq;
 using NuGet.Lucene.Web.Symbols;
 using NuGet.Lucene.Web.Util;
 using NUnit.Framework;
@@ -221,6 +222,19 @@ namespace NuGet.Lucene.Web.Tests.Controllers
             luceneRepository.Verify(r => r.AddPackageAsync(It.IsAny<IPackage>(), It.IsAny<CancellationToken>()), Times.Never());
 
             Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
+        }
+
+        [Test]
+        public async Task DeletePackageNotFound_ReturnsMessage()
+        {
+            luceneRepository.Setup(r => r.FindPackage(package.Id, package.Version.SemanticVersion)).Returns((IPackage)null);
+
+            var result = await controller.DeletePackage(package.Id, package.Version.ToString());
+
+            luceneRepository.Verify(r => r.AddPackageAsync(It.IsAny<IPackage>(), It.IsAny<CancellationToken>()), Times.Never());
+
+            var content = await result.Content.ReadAsAsync<JObject>();
+            Assert.That(content["Message"].Value<string>(), Is.EqualTo("Package 'Sample' version '1.0' not found."));
         }
 
         [Test]
