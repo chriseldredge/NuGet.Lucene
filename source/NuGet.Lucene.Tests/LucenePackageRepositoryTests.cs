@@ -362,6 +362,26 @@ namespace NuGet.Lucene.Tests
             }
 
             [Test]
+            public async Task DenyPackageOverwrite()
+            {
+                var p = MakeSamplePackage("Foo", "1.0");
+                repository.LucenePackages = (new[] {p}).AsQueryable();
+                repository.PackageOverwriteMode = PackageOverwriteMode.Deny;
+
+                try
+                {
+                    await repository.AddPackageAsync(p, CancellationToken.None);
+                    Assert.Fail("Expected PackageOverwriteDeniedException");
+                }
+                catch (PackageOverwriteDeniedException)
+                {
+                }
+                
+
+                indexer.Verify(i => i.AddPackageAsync(It.IsAny<LucenePackage>(), It.IsAny<CancellationToken>()), Times.Never);
+            }
+
+            [Test]
             public async Task CancelDuringGetDownloadStream()
             {
                 var package = new FakeDataServicePackage(new Uri("http://example.com/packages/Foo/1.0"));
@@ -451,6 +471,9 @@ namespace NuGet.Lucene.Tests
         {
             public FakeDataServicePackage(Uri packageStreamUri)
             {
+                Id = "Sample";
+                Version = "1.0";
+
                 var context = new Mock<IDataServiceContext>();
                 context.Setup(c => c.GetReadStreamUri(It.IsAny<object>())).Returns(packageStreamUri);
                 var prop = typeof(DataServicePackage).GetProperty("Context", BindingFlags.NonPublic | BindingFlags.Instance);

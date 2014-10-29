@@ -172,6 +172,16 @@ namespace NuGet.Lucene.Web.Tests.Controllers
         }
 
         [Test]
+        public async Task PutPackage_HandlesOverwriteDenied()
+        {
+            luceneRepository.Setup(r => r.AddPackageAsync(package, CancellationToken.None)).Throws(new PackageOverwriteDeniedException(package));
+
+            var result = await controller.PutPackage(package);
+
+            Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.Conflict));
+        }
+
+        [Test]
         public async Task PutPackageCannotBeNull()
         {
             var result = await controller.PutPackage(null);

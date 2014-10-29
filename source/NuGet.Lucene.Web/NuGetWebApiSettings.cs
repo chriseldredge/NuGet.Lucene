@@ -166,6 +166,11 @@ namespace NuGet.Lucene.Web
             }
         }
 
+        public PackageOverwriteMode PackageOverwriteMode
+        {
+            get { return GetEnumFromAppSetting("packageOverwriteMode", PackageOverwriteMode.Allow); }
+        }
+
         public string LuceneUsersIndexPath
         {
             get
@@ -192,6 +197,13 @@ namespace NuGet.Lucene.Web
             }
 
             return path.Replace('/', Path.DirectorySeparatorChar);
+        }
+
+        protected virtual T GetEnumFromAppSetting<T>(string appSetting, T defaultValue) where T : struct
+        {
+            T value;
+            var parsed = Enum.TryParse(GetAppSetting(appSetting, defaultValue.ToString()), out value);
+            return parsed ? value : defaultValue;
         }
 
         protected internal virtual string GetAppSetting(string key, string defaultValue)

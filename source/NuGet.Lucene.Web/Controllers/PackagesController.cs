@@ -231,19 +231,25 @@ namespace NuGet.Lucene.Web.Controllers
                 return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "Must provide package with valid id and version.");
             }
 
-            var result = Request.CreateResponse(HttpStatusCode.Created);
-
-            if (package.IsSymbolPackage())
+            try
             {
-                Audit("Add symbols package {0} version {1}", package.Id, package.Version);
-                await SymbolSource.AddSymbolsAsync(package, Url.GetSymbolSourceUri());
-                return result;
+                if (package.IsSymbolPackage())
+                {
+                    Audit("Add symbols package {0} version {1}", package.Id, package.Version);
+                    await SymbolSource.AddSymbolsAsync(package, Url.GetSymbolSourceUri());
+                    return Request.CreateResponse(HttpStatusCode.OK); ;
+                }
+
+                Audit("Add package {0} version {1}", package.Id, package.Version);
+                await LuceneRepository.AddPackageAsync(package, CancellationToken.None);
+            }
+            catch (PackageOverwriteDeniedException ex)
+            {
+                return Request.CreateErrorResponse(HttpStatusCode.Conflict, ex.Message);
             }
 
-            Audit("Add package {0} version {1}", package.Id, package.Version);
-            await LuceneRepository.AddPackageAsync(package, CancellationToken.None);
-
             var location = Url.Link(RouteNames.Packages.Info, new { id = package.Id, version = package.Version });
+            var result = Request.CreateResponse(HttpStatusCode.Created);
             result.Headers.Location = new Uri(location);
             return result;
         }

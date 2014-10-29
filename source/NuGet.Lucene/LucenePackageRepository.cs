@@ -36,6 +36,7 @@ namespace NuGet.Lucene
 
         public string LucenePackageSource { get; set; }
 
+        public PackageOverwriteMode PackageOverwriteMode { get; set; }
 
         private readonly object fileSystemLock = new object();
 
@@ -61,6 +62,11 @@ namespace NuGet.Lucene
 
         public async Task AddPackageAsync(IPackage package, CancellationToken cancellationToken)
         {
+            if (PackageOverwriteMode == PackageOverwriteMode.Deny && FindPackage(package.Id, package.Version) != null)
+            {
+                throw new PackageOverwriteDeniedException(package);
+            }
+
             Log.Info(m => m("Adding package {0} {1} to file system", package.Id, package.Version));
 
             var lucenePackage = await AddPackageToFileSystemAsync(package, cancellationToken);

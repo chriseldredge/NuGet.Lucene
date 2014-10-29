@@ -59,6 +59,13 @@ namespace NuGet.Lucene
         public LuceneDataProvider Provider { get; set; }
 
         /// <summary>
+        /// Specifies a policy of how conflicting packages should
+        /// be handled when adding a package that already exists.
+        /// (default: <see cref="Lucene.PackageOverwriteMode.Allow"/>
+        /// </summary>
+        public PackageOverwriteMode PackageOverwriteMode { get; set; }
+
+        /// <summary>
         /// Holds a reference to the Lucene Directory after
         /// <see cref="Initialize"/> has been invoked.
         /// </summary>
@@ -98,7 +105,8 @@ namespace NuGet.Lucene
                     Indexer = PackageIndexer,
                     LuceneDataProvider = Provider,
                     LucenePackages = Provider.AsQueryable(() => new LucenePackage(fileSystem)),
-                    LucenePackageSource = string.Format("{0} (with Lucene.Net index in {1})", PackagePath, LuceneIndexPath)
+                    LucenePackageSource = string.Format("{0} (with Lucene.Net index in {1})", PackagePath, LuceneIndexPath),
+                    PackageOverwriteMode = PackageOverwriteMode
                 };
 
             // TODO: circular reference

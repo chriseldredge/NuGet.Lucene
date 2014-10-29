@@ -69,7 +69,8 @@ namespace NuGet.Lucene.Web
                 EnablePackageFileWatcher = settings.EnablePackageFileWatcher,
                 GroupPackageFilesById = settings.GroupPackageFilesById,
                 LuceneIndexPath = settings.LucenePackagesIndexPath,
-                PackagePath = settings.PackagesPath
+                PackagePath = settings.PackagesPath,
+                PackageOverwriteMode = settings.PackageOverwriteMode
             };
 
             cfg.Initialize();
