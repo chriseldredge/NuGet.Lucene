@@ -36,6 +36,9 @@ namespace NuGet.Lucene
 
         public string LucenePackageSource { get; set; }
 
+
+        private readonly object fileSystemLock = new object();
+
         private volatile int packageCount;
         public int PackageCount { get { return packageCount; } }
 
@@ -73,7 +76,11 @@ namespace NuGet.Lucene
 
             if (dataPackage == null)
             {
-                base.AddPackage(package);
+                lock (fileSystemLock)
+                {
+                    base.AddPackage(package);
+                }
+                
                 return Convert(package);
             }
 
@@ -84,6 +91,7 @@ namespace NuGet.Lucene
         {
             var parent = PathResolver.GetInstallPath(dataPackage);
             var path = Path.Combine(parent, PathResolver.GetPackageFileName(dataPackage));
+            var tmpPath = path + "." + Guid.NewGuid() + ".tmp";
 
             if (!Directory.Exists(parent))
             {
@@ -103,7 +111,7 @@ namespace NuGet.Lucene
 
             cancellationToken.ThrowIfCancellationRequested();
 
-            var fileStream = OpenFileWriteStream(path);
+            var fileStream = OpenFileWriteStream(tmpPath);
             using (fileStream)
             {
                 using (stream)
@@ -112,6 +120,8 @@ namespace NuGet.Lucene
                 }
             }
 
+            MoveFileWithOverwrite(tmpPath, path);
+            
             var lucenePackage = LoadFromFileSystem(path);
             lucenePackage.OriginUrl = dataPackage.DownloadUrl;
             lucenePackage.IsMirrored = true;
@@ -126,6 +136,18 @@ namespace NuGet.Lucene
         protected virtual Stream OpenFileWriteStream(string path)
         {
             return File.OpenWrite(path);
+        }
+
+        protected virtual void MoveFileWithOverwrite(string src, string dest)
+        {
+            lock (fileSystemLock)
+            {
+                if (File.Exists(dest))
+                {
+                    File.Delete(dest);
+                }
+                File.Move(src, dest);
+            }
         }
 
         public override void AddPackage(IPackage package)
@@ -150,7 +172,10 @@ namespace NuGet.Lucene
         {
             var task = Indexer.RemovePackageAsync(package, cancellationToken);
 
-            base.RemovePackage(package);
+            lock (fileSystemLock)
+            {
+                base.RemovePackage(package);
+            }
 
             await task;
         }

@@ -392,6 +392,7 @@ namespace NuGet.Lucene.Tests
                 try
                 {
                     await repository.AddPackageAsync(package, cts.Token);
+                    await cancelTask;
                     Assert.Fail("Expected TaskCanceledException");
                 }
                 catch (TaskCanceledException ex)
@@ -475,6 +476,10 @@ namespace NuGet.Lucene.Tests
             protected override Stream OpenFileWriteStream(string path)
             {
                 return new MemoryStream();
+            }
+
+            protected override void MoveFileWithOverwrite(string src, string dest)
+            {
             }
 
             protected override System.Net.Http.HttpClient CreateHttpClient()
