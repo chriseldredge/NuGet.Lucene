@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Moq;
+using NuGet.Lucene.Web.Controllers;
 using NuGet.Lucene.Web.Models;
 using NUnit.Framework;
-using NuGet.Lucene.Web.Controllers;
 
 namespace NuGet.Lucene.Web.Tests.Controllers
 {

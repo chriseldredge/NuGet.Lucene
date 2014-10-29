@@ -7,7 +7,6 @@ using System.Text;
 using System.Web.Http;
 using System.Web.Http.OData;
 using System.Web.Http.OData.Query;
-using Lucene.Net.Linq;
 using NuGet.Lucene.Web.Models;
 using NuGet.Lucene.Web.Util;
 

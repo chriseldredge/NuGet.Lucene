@@ -1,6 +1,6 @@
 using Autofac;
-using Owin;
 using NuGet.Lucene.Web.Util;
+using Owin;
 
 namespace NuGet.Lucene.Web
 {

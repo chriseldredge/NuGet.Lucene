@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Lucene.Net.Linq;
-using Lucene.Net.Linq.Util;
 using NuGet.Lucene.Web.Authentication;
 
 namespace NuGet.Lucene.Web

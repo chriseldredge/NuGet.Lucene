@@ -6,10 +6,10 @@ using System.Web.Http.OData.Extensions;
 using System.Web.Http.OData.Formatter;
 using System.Web.Http.OData.Formatter.Deserialization;
 using System.Web.Http.OData.Routing.Conventions;
+using System.Web.Http.Routing;
 using NuGet.Lucene.Web.OData.Formatter.Serialization;
 using NuGet.Lucene.Web.OData.Routing;
 using NuGet.Lucene.Web.OData.Routing.Conventions;
-using HttpMethodConstraint = System.Web.Http.Routing.HttpMethodConstraint;
 
 namespace NuGet.Lucene.Web
 {

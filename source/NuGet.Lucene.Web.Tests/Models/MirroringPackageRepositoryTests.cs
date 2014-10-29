@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using Moq;
+using NuGet.Lucene.Web.Models;
 using NuGet.Lucene.Web.Util;
 using NUnit.Framework;
-using NuGet.Lucene.Web.Models;
 
 namespace NuGet.Lucene.Web.Tests.Models
 {

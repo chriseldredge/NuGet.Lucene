@@ -6,9 +6,9 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web.Http;
-using NUnit.Framework;
 using NuGet.Lucene.Tests;
 using NuGet.Lucene.Web.Formatters;
+using NUnit.Framework;
 
 namespace NuGet.Lucene.Web.Tests.Formatters
 {

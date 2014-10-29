@@ -6,7 +6,6 @@ using System.Linq;
 using System.Runtime.Versioning;
 using System.Text.RegularExpressions;
 using Lucene.Net.Analysis.Standard;
-using Lucene.Net.Linq.Analysis;
 using Lucene.Net.Linq.Mapping;
 using NuGet.Lucene.Analysis;
 using NuGet.Lucene.Mapping;

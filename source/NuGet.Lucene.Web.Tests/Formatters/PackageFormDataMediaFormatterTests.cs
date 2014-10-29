@@ -1,6 +1,6 @@
 ﻿using System;
-using NUnit.Framework;
 using NuGet.Lucene.Web.Formatters;
+using NUnit.Framework;
 
 namespace NuGet.Lucene.Web.Tests.Formatters
 {

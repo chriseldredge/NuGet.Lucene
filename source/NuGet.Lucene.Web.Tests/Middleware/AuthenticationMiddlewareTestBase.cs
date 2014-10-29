@@ -2,7 +2,6 @@ using System.Security.Principal;
 using Microsoft.Owin;
 using Moq;
 using NuGet.Lucene.Web.Authentication;
-using NuGet.Lucene.Web.Middleware;
 using NUnit.Framework;
 
 namespace NuGet.Lucene.Web.Tests.Middleware

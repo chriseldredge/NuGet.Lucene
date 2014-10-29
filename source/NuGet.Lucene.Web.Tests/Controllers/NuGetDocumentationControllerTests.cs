@@ -1,8 +1,8 @@
 ﻿using System.Linq;
 using System.Net.Http;
 using AspNet.WebApi.HtmlMicrodataFormatter;
-using NUnit.Framework;
 using NuGet.Lucene.Web.Controllers;
+using NUnit.Framework;
 
 namespace NuGet.Lucene.Web.Tests.Controllers
 {

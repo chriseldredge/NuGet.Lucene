@@ -4,9 +4,9 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Moq;
+using NuGet.Lucene.Web.Controllers;
 using NuGet.Lucene.Web.Util;
 using NUnit.Framework;
-using NuGet.Lucene.Web.Controllers;
 
 namespace NuGet.Lucene.Web.Tests.Controllers
 {

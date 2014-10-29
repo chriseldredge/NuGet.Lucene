@@ -1,7 +1,7 @@
 using System.Linq;
 using System.Runtime.Versioning;
-using NUnit.Framework;
 using NuGet.Lucene.Mapping;
+using NUnit.Framework;
 
 namespace NuGet.Lucene.Tests.Mapping
 {

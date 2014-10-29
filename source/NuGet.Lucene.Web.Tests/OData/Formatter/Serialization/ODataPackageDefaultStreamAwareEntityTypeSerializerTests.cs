@@ -1,10 +1,10 @@
-﻿using NUnit.Framework;
-using System;
-using NuGet.Lucene.Web.OData.Formatter.Serialization;
-using NuGet.Lucene.Web.Models;
+﻿using System;
 using System.Web.Http.OData;
-using NuGet.Lucene.Web.Tests.Controllers;
 using System.Web.Http.Routing;
+using NuGet.Lucene.Web.Models;
+using NuGet.Lucene.Web.OData.Formatter.Serialization;
+using NuGet.Lucene.Web.Tests.Controllers;
+using NUnit.Framework;
 
 namespace NuGet.Lucene.Web.Tests.OData.Formatter.Serialization
 {

@@ -3,11 +3,11 @@ using Autofac;
 using Autofac.Integration.WebApi;
 using Lucene.Net.Linq;
 using Lucene.Net.Store;
+using Lucene.Net.Util;
 using NuGet.Lucene.Web.Authentication;
-using NuGet.Lucene.Web.Models;
 using NuGet.Lucene.Web.Middleware;
+using NuGet.Lucene.Web.Models;
 using NuGet.Lucene.Web.Symbols;
-using Version = Lucene.Net.Util.Version;
 
 namespace NuGet.Lucene.Web
 {

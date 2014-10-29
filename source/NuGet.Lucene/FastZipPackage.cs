@@ -4,7 +4,6 @@ using System.IO;
 using System.IO.Packaging;
 using System.Linq;
 using System.Runtime.Versioning;
-using Common.Logging;
 
 namespace NuGet.Lucene
 {

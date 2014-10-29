@@ -1,8 +1,8 @@
+using System;
 using System.Web.Http.OData;
 using System.Web.Http.OData.Formatter.Serialization;
 using System.Web.Http.Routing;
 using NuGet.Lucene.Web.Models;
-using System;
 
 namespace NuGet.Lucene.Web.OData.Formatter.Serialization
 {

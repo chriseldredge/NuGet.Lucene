@@ -11,11 +11,11 @@ using System.Threading.Tasks;
 using System.Web.Http;
 using Moq;
 using Newtonsoft.Json.Linq;
+using NuGet.Lucene.Web.Controllers;
+using NuGet.Lucene.Web.Models;
 using NuGet.Lucene.Web.Symbols;
 using NuGet.Lucene.Web.Util;
 using NUnit.Framework;
-using NuGet.Lucene.Web.Controllers;
-using NuGet.Lucene.Web.Models;
 
 namespace NuGet.Lucene.Web.Tests.Controllers
 {

@@ -1,8 +1,8 @@
 ﻿using System.Linq;
 using System.Net.Http;
 using System.Web.Http.Hosting;
-using NUnit.Framework;
 using NuGet.Lucene.Web.MessageHandlers;
+using NUnit.Framework;
 
 namespace NuGet.Lucene.Web.Tests
 {

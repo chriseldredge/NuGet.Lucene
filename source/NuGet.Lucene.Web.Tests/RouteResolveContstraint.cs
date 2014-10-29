@@ -1,9 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Net.Http;
-using System.Web;
 using System.Web.Http;
-using System.Web.Routing;
-using Moq;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
 

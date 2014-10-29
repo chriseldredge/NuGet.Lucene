@@ -2,9 +2,9 @@
 using Common.Logging;
 using Lucene.Net.Linq;
 using Lucene.Net.Store;
+using Lucene.Net.Util;
 using Directory = System.IO.Directory;
 using LuceneDirectory = Lucene.Net.Store.Directory;
-using Version = Lucene.Net.Util.Version;
 
 namespace NuGet.Lucene
 {
