@@ -71,6 +71,32 @@ namespace NuGet.Lucene.Web.Tests.Formatters
         }
 
         [Test]
+        public void CachesPartialMatch_NoMatchOnReadAhead_EndOfStream()
+        {
+            const string body = "the message\nfo";
+            var realStream = new MemoryStream(Encoding.UTF8.GetBytes(body));
+
+            var stream = new MalformedMultipartFixingStream(realStream, "foobar");
+            var buffer = new byte[realStream.Length + 1];
+            var bytesRead = stream.Read(buffer, 0, "the message\nf".Length);
+
+            Assert.That(Encoding.UTF8.GetString(buffer, 0, bytesRead) + stream.ReadToEnd(), Is.EqualTo("the message\nfo"));
+        }
+
+        [Test]
+        public void CachesPartialMatch_NoMatchOnReadAhead()
+        {
+            const string body = "the message\nfor the record";
+            var realStream = new MemoryStream(Encoding.UTF8.GetBytes(body));
+
+            var stream = new MalformedMultipartFixingStream(realStream, "foo");
+            var buffer = new byte[realStream.Length + 1];
+            var bytesRead = stream.Read(buffer, 0, "the message\nf".Length);
+
+            Assert.That(Encoding.UTF8.GetString(buffer, 0, bytesRead) + stream.ReadToEnd(), Is.EqualTo("the message\nfor the record"));
+        }
+
+        [Test]
         public void CachesPreviousCharOnPartialMatch()
         {
             const string body = "the message\nfoo\r\n";

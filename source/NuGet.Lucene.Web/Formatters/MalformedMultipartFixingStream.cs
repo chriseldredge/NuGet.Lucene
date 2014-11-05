@@ -125,6 +125,20 @@ namespace NuGet.Lucene.Web.Formatters
                     bytesToRead -= additionalBytesRead;
                 } while (additionalBytesRead != 0 && bytesToRead > 0);
 
+                var completeMatch = totalAdditionalBytesRead >= bytesToRead;
+
+                for (var i = matchIndex + matchLength; completeMatch && i < totalBytesRead + totalAdditionalBytesRead; i++)
+                {
+                    completeMatch = tmp[i] == boundary[i - matchIndex];
+                }
+
+                if (!completeMatch)
+                {
+                    peekBuffer.Write(tmp, totalBytesRead, totalAdditionalBytesRead);
+                    peekBuffer.Seek(0, SeekOrigin.Begin);
+                    return totalBytesRead;
+                }
+
                 buffer = tmp;
                 offset = 0;
             }
