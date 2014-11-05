@@ -171,7 +171,7 @@ namespace NuGet.Lucene
 
         public IEnumerable<FrameworkName> GetSupportedFrameworks()
         {
-            return SupportedFrameworks.Select(VersionUtility.ParseFrameworkName);
+            return SupportedFrameworks.Select(VersionUtility.ParseFrameworkName).Distinct();
         }
 
         public IEnumerable<IPackageFile> GetFiles()

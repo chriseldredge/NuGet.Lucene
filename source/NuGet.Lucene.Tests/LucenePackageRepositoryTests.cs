@@ -109,11 +109,28 @@ namespace NuGet.Lucene.Tests
             public void SupportedFrameworks()
             {
                 var package = SetUpConvertPackage();
+                package.Setup(p => p.GetSupportedFrameworks()).Returns(new[] { VersionUtility.ParseFrameworkName("net40") });
 
                 var result = repository.Convert(package.Object);
 
                 Assert.That(result.SupportedFrameworks, Is.Not.Null, "SupportedFrameworks");
                 Assert.That(result.SupportedFrameworks.ToArray(), Is.EquivalentTo(new[] {"net40"}));
+            }
+
+            [Test]
+            [TestCase("magicsauce", "magicsauce", "0.0", "")]
+            [TestCase("magicsauce-lite", "magicsauce", "0.0", "lite")]
+            [TestCase("magicsauce12", "magicsauce", "1.2", "")]
+            [TestCase("magicsauce123-lite", "magicsauce", "1.2.3", "lite")]
+            public void SupportedFrameworks_Custom(string expected, string identifier, string version, string profile)
+            {
+                var package = SetUpConvertPackage();
+                package.Setup(p => p.GetSupportedFrameworks()).Returns(new[] { new FrameworkName(identifier, new Version(version), profile) });
+
+                var result = repository.Convert(package.Object);
+
+                Assert.That(result.SupportedFrameworks, Is.Not.Null, "SupportedFrameworks");
+                Assert.That(result.SupportedFrameworks.ToArray(), Is.EquivalentTo(new[] { expected }));
             }
 
             [Test]
@@ -487,8 +504,7 @@ namespace NuGet.Lucene.Tests
             package.SetupGet(p => p.Id).Returns("Sample");
             package.SetupGet(p => p.Version).Returns(new SemanticVersion("1.0"));
             package.SetupGet(p => p.DependencySets).Returns(new List<PackageDependencySet>());
-
-            package.Setup(p => p.GetSupportedFrameworks()).Returns(new[] {VersionUtility.ParseFrameworkName("net40")});
+            
             fileSystem.Setup(fs => fs.OpenFile(It.IsAny<string>())).Returns(new MemoryStream());
             package.Setup(p => p.GetStream()).Returns(new MemoryStream());
             Assert.That(package.Object.Version, Is.Not.Null);

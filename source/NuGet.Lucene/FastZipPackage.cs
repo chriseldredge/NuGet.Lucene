@@ -4,7 +4,6 @@ using System.IO;
 using System.IO.Packaging;
 using System.Linq;
 using System.Runtime.Versioning;
-using ICSharpCode.SharpZipLib.Zip;
 
 namespace NuGet.Lucene
 {
@@ -85,7 +84,9 @@ namespace NuGet.Lucene
 
         public IEnumerable<FrameworkName> GetSupportedFrameworks()
         {
-            return new FrameworkName[0];
+            return FrameworkAssemblies.SelectMany(f => f.SupportedFrameworks)
+                .Union(Files.SelectMany(f => f.SupportedFrameworks))
+                .Where(f => f != null && f != VersionUtility.UnsupportedFrameworkName);
         }
 
         public string Id { get; set; }
@@ -104,14 +105,14 @@ namespace NuGet.Lucene
         public string Language { get; private set; }
         public string Tags { get; private set; }
         public string Copyright { get; private set; }
-        public IEnumerable<FrameworkAssemblyReference> FrameworkAssemblies { get; private set; }
+        public IEnumerable<FrameworkAssemblyReference> FrameworkAssemblies { get; set; }
         public IEnumerable<PackageDependencySet> DependencySets { get; private set; }
         public Uri ReportAbuseUrl { get { return null; } }
         public int DownloadCount { get { return 0; } }
         public byte[] Hash { get; set; }
         public Version MinClientVersion { get; private set; }
         public bool DevelopmentDependency { get; private set; }
-        public IEnumerable<IPackageFile> Files { get; private set; }
+        public IEnumerable<IPackageFile> Files { get; set; }
         public bool IsAbsoluteLatestVersion { get { return false; } }
         public bool IsLatestVersion { get { return false; } }
         public bool Listed { get { return false; } }
@@ -155,7 +156,7 @@ namespace NuGet.Lucene
 
         protected virtual void ProcessManifest(Stream manifestStream)
         {
-            var manifest = Manifest.ReadFrom(manifestStream, validateSchema:false);
+            var manifest = Manifest.ReadFrom(manifestStream, validateSchema: false);
             var packageMetadata = (IPackageMetadata)manifest.Metadata;
             Id = packageMetadata.Id;
             Version = packageMetadata.Version;
@@ -177,7 +178,7 @@ namespace NuGet.Lucene
             Copyright = packageMetadata.Copyright;
             PackageAssemblyReferences = packageMetadata.PackageAssemblyReferences;
             DevelopmentDependency = packageMetadata.DevelopmentDependency;
-            
+
             if (string.IsNullOrEmpty(Tags))
                 return;
             Tags = " " + Tags + " ";

@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
 using System.Net;
@@ -43,7 +44,7 @@ namespace NuGet.Lucene.Web.Controllers
             var package = packageSpec.Version != null
                               ? packages.Find(p => p.Version.SemanticVersion == packageSpec.Version)
                               : packages.LastOrDefault();
-            
+
             if (package == null)
             {
                 return Request.CreateErrorResponse(HttpStatusCode.NotFound, "Package not found.");
@@ -111,7 +112,7 @@ namespace NuGet.Lucene.Web.Controllers
                     CreationDate = package.Created,
                     ModificationDate = package.LastUpdated,
                 };
-            
+
             return result;
         }
 
@@ -198,7 +199,7 @@ namespace NuGet.Lucene.Web.Controllers
             {
                 return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "Must specify package id and version.");
             }
-            
+
             var package = LuceneRepository.FindPackage(id, new SemanticVersion(version));
 
             if (package == null)

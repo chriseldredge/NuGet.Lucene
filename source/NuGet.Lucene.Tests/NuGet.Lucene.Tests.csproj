@@ -82,10 +82,13 @@
       <Link>Properties\VersionInfo.cs</Link>
     </Compile>
     <Compile Include="AssertEx.cs" />
+    <Compile Include="FastZipPackageTests.cs" />
     <Compile Include="GroupingPackagePathResolverTests.cs" />
     <Compile Include="IndexDifferenceCalculatorTests.cs" />
     <Compile Include="IO\HashingWriteStreamTests.cs" />
+    <Compile Include="FastZipPackageFileTests.cs" />
     <Compile Include="LucenePackageRepositoryTests.cs" />
+    <Compile Include="LucenePackageTests.cs" />
     <Compile Include="Mapping\PackageDependencySetConverterTests.cs" />
     <Compile Include="PackageFileSystemWatcherTests.cs" />
     <Compile Include="PackageIndexerAddPackageTests.cs" />

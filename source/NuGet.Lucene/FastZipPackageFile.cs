@@ -1,22 +1,23 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.Versioning;
+using System.Text;
 
 namespace NuGet.Lucene
 {
     public class FastZipPackageFile : IPackageFile
     {
         private readonly IFastZipPackage fastZipPackage;
-        private readonly FrameworkName targetFramework;
-
+        private FrameworkName targetFramework;
+        private string effectivePath;
+        private bool targetFrameworkParsed;
+        
         internal FastZipPackageFile(IFastZipPackage fastZipPackage, string path)
         {
             this.fastZipPackage = fastZipPackage;
             Path = Normalize(path);
-
-            string effectivePath;
-            targetFramework = VersionUtility.ParseFrameworkNameFromFilePath(Path, out effectivePath);
-            EffectivePath = effectivePath;
         }
 
         private string Normalize(string path)
@@ -34,14 +35,68 @@ namespace NuGet.Lucene
 
         public string EffectivePath
         {
-            get;
-            private set;
+            get { return TargetFramework != null ? effectivePath : Path; }
         }
 
         public FrameworkName TargetFramework
         {
             get
             {
+                if (targetFrameworkParsed) return targetFramework;
+
+                targetFrameworkParsed = true;
+
+                targetFramework = VersionUtility.ParseFrameworkNameFromFilePath(Path, out effectivePath);
+                if (targetFramework != VersionUtility.UnsupportedFrameworkName) return targetFramework;
+
+                var parts = Path.Split('/', '\\');
+
+                if (parts.Length < 3)
+                {
+                    targetFramework = null;
+                    return targetFramework;
+                }
+
+                var frameworkParts = parts[1].Split(new [] {'-'}, 2);
+                var framework = frameworkParts[0];
+                var version = "0.0";
+                var profile = frameworkParts.Length == 2 ? frameworkParts[1] : "";
+
+                for (var i = 0; i < framework.Length; i++)
+                {
+                    if (!Char.IsDigit(framework[i])) continue;
+
+                    var chars = framework.Substring(i).ToCharArray();
+
+                    framework = framework.Substring(0, i);
+
+                    var sb = new StringBuilder();
+                    sb.Append(chars[0]);
+
+                    for (var k = 1; k < chars.Length; k++)
+                    {
+                        sb.Append('.');
+
+                        if (k > 2)
+                        {
+                            sb.Append(chars, k, chars.Length - k);
+                            break;
+                        }
+
+                        sb.Append(chars[k]);
+                    }
+
+                    if (sb.Length == 1)
+                    {
+                        sb.Append(".0");
+                    }
+
+                    version = sb.ToString();
+                    break;
+                }
+
+                targetFramework = new FrameworkName(framework, new Version(version), profile);
+
                 return targetFramework;
             }
         }
