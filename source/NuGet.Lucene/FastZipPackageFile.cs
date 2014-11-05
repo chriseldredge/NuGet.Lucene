@@ -12,10 +12,10 @@ namespace NuGet.Lucene
         internal FastZipPackageFile(IFastZipPackage fastZipPackage, string path)
         {
             this.fastZipPackage = fastZipPackage;
-            Path = path;
+            Path = Normalize(path);
 
             string effectivePath;
-            targetFramework = VersionUtility.ParseFrameworkNameFromFilePath(Normalize(path), out effectivePath);
+            targetFramework = VersionUtility.ParseFrameworkNameFromFilePath(Path, out effectivePath);
             EffectivePath = effectivePath;
         }
 
