@@ -95,6 +95,7 @@
     <Compile Include="Analysis\PorterStemAnalyzer.cs" />
     <Compile Include="FastZipPackage.cs" />
     <Compile Include="ILuceneRepositoryConfigurator.cs" />
+    <Compile Include="IO\HashingWriteStream.cs" />
     <Compile Include="IO\ReadStream.cs" />
     <Compile Include="LuceneRepositoryConfigurator.cs" />
     <Compile Include="Mapping\CachingVersionConverter.cs" />
