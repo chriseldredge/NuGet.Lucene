@@ -10,6 +10,9 @@ namespace NuGet.Lucene
 {
     public class FastZipPackage : FastZipPackageBase, IFastZipPackage
     {
+        private static readonly ISet<string> PackageFileExcludeExtensions
+            = new HashSet<string>{ ".pdscmp", ".psmdcp", ".nuspec", ".rels" };
+
         protected internal FastZipPackage()
         {
             FrameworkAssemblies = Enumerable.Empty<FrameworkAssemblyReference>();
@@ -123,7 +126,10 @@ namespace NuGet.Lucene
 
         protected virtual void ProcessPackageContents(Package package)
         {
-            Files = package.GetParts().Select(p => new FastZipPackageFile(this, p.Uri.OriginalString)).ToArray();
+            Files = package.GetParts()
+                .Where(p => !PackageFileExcludeExtensions.Contains(Path.GetExtension(p.Uri.OriginalString)))
+                .Select(p => new FastZipPackageFile(this, p.Uri.OriginalString))
+                .ToArray();
         }
         
         protected virtual void ProcessFileMetadata(Stream stream)
