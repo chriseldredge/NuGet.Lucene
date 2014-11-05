@@ -65,10 +65,16 @@ namespace NuGet.Lucene
         public virtual HashingWriteStream CreateStreamForStagingPackage()
         {
             var tmpPath = Path.Combine(StagingDirectory, "package-" + Guid.NewGuid() + ".nupkg.tmp");
+            var directoryName = Path.GetDirectoryName(tmpPath);
+            if (directoryName != null && !Directory.Exists(directoryName))
+            {
+                Directory.CreateDirectory(directoryName);
+            }
+
             return new HashingWriteStream(tmpPath, OpenFileWriteStream(tmpPath), HashAlgorithm.Create(HashAlgorithmName));
         }
 
-        public virtual IPackage LoadStagedPackage(HashingWriteStream packageStream)
+        public virtual IFastZipPackage LoadStagedPackage(HashingWriteStream packageStream)
         {
             packageStream.Dispose();
 
@@ -81,16 +87,11 @@ namespace NuGet.Lucene
             FileSystem.DeleteFile(packageStream.FileLocation);
         }
 
-        public string StagingDirectory
+        protected virtual string StagingDirectory
         {
             get
             {
-                var stagingDirectory = Path.Combine(FileSystem.Root, ".tmp");
-                if (!Directory.Exists(stagingDirectory))
-                {
-                    Directory.CreateDirectory(stagingDirectory);
-                }
-                return stagingDirectory;
+                return FileSystem.GetFullPath(".tmp");
             }
         }
 
@@ -101,7 +102,7 @@ namespace NuGet.Lucene
                 throw new PackageOverwriteDeniedException(package);
             }
 
-            var fastZipPackage = package as FastZipPackage;
+            var fastZipPackage = package as IFastZipPackage;
             var dataPackage = package as DataServicePackage;
             LucenePackage lucenePackage = null;
 
@@ -113,9 +114,9 @@ namespace NuGet.Lucene
                 lucenePackage.IsMirrored = true;
             }
             
-            if (fastZipPackage != null && !string.IsNullOrEmpty(fastZipPackage.FileLocation))
+            if (fastZipPackage != null && !string.IsNullOrEmpty(fastZipPackage.GetFileLocation()))
             {
-                MoveFileWithOverwrite(fastZipPackage.FileLocation, base.GetPackageFilePath(fastZipPackage));
+                MoveFileWithOverwrite(fastZipPackage.GetFileLocation(), base.GetPackageFilePath(fastZipPackage));
                 if (lucenePackage == null)
                 {
                     lucenePackage = Convert(fastZipPackage);
@@ -143,7 +144,7 @@ namespace NuGet.Lucene
             return TaskEx.FromResult(Convert(package));
         }
 
-        private async Task<FastZipPackage> DownloadDataServicePackage(DataServicePackage dataPackage, CancellationToken cancellationToken)
+        private async Task<IFastZipPackage> DownloadDataServicePackage(DataServicePackage dataPackage, CancellationToken cancellationToken)
         {
             var assembly = typeof(LucenePackageRepository).Assembly;
 
@@ -165,7 +166,7 @@ namespace NuGet.Lucene
                 using (var hashingStream = CreateStreamForStagingPackage())
                 {
                     await stream.CopyToAsync(hashingStream, 4096, cancellationToken);
-                    return (FastZipPackage)LoadStagedPackage(hashingStream);
+                    return LoadStagedPackage(hashingStream);
                 }
             }
         }
@@ -182,7 +183,7 @@ namespace NuGet.Lucene
 
         protected virtual void MoveFileWithOverwrite(string src, string dest)
         {
-            dest = Path.Combine(FileSystem.Root, dest);
+            dest = FileSystem.GetFullPath(dest);
 
             lock (fileSystemLock)
             {

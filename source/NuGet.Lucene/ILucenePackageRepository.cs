@@ -88,7 +88,7 @@ namespace NuGet.Lucene
         /// <summary>
         /// Loads a staged package (after the stream has been written).
         /// </summary>
-        IPackage LoadStagedPackage(HashingWriteStream packageStream);
+        IFastZipPackage LoadStagedPackage(HashingWriteStream packageStream);
 
         /// <summary>
         /// Deletes a temporary package that won't be added for whatever reason.

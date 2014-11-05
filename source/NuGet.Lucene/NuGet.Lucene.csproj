@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -94,9 +94,12 @@
     <Compile Include="Analysis\PathAnalyzer.cs" />
     <Compile Include="Analysis\PorterStemAnalyzer.cs" />
     <Compile Include="FastZipPackage.cs" />
+    <Compile Include="FastZipPackageBase.cs" />
     <Compile Include="ILuceneRepositoryConfigurator.cs" />
     <Compile Include="IO\HashingWriteStream.cs" />
     <Compile Include="IO\ReadStream.cs" />
+    <Compile Include="FastZipPackageFile.cs" />
+    <Compile Include="IFastZipPackage.cs" />
     <Compile Include="LuceneRepositoryConfigurator.cs" />
     <Compile Include="Mapping\CachingVersionConverter.cs" />
     <Compile Include="GroupingPackagePathResolver.cs" />

@@ -8,7 +8,7 @@ using ICSharpCode.SharpZipLib.Zip;
 
 namespace NuGet.Lucene
 {
-    public class FastZipPackage : IPackage
+    public class FastZipPackage : FastZipPackageBase, IFastZipPackage
     {
         protected internal FastZipPackage()
         {
@@ -55,7 +55,7 @@ namespace NuGet.Lucene
             }
         }
 
-        public static FastZipPackage Open(string fileLocation, IHashProvider hashProvider)
+        public static IFastZipPackage Open(string fileLocation, IHashProvider hashProvider)
         {
             using (var stream = new FileStream(fileLocation, FileMode.Open, FileAccess.Read))
             {
@@ -63,6 +63,16 @@ namespace NuGet.Lucene
                 stream.Seek(0, SeekOrigin.Begin);
                 return Open(fileLocation, stream, hash);
             }
+        }
+
+        public override Stream GetStream()
+        {
+            return new FileStream(FileLocation, FileMode.Open, FileAccess.Read);
+        }
+
+        public string GetFileLocation()
+        {
+            return FileLocation;
         }
 
         public IEnumerable<IPackageFile> GetFiles()
@@ -75,13 +85,9 @@ namespace NuGet.Lucene
             return new FrameworkName[0];
         }
 
-        public Stream GetStream()
-        {
-            return new FileStream(FileLocation, FileMode.Open, FileAccess.Read);
-        }
-
         public string Id { get; set; }
         public SemanticVersion Version { get; set; }
+        public string FileLocation { get; set; }
         public string Title { get; private set; }
         public IEnumerable<string> Authors { get; private set; }
         public IEnumerable<string> Owners { get; private set; }
@@ -103,7 +109,6 @@ namespace NuGet.Lucene
         public Version MinClientVersion { get; private set; }
         public bool DevelopmentDependency { get; private set; }
         public IEnumerable<IPackageFile> Files { get; private set; }
-        public string FileLocation { get; set; }
         public bool IsAbsoluteLatestVersion { get { return false; } }
         public bool IsLatestVersion { get { return false; } }
         public bool Listed { get { return false; } }
@@ -118,7 +123,7 @@ namespace NuGet.Lucene
 
         protected virtual void ProcessPackageContents(Package package)
         {
-            Files = package.GetParts().Select(p => new LucenePackageFile(p.Uri.OriginalString)).ToArray();
+            Files = package.GetParts().Select(p => new FastZipPackageFile(this, p.Uri.OriginalString)).ToArray();
         }
         
         protected virtual void ProcessFileMetadata(Stream stream)

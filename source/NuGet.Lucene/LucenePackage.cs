@@ -16,18 +16,25 @@ namespace NuGet.Lucene
     /// Representation of a NuGet package stored/retrieved in a Lucene index.
     /// </summary>
     [DebuggerDisplay("Id = {Id}, Version = {Version}")]
-    public class LucenePackage : IPackage
+    public class LucenePackage : FastZipPackageBase, IFastZipPackage
     {
         private readonly Func<string, Stream> getStream;
+        private readonly Func<string, string> getFullPath;
 
         public LucenePackage(IFileSystem fileSystem)
-            : this(fileSystem.OpenFile)
+            : this(fileSystem.OpenFile, fileSystem.GetFullPath)
         {
         }
 
         public LucenePackage(Func<string, Stream> getStream)
+            :this(getStream, null)
+        {
+        }
+
+        public LucenePackage(Func<string, Stream> getStream, Func<string, string> getFullPath)
         {
             this.getStream = getStream;
+            this.getFullPath = getFullPath;
 
             Listed = true;
 
@@ -169,12 +176,21 @@ namespace NuGet.Lucene
 
         public IEnumerable<IPackageFile> GetFiles()
         {
-            return Files.Select(path => new LucenePackageFile(path));
+            return Files.Select(path => new FastZipPackageFile(this, path));
         }
 
-        public Stream GetStream()
+        public override Stream GetStream()
         {
             return getStream(Path);
+        }
+
+        public string GetFileLocation()
+        {
+            if (getFullPath == null || string.IsNullOrEmpty(Path))
+            {
+                throw new InvalidOperationException("File lcoation is unknown");
+            }
+            return getFullPath(Path);
         }
 
         #endregion
@@ -209,60 +225,5 @@ namespace NuGet.Lucene
 
         public bool IsMirrored { get; set; }
         #endregion
-    }
-
-    public class LucenePackageFile : IPackageFile
-    {
-        private readonly FrameworkName targetFramework;
-
-        public LucenePackageFile(string path)
-        {
-            Path = path;
-
-            string effectivePath;
-            targetFramework = VersionUtility.ParseFrameworkNameFromFilePath(path, out effectivePath);
-            EffectivePath = effectivePath;
-        }
-
-        public string Path
-        {
-            get;
-            private set;
-        }
-
-        public string EffectivePath
-        {
-            get;
-            private set;
-        }
-
-        public FrameworkName TargetFramework
-        {
-            get
-            {
-                return targetFramework;
-            }
-        }
-
-        IEnumerable<FrameworkName> IFrameworkTargetable.SupportedFrameworks
-        {
-            get
-            {
-                if (TargetFramework != null)
-                {
-                    yield return TargetFramework;
-                }
-            }
-        }
-
-        public Stream GetStream()
-        {
-            throw new NotSupportedException();
-        }
-
-        public override string ToString()
-        {
-            return Path;
-        }
     }
 }

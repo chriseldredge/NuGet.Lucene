@@ -357,7 +357,7 @@ namespace NuGet.Lucene.Tests
             public async Task DownloadAndIndex()
             {
                 var package = new FakeDataServicePackage(new Uri("http://example.com/packages/Foo/1.0"));
-                fileSystem.Setup(fs => fs.Root).Returns(Environment.CurrentDirectory);
+                fileSystem.Setup(fs => fs.GetFullPath(It.IsAny<string>())).Returns<string>(n => n);
 
                 await repository.AddPackageAsync(package, CancellationToken.None);
 
@@ -499,7 +499,7 @@ namespace NuGet.Lucene.Tests
                 return new TestPackage(Path.GetFileNameWithoutExtension(path));
             }
 
-            public override IPackage LoadStagedPackage(HashingWriteStream packageStream)
+            public override IFastZipPackage LoadStagedPackage(HashingWriteStream packageStream)
             {
                 packageStream.Close();
                 return new FastZipPackage
