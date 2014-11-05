@@ -9,6 +9,7 @@ using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
 using Moq;
+using NuGet.Lucene.IO;
 using NUnit.Framework;
 
 namespace NuGet.Lucene.Tests
@@ -346,14 +347,17 @@ namespace NuGet.Lucene.Tests
 
         public class AddDataServicePackageTests : LucenePackageRepositoryTests
         {
+            [SetUp]
+            public void SetHashAlgorithm()
+            {
+                repository.HashAlgorithmName = "SHA256";
+            }
+
             [Test]
             public async Task DownloadAndIndex()
             {
                 var package = new FakeDataServicePackage(new Uri("http://example.com/packages/Foo/1.0"));
-                packagePathResolver.Setup(r => r.GetInstallPath(package)).Returns("Foo");
-                packagePathResolver.Setup(r => r.GetPackageFileName(package)).Returns("Foo.1.0.nupkg");
-                fileSystem.Setup(fs => fs.GetFullPath(It.IsAny<string>())).Returns<string>(s => s);
-                fileSystem.Setup(fs => fs.OpenFile(It.IsAny<string>())).Returns(new MemoryStream());
+                fileSystem.Setup(fs => fs.Root).Returns(Environment.CurrentDirectory);
 
                 await repository.AddPackageAsync(package, CancellationToken.None);
 
@@ -493,6 +497,18 @@ namespace NuGet.Lucene.Tests
             protected override IPackage OpenPackage(string path)
             {
                 return new TestPackage(Path.GetFileNameWithoutExtension(path));
+            }
+
+            public override IPackage LoadStagedPackage(HashingWriteStream packageStream)
+            {
+                packageStream.Close();
+                return new FastZipPackage
+                {
+                    Id = "Sample",
+                    Version = new SemanticVersion("1.0"),
+                    FileLocation = packageStream.FileLocation,
+                    Hash = packageStream.Hash
+                };
             }
 
             protected override Stream OpenFileWriteStream(string path)

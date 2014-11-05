@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using NuGet.Lucene.IO;
 
 namespace NuGet.Lucene
 {
@@ -74,5 +75,24 @@ namespace NuGet.Lucene
         /// to be merged and expunging deleted documents.
         /// </summary>
         void Optimize();
+
+        /// <summary>
+        /// Creates a stream appropriate for staging a package that will be added
+        /// after the contents are written into place.
+        /// 
+        /// The stream returned automatically calculates a hash of the package contents
+        /// while the stream is being written to avoid additional I/O.
+        /// </summary>
+        HashingWriteStream CreateStreamForStagingPackage();
+
+        /// <summary>
+        /// Loads a staged package (after the stream has been written).
+        /// </summary>
+        IPackage LoadStagedPackage(HashingWriteStream packageStream);
+
+        /// <summary>
+        /// Deletes a temporary package that won't be added for whatever reason.
+        /// </summary>
+        void DiscardStagedPackage(HashingWriteStream packageStream);
     }
 }

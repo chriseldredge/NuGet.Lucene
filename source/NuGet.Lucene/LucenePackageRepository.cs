@@ -6,11 +6,13 @@ using System.Linq.Expressions;
 using System.Net.Http.Headers;
 using System.Reactive.Linq;
 using System.Runtime.Versioning;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Common.Logging;
 using ICSharpCode.SharpZipLib.Zip;
 using Lucene.Net.Linq;
+using NuGet.Lucene.IO;
 using NuGet.Lucene.Util;
 using LuceneDirectory = Lucene.Net.Store.Directory;
 
@@ -32,7 +34,7 @@ namespace NuGet.Lucene
 
         public IHashProvider HashProvider { get; set; }
 
-        public string HashAlgorithm { get; set; }
+        public string HashAlgorithmName { get; set; }
 
         public string LucenePackageSource { get; set; }
 
@@ -60,6 +62,38 @@ namespace NuGet.Lucene
             get { return LucenePackageSource ?? base.Source; }
         }
 
+        public virtual HashingWriteStream CreateStreamForStagingPackage()
+        {
+            var tmpPath = Path.Combine(StagingDirectory, "package-" + Guid.NewGuid() + ".nupkg.tmp");
+            return new HashingWriteStream(tmpPath, OpenFileWriteStream(tmpPath), HashAlgorithm.Create(HashAlgorithmName));
+        }
+
+        public virtual IPackage LoadStagedPackage(HashingWriteStream packageStream)
+        {
+            packageStream.Dispose();
+
+            return FastZipPackage.Open(packageStream.FileLocation, packageStream.Hash);
+        }
+
+        public void DiscardStagedPackage(HashingWriteStream packageStream)
+        {
+            packageStream.Dispose();
+            FileSystem.DeleteFile(packageStream.FileLocation);
+        }
+
+        public string StagingDirectory
+        {
+            get
+            {
+                var stagingDirectory = Path.Combine(FileSystem.Root, ".tmp");
+                if (!Directory.Exists(stagingDirectory))
+                {
+                    Directory.CreateDirectory(stagingDirectory);
+                }
+                return stagingDirectory;
+            }
+        }
+
         public async Task AddPackageAsync(IPackage package, CancellationToken cancellationToken)
         {
             if (PackageOverwriteMode == PackageOverwriteMode.Deny && FindPackage(package.Id, package.Version) != null)
@@ -67,71 +101,73 @@ namespace NuGet.Lucene
                 throw new PackageOverwriteDeniedException(package);
             }
 
-            Log.Info(m => m("Adding package {0} {1} to file system", package.Id, package.Version));
+            var fastZipPackage = package as FastZipPackage;
+            var dataPackage = package as DataServicePackage;
+            LucenePackage lucenePackage = null;
 
-            var lucenePackage = await AddPackageToFileSystemAsync(package, cancellationToken);
+            if (dataPackage != null)
+            {
+                fastZipPackage = await DownloadDataServicePackage(dataPackage, cancellationToken);
+                lucenePackage = Convert(fastZipPackage);
+                lucenePackage.OriginUrl = dataPackage.DownloadUrl;
+                lucenePackage.IsMirrored = true;
+            }
+            
+            if (fastZipPackage != null && !string.IsNullOrEmpty(fastZipPackage.FileLocation))
+            {
+                MoveFileWithOverwrite(fastZipPackage.FileLocation, base.GetPackageFilePath(fastZipPackage));
+                if (lucenePackage == null)
+                {
+                    lucenePackage = Convert(fastZipPackage);
+                }
+            }
+            else
+            {
+                lucenePackage = await AddPackageToFileSystemAsync(package, cancellationToken);
+            }
 
             Log.Info(m => m("Indexing package {0} {1}", package.Id, package.Version));
 
             await Indexer.AddPackageAsync(lucenePackage, cancellationToken);
         }
 
-        private async Task<LucenePackage> AddPackageToFileSystemAsync(IPackage package, CancellationToken cancellationToken)
+        private Task<LucenePackage> AddPackageToFileSystemAsync(IPackage package, CancellationToken cancellationToken)
         {
-            var dataPackage = package as DataServicePackage;
+            Log.Info(m => m("Adding package {0} {1} to file system", package.Id, package.Version));
 
-            if (dataPackage == null)
+            lock (fileSystemLock)
             {
-                lock (fileSystemLock)
-                {
-                    base.AddPackage(package);
-                }
-                
-                return Convert(package);
+                base.AddPackage(package);
             }
 
-            return await DownloadDataServicePackage(dataPackage, cancellationToken);
+            return TaskEx.FromResult(Convert(package));
         }
 
-        private async Task<LucenePackage> DownloadDataServicePackage(DataServicePackage dataPackage, CancellationToken cancellationToken)
+        private async Task<FastZipPackage> DownloadDataServicePackage(DataServicePackage dataPackage, CancellationToken cancellationToken)
         {
-            var parent = PathResolver.GetInstallPath(dataPackage);
-            var path = Path.Combine(parent, PathResolver.GetPackageFileName(dataPackage));
-            var tmpPath = path + "." + Guid.NewGuid() + ".tmp";
+            var assembly = typeof(LucenePackageRepository).Assembly;
 
-            if (!Directory.Exists(parent))
+            using (var client = CreateHttpClient())
             {
-                Directory.CreateDirectory(parent);
-            }
+                client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue(assembly.GetName().Name,
+                    assembly.GetName().Version.ToString()));
+                client.DefaultRequestHeaders.Add(RepositoryOperationNames.OperationHeaderName,
+                    RepositoryOperationNames.Mirror);
 
-            var client = CreateHttpClient();
-            var assembly = typeof (LucenePackageRepository).Assembly;
-            client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue(assembly.GetName().Name,
-                assembly.GetName().Version.ToString()));
-            client.DefaultRequestHeaders.Add(RepositoryOperationNames.OperationHeaderName, RepositoryOperationNames.Mirror);
-            Stream stream;
-            using (cancellationToken.Register(client.CancelPendingRequests))
-            {
-                stream = await client.GetStreamAsync(dataPackage.DownloadUrl);
-            }
-
-            cancellationToken.ThrowIfCancellationRequested();
-
-            var fileStream = OpenFileWriteStream(tmpPath);
-            using (fileStream)
-            {
-                using (stream)
+                Stream stream;
+                using (cancellationToken.Register(client.CancelPendingRequests))
                 {
-                    await stream.CopyToAsync(fileStream, 4096, cancellationToken);
+                    stream = await client.GetStreamAsync(dataPackage.DownloadUrl);
+                }
+
+                cancellationToken.ThrowIfCancellationRequested();
+
+                using (var hashingStream = CreateStreamForStagingPackage())
+                {
+                    await stream.CopyToAsync(hashingStream, 4096, cancellationToken);
+                    return (FastZipPackage)LoadStagedPackage(hashingStream);
                 }
             }
-
-            MoveFileWithOverwrite(tmpPath, path);
-            
-            var lucenePackage = LoadFromFileSystem(path);
-            lucenePackage.OriginUrl = dataPackage.DownloadUrl;
-            lucenePackage.IsMirrored = true;
-            return lucenePackage;
         }
 
         protected virtual System.Net.Http.HttpClient CreateHttpClient()
@@ -146,12 +182,21 @@ namespace NuGet.Lucene
 
         protected virtual void MoveFileWithOverwrite(string src, string dest)
         {
+            dest = Path.Combine(FileSystem.Root, dest);
+
             lock (fileSystemLock)
             {
+                var parent = Path.GetDirectoryName(dest);
+                if (!Directory.Exists(parent))
+                {
+                    Directory.CreateDirectory(parent);
+                }
                 if (File.Exists(dest))
                 {
                     File.Delete(dest);
                 }
+
+                Log.Info(m => m("Moving package file from {0} to {1}.", src, dest));
                 File.Move(src, dest);
             }
         }
@@ -388,7 +433,7 @@ namespace NuGet.Lucene
 
         protected override string GetPackageFilePath(IPackage package)
         {
-            return GetPackageFilePath((IPackageName)package);
+            return GetPackageFilePath(package);
         }
 
         protected override string GetPackageFilePath(string id, SemanticVersion version)
@@ -491,7 +536,7 @@ namespace NuGet.Lucene
                 package.Created = fastPackage.Created;
             }
 
-            package.PackageHashAlgorithm = HashAlgorithm;
+            package.PackageHashAlgorithm = HashAlgorithmName;
             package.LastUpdated = GetLastModified(package, path);
             package.Published = package.LastUpdated;
             package.Path = path;

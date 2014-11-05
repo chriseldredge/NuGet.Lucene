@@ -4,20 +4,84 @@ using System.IO;
 using System.IO.Packaging;
 using System.Linq;
 using System.Runtime.Versioning;
+using ICSharpCode.SharpZipLib.Zip;
 
 namespace NuGet.Lucene
 {
     public class FastZipPackage : IPackage
     {
-        private readonly string originalFilePath;
-
-        private FastZipPackage(string originalFilePath)
+        protected internal FastZipPackage()
         {
-            this.originalFilePath = originalFilePath;
+            FrameworkAssemblies = Enumerable.Empty<FrameworkAssemblyReference>();
+            DependencySets = Enumerable.Empty<PackageDependencySet>();
+            Files = Enumerable.Empty<IPackageFile>();
         }
 
-        public string Id { get; private set; }
-        public SemanticVersion Version { get; private set; }
+        private static FastZipPackage Open(string fileLocation, Stream stream, byte[] hash)
+        {
+            if (!stream.CanRead)
+            {
+                throw new ArgumentException("Stream.CanRead must be supported.", "stream");
+            }
+            if (!stream.CanSeek)
+            {
+                throw new ArgumentException("Stream.CanSeek must be supported.", "stream");
+            }
+
+            var fastZipPackage = new FastZipPackage { FileLocation = fileLocation };
+
+            using (var package = Package.Open(stream, FileMode.Open, FileAccess.Read))
+            {
+                fastZipPackage.ProcessManifest(package);
+
+                fastZipPackage.ProcessPackageContents(package);
+            }
+
+            stream.Seek(0, SeekOrigin.Begin);
+
+            fastZipPackage.ProcessFileMetadata(stream);
+
+            fastZipPackage.Size = stream.Length;
+            fastZipPackage.Hash = hash;
+
+            return fastZipPackage;
+        }
+
+        public static FastZipPackage Open(string fileLocation, byte[] hash)
+        {
+            using (var stream = new FileStream(fileLocation, FileMode.Open, FileAccess.Read))
+            {
+                return Open(fileLocation, stream, hash);
+            }
+        }
+
+        public static FastZipPackage Open(string fileLocation, IHashProvider hashProvider)
+        {
+            using (var stream = new FileStream(fileLocation, FileMode.Open, FileAccess.Read))
+            {
+                var hash = hashProvider.CalculateHash(stream);
+                stream.Seek(0, SeekOrigin.Begin);
+                return Open(fileLocation, stream, hash);
+            }
+        }
+
+        public IEnumerable<IPackageFile> GetFiles()
+        {
+            return Files;
+        }
+
+        public IEnumerable<FrameworkName> GetSupportedFrameworks()
+        {
+            return new FrameworkName[0];
+        }
+
+        public Stream GetStream()
+        {
+            return new FileStream(FileLocation, FileMode.Open, FileAccess.Read);
+        }
+
+        public string Id { get; set; }
+        public SemanticVersion Version { get; set; }
         public string Title { get; private set; }
         public IEnumerable<string> Authors { get; private set; }
         public IEnumerable<string> Owners { get; private set; }
@@ -33,66 +97,57 @@ namespace NuGet.Lucene
         public string Copyright { get; private set; }
         public IEnumerable<FrameworkAssemblyReference> FrameworkAssemblies { get; private set; }
         public IEnumerable<PackageDependencySet> DependencySets { get; private set; }
-        public Uri ReportAbuseUrl { get; private set; }
-        public int DownloadCount { get; private set; }
-        public byte[] Hash { get; private set; }
+        public Uri ReportAbuseUrl { get { return null; } }
+        public int DownloadCount { get { return 0; } }
+        public byte[] Hash { get; set; }
         public Version MinClientVersion { get; private set; }
         public bool DevelopmentDependency { get; private set; }
         public IEnumerable<IPackageFile> Files { get; private set; }
-
-        public IEnumerable<IPackageFile> GetFiles()
+        public string FileLocation { get; set; }
+        public bool IsAbsoluteLatestVersion { get { return false; } }
+        public bool IsLatestVersion { get { return false; } }
+        public bool Listed { get { return false; } }
+        public DateTimeOffset? Published { get { return null; } }
+        public IEnumerable<IPackageAssemblyReference> AssemblyReferences
         {
-            return Files;
+            get { return Enumerable.Empty<IPackageAssemblyReference>(); }
         }
-
-        public IEnumerable<FrameworkName> GetSupportedFrameworks()
-        {
-            return new FrameworkName[0];
-        }
-
-        public Stream GetStream()
-        {
-            return new FileStream(originalFilePath, FileMode.Open, FileAccess.Read);
-        }
-
-        public bool IsAbsoluteLatestVersion { get; private set; }
-        public bool IsLatestVersion { get; private set; }
-        public bool Listed { get; private set; }
-        public DateTimeOffset? Published { get; private set; }
-        public IEnumerable<IPackageAssemblyReference> AssemblyReferences { get; private set; }
         public ICollection<PackageReferenceSet> PackageAssemblyReferences { get; private set; }
         public DateTimeOffset Created { get; private set; }
         public long Size { get; private set; }
 
-        public static FastZipPackage Open(string originalFilePath, IHashProvider hashProvider)
+        protected virtual void ProcessPackageContents(Package package)
         {
-            var result = new FastZipPackage(originalFilePath);
+            Files = package.GetParts().Select(p => new LucenePackageFile(p.Uri.OriginalString)).ToArray();
+        }
+        
+        protected virtual void ProcessFileMetadata(Stream stream)
+        {
+            var zip = new ZipFile(stream);
 
-            using (var package = Package.Open(originalFilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
-            {
-                var packageRelationship = package.GetRelationshipsByType("http://schemas.microsoft.com/packaging/2010/07/manifest").SingleOrDefault();
-                if (packageRelationship == null)
-                    throw new InvalidOperationException("Package does not contain a manifest");
-                var part = package.GetPart(packageRelationship.TargetUri);
-                using (var stream2 = part.GetStream())
-                    result.ReadManifest(stream2);
-
-                result.Files = package.GetParts().Select(p => new LucenePackageFile(p.Uri.OriginalString)).ToArray();
-            }
-
-            using (var stream = new FileStream(originalFilePath, FileMode.Open, FileAccess.Read))
-            {
-                result.Hash = hashProvider.CalculateHash(stream);
-            }
-
-            var info = new FileInfo(originalFilePath);
-            result.Created = info.CreationTimeUtc;
-            result.Size = info.Length;
-
-            return result;
+            Created = zip.Cast<ZipEntry>()
+                .Where(f => f.Name.EndsWith(".nuspec"))
+                .Select(f => f.DateTime)
+                .FirstOrDefault();
         }
 
-        protected void ReadManifest(Stream manifestStream)
+        protected virtual void ProcessManifest(Package package)
+        {
+            var packageRelationship =
+                package.GetRelationshipsByType("http://schemas.microsoft.com/packaging/2010/07/manifest")
+                .SingleOrDefault();
+
+            if (packageRelationship == null)
+            {
+                throw new InvalidOperationException("Package does not contain a manifest");
+            }
+
+            var part = package.GetPart(packageRelationship.TargetUri);
+
+            ProcessManifest(part.GetStream());
+        }
+
+        protected virtual void ProcessManifest(Stream manifestStream)
         {
             var manifest = Manifest.ReadFrom(manifestStream, validateSchema:false);
             var packageMetadata = (IPackageMetadata)manifest.Metadata;

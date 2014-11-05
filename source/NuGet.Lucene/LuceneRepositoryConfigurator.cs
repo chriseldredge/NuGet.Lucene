@@ -100,7 +100,7 @@ namespace NuGet.Lucene
             var repository = new LucenePackageRepository(packagePathResolver, fileSystem)
                 {
                     HashProvider = hashProvider,
-                    HashAlgorithm = PackageHashAlgorithm,
+                    HashAlgorithmName = PackageHashAlgorithm,
                     PathResolver = packagePathResolver,
                     Indexer = PackageIndexer,
                     LuceneDataProvider = Provider,
