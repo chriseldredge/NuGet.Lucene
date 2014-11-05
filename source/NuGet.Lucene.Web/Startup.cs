@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Net.Http.Formatting;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
@@ -62,7 +64,7 @@ namespace NuGet.Lucene.Web
         {
             var config = CreateHttpConfiguration();
 
-            ConfigureWebApi(config);
+            ConfigureWebApi(config, container);
 
             if (Settings.ShowExceptionDetails)
             {
@@ -170,7 +172,7 @@ namespace NuGet.Lucene.Web
             container.CurrentScopeEnding += (s, e) => statusHubBroadcaster.Dispose();
         }
 
-        protected virtual void ConfigureWebApi(HttpConfiguration config)
+        protected virtual void ConfigureWebApi(HttpConfiguration config, IContainer container)
         {
             config.IncludeErrorDetailPolicy = Settings.ShowExceptionDetails
                 ? IncludeErrorDetailPolicy.Always
@@ -188,7 +190,7 @@ namespace NuGet.Lucene.Web
 
             config.Formatters.Add(formatter);
             config.Formatters.Remove(config.Formatters.XmlFormatter);
-            config.Formatters.Add(new PackageFormDataMediaFormatter());
+            config.Formatters.AddRange(container.Resolve<IEnumerable<MediaTypeFormatter>>());
 
             config.Formatters.JsonFormatter.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
             config.Formatters.JsonFormatter.SerializerSettings.Converters.Add(new StringEnumConverter());

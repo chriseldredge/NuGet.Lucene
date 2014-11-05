@@ -1,10 +1,12 @@
 ﻿using System.IO;
+using System.Net.Http.Formatting;
 using Autofac;
 using Autofac.Integration.WebApi;
 using Lucene.Net.Linq;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
 using NuGet.Lucene.Web.Authentication;
+using NuGet.Lucene.Web.Formatters;
 using NuGet.Lucene.Web.Middleware;
 using NuGet.Lucene.Web.Models;
 using NuGet.Lucene.Web.Symbols;
@@ -49,6 +51,7 @@ namespace NuGet.Lucene.Web
                 SymbolsPath = symbolsPath,
                 KeepSourcesCompressed = settings.KeepSourcesCompressed
             }).As<ISymbolSource>().PropertiesAutowired();
+
             builder.RegisterInstance(new SymbolTools
             {
                 SymbolPath = symbolsPath,
@@ -59,6 +62,7 @@ namespace NuGet.Lucene.Web
 
             builder.RegisterInstance(new StopSynchronizationCancellationTokenSource());
 
+            builder.RegisterType<PackageFormDataMediaFormatter>().As<MediaTypeFormatter>();
             builder.RegisterApiControllers(typeof (NuGetWebApiModule).Assembly).PropertiesAutowired();
         }
 
