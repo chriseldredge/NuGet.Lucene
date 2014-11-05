@@ -1,6 +1,9 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using NuGet.Lucene.IO;
 
 namespace NuGet.Lucene.Web.Formatters
 {
@@ -11,22 +14,32 @@ namespace NuGet.Lucene.Web.Formatters
     /// 
     /// This stream decorator fixes these boundaries to be correct.
     /// </summary>
-    public class MalformedMultipartFixingStream : Stream
+    public class MalformedMultipartFixingStream : ReadStream
     {
-        private readonly Stream stream;
         private readonly MemoryStream peekBuffer = new MemoryStream();
         private readonly byte[] boundary;
         private byte lastByteRead;
 
         public MalformedMultipartFixingStream(Stream stream, string boundary)
+            :base(stream)
         {
-            this.stream = stream;
             this.boundary = Encoding.UTF8.GetBytes('\n' + boundary);
         }
 
         public override int Read(byte[] buffer, int offset, int count)
         {
             var bytesRead = BufferedRead(buffer, offset, count);
+            if (bytesRead > 0)
+            {
+                lastByteRead = buffer[offset + bytesRead - 1];
+            }
+
+            return bytesRead;
+        }
+
+        public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            var bytesRead = await BufferedReadAsync(buffer, offset, count, cancellationToken);
             if (bytesRead > 0)
             {
                 lastByteRead = buffer[offset + bytesRead - 1];
@@ -43,9 +56,28 @@ namespace NuGet.Lucene.Web.Formatters
 
             if (bytesRead < count)
             {
-                totalBytesRead += stream.Read(buffer, offset + bytesRead, count - bytesRead);
+                totalBytesRead += base.Read(buffer, offset + bytesRead, count - bytesRead);
             }
 
+            return ProcessBytesRead(buffer, offset, count, totalBytesRead, bytesRead);
+        }
+
+        public async Task<int> BufferedReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            var bytesRead = await peekBuffer.ReadAsync(buffer, offset, count, cancellationToken);
+
+            var totalBytesRead = bytesRead;
+
+            if (bytesRead < count)
+            {
+                totalBytesRead += await base.ReadAsync(buffer, offset + bytesRead, count - bytesRead, cancellationToken);
+            }
+
+            return ProcessBytesRead(buffer, offset, count, totalBytesRead, bytesRead);
+        }
+
+        private int ProcessBytesRead(byte[] buffer, int offset, int count, int totalBytesRead, int bytesRead)
+        {
             if (totalBytesRead == bytesRead)
             {
                 return totalBytesRead;
@@ -88,7 +120,7 @@ namespace NuGet.Lucene.Web.Formatters
                 var bytesToRead = boundary.Length - matchLength;
                 do
                 {
-                    additionalBytesRead = stream.Read(tmp, totalBytesRead + totalAdditionalBytesRead, bytesToRead);
+                    additionalBytesRead = base.Read(tmp, totalBytesRead + totalAdditionalBytesRead, bytesToRead);
                     totalAdditionalBytesRead += additionalBytesRead;
                     bytesToRead -= additionalBytesRead;
                 } while (additionalBytesRead != 0 && bytesToRead > 0);
@@ -136,34 +168,9 @@ namespace NuGet.Lucene.Web.Formatters
             return totalBytesRead;
         }
 
-        public override bool CanRead
-        {
-            get { return stream.CanRead; }
-        }
-
         public override bool CanSeek
         {
             get { return false; }
-        }
-
-        public override bool CanWrite
-        {
-            get { return false; }
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                stream.Dispose();
-            }
-        }
-
-        #region NotSupported
-        public override long Position
-        {
-            get { throw new NotSupportedException(); }
-            set { throw new NotSupportedException(); }
         }
 
         public override long Length
@@ -171,25 +178,9 @@ namespace NuGet.Lucene.Web.Formatters
             get { throw new NotSupportedException(); }
         }
 
-        public override void Write(byte[] buffer, int offset, int count)
+        public override IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
         {
-            throw new NotSupportedException();
+            throw new NotSupportedException("Use ReadAsync.");
         }
-
-        public override void SetLength(long value)
-        {
-            throw new NotSupportedException();
-        }
-
-        public override long Seek(long offset, SeekOrigin origin)
-        {
-            throw new NotSupportedException();
-        }
-
-        public override void Flush()
-        {
-            throw new NotSupportedException();
-        }
-        #endregion
     }
 }
