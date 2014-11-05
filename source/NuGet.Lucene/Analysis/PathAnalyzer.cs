@@ -33,6 +33,8 @@ namespace NuGet.Lucene.Analysis
                 {
                     if (!input.IncrementToken())
                         return false;
+
+                    NormalizeDirectorySeparators();
                 }
 
                 currentState = (FilterState) ((int) currentState + 1);
@@ -50,11 +52,23 @@ namespace NuGet.Lucene.Analysis
                 }
             }
 
-            private bool SetTermToFileName()
+            private void NormalizeDirectorySeparators()
             {
+                var termBuffer = termAtt.TermBuffer();
                 for (var i = termAtt.TermLength(); i >= 0; i--)
                 {
-                    var termBuffer = termAtt.TermBuffer();
+                    if (termBuffer[i] == '\\')
+                    {
+                        termBuffer[i] = '/';
+                    }
+                }
+            }
+
+            private bool SetTermToFileName()
+            {
+                var termBuffer = termAtt.TermBuffer();
+                for (var i = termAtt.TermLength(); i >= 0; i--)
+                {
                     if (termBuffer[i] == '/')
                     {
                         var fileName = termBuffer.Take(termAtt.TermLength()).Skip(i + 1).ToArray();
