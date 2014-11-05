@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using ICSharpCode.SharpZipLib.Zip;
 
 namespace NuGet.Lucene
@@ -31,6 +32,16 @@ namespace NuGet.Lucene
             }
 
             return zipFile.GetInputStream(zipEntry);
+        }
+
+        public static DateTimeOffset GetPackageCreatedDateTime(Stream stream)
+        {
+            var zip = new ZipFile(stream);
+
+            return zip.Cast<ZipEntry>()
+                .Where(f => f.Name.EndsWith(".nuspec"))
+                .Select(f => f.DateTime)
+                .FirstOrDefault();
         }
     }
 }

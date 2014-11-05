@@ -134,12 +134,7 @@ namespace NuGet.Lucene
         
         protected virtual void ProcessFileMetadata(Stream stream)
         {
-            var zip = new ZipFile(stream);
-
-            Created = zip.Cast<ZipEntry>()
-                .Where(f => f.Name.EndsWith(".nuspec"))
-                .Select(f => f.DateTime)
-                .FirstOrDefault();
+            Created = GetPackageCreatedDateTime(stream);
         }
 
         protected virtual void ProcessManifest(Package package)

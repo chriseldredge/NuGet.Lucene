@@ -10,7 +10,6 @@ using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Common.Logging;
-using ICSharpCode.SharpZipLib.Zip;
 using Lucene.Net.Linq;
 using NuGet.Lucene.IO;
 using NuGet.Lucene.Util;
@@ -528,7 +527,7 @@ namespace NuGet.Lucene
             var fastPackage = sourcePackage as FastZipPackage;
             if (fastPackage == null)
             {
-                CalculateDerivedDataSlowlyConsumingLotsOfMemory(package, openStream);
+                CalculateDerivedDataFromStream(package, openStream);
             }
             else
             {
@@ -555,27 +554,21 @@ namespace NuGet.Lucene
             return lastModified;
         }
 
-        private void CalculateDerivedDataSlowlyConsumingLotsOfMemory(LucenePackage package, Func<Stream> openStream)
+        private void CalculateDerivedDataFromStream(LucenePackage package, Func<Stream> openStream)
         {
-            byte[] fileBytes;
             using (var stream = openStream())
             {
-                fileBytes = stream.ReadAllBytes();
+                if (!stream.CanSeek)
+                {
+                    throw new InvalidOperationException("Package stream must support CanSeek.");
+                }
+
+                package.Created = FastZipPackageBase.GetPackageCreatedDateTime(stream);
+                package.PackageSize = stream.Length;
+
+                stream.Seek(0, SeekOrigin.Begin);
+                package.PackageHash = System.Convert.ToBase64String(HashProvider.CalculateHash(stream));
             }
-
-            package.PackageSize = fileBytes.Length;
-            package.PackageHash = System.Convert.ToBase64String(HashProvider.CalculateHash(fileBytes));
-            package.Created = GetZipArchiveCreateDate(new MemoryStream(fileBytes));
-        }
-
-        private DateTimeOffset GetZipArchiveCreateDate(Stream stream)
-        {
-            var zip = new ZipFile(stream);
-
-            return zip.Cast<ZipEntry>()
-                .Where(f => f.Name.EndsWith(".nuspec"))
-                .Select(f => f.DateTime)
-                .FirstOrDefault();
         }
     }
 }
