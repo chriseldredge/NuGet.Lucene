@@ -147,7 +147,7 @@ namespace NuGet.Lucene.Web.Symbols
             Directory.CreateDirectory(dir);
             var visitedDirectories = new HashSet<string>();
 
-            foreach (var file in package.GetFiles())
+            foreach (var file in package.GetFiles("src"))
             {
                 var filePath = Path.Combine(dir, file.Path);
                 var fileDir = Path.GetDirectoryName(filePath);
