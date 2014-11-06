@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -101,11 +102,16 @@ Content-Type: application/octet-stream
             return new MemoryStream(Encoding.ASCII.GetBytes(message));
         }
 
-        class TestableMultipartFormDataMediaFormatter : MultipartFormDataMediaFormatter<string>
+        class TestableMultipartFormDataMediaFormatter : MultipartFormDataMediaFormatter<string, MultipartMemoryStreamProvider>
         {
-            protected override Task<string> ReadFormDataFromStreamAsync(Stream stream)
+            protected override MultipartMemoryStreamProvider CreateStreamProvider()
             {
-                return new StreamReader(stream).ReadToEndAsync();
+                return new MultipartMemoryStreamProvider();
+            }
+
+            protected override async Task<string> ReadFormDataFromStreamAsync(MultipartMemoryStreamProvider streamProvider)
+            {
+                return await streamProvider.Contents.Single().ReadAsStringAsync();
             }
         }
     }

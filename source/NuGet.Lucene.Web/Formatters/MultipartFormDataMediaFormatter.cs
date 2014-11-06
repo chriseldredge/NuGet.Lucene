@@ -10,7 +10,7 @@ using System.Web.Http;
 
 namespace NuGet.Lucene.Web.Formatters
 {
-    public abstract class MultipartFormDataMediaFormatter<T> : MediaTypeFormatter
+    public abstract class MultipartFormDataMediaFormatter<TModel, TMultipartStreamProvider> : MediaTypeFormatter where TMultipartStreamProvider : MultipartStreamProvider
     {
         protected MultipartFormDataMediaFormatter()
         {
@@ -18,7 +18,8 @@ namespace NuGet.Lucene.Web.Formatters
             SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/octet-stream"));
         }
 
-        protected abstract Task<T> ReadFormDataFromStreamAsync(Stream stream);
+        protected abstract TMultipartStreamProvider CreateStreamProvider();
+        protected abstract Task<TModel> ReadFormDataFromStreamAsync(TMultipartStreamProvider streamProvider);
 
         public override async Task<object> ReadFromStreamAsync(Type type, Stream readStream, HttpContent content, IFormatterLogger formatterLogger)
         {
@@ -33,19 +34,10 @@ namespace NuGet.Lucene.Web.Formatters
 
             content = ReplaceContent(content, multipartStream);
 
-            var parts = await content.ReadAsMultipartAsync();
-
-            var fileContent = parts.Contents.FirstOrDefault(p => SupportedMediaTypes.Contains(p.Headers.ContentType));
-
-            if (fileContent == null)
-            {
-                throw new HttpResponseException(HttpStatusCode.UnsupportedMediaType);
-            }
-
-            using (var stream = await fileContent.ReadAsStreamAsync())
-            {
-                return await ReadFormDataFromStreamAsync(stream);
-            }
+            var streamProvider = CreateStreamProvider();
+            await content.ReadAsMultipartAsync(streamProvider);
+            await streamProvider.ExecutePostProcessingAsync();
+            return await ReadFormDataFromStreamAsync(streamProvider);
         }
 
         private static HttpContent ReplaceContent(HttpContent content, Stream multipartStream)
@@ -108,7 +100,7 @@ namespace NuGet.Lucene.Web.Formatters
 
         public override bool CanReadType(Type type)
         {
-            return typeof(T).IsAssignableFrom(type);
+            return typeof(TModel).IsAssignableFrom(type);
         }
 
         public override bool CanWriteType(Type type)
