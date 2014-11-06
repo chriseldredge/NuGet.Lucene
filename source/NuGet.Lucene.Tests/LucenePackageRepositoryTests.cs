@@ -164,6 +164,16 @@ namespace NuGet.Lucene.Tests
                 Assert.That(result.LicenseUrl, Is.Null, "LicenseUrl");
                 Assert.That(result.ProjectUrl, Is.Null, "ProjectUrl");
             }
+
+            [Test]
+            public void SetsPath()
+            {
+                var package = SetUpConvertPackage();
+
+                var result = repository.Convert(package.Object);
+
+                Assert.That(result.Path, Is.EqualTo(Path.Combine("package-dir", "Sample.1.0")));
+            }
         }
 
         public class GetUpdatesTests : LucenePackageRepositoryTests
@@ -325,23 +335,58 @@ namespace NuGet.Lucene.Tests
 
         public class LoadFromFileSystemTests : LucenePackageRepositoryTests
         {
+            readonly DateTime lastModified = new DateTime(2001, 5, 27, 0, 0, 0, DateTimeKind.Utc);
+            readonly string expectedPath = Path.Combine("a", "non", "standard", "package", "location.nupkg");
+
             [Test]
             public void LoadFromFileSystem()
             {
-                var root = Environment.CurrentDirectory;
-                var expectedPath = Path.Combine("a", "non", "standard", "package", "location.nupkg");
-                var date = new DateTime(2001, 5, 27, 0, 0, 0, DateTimeKind.Utc);
+                SetupFileSystem();
+                
+                repository.LoadFromFileSystem(expectedPath);
 
-                fileSystem.SetupGet(fs => fs.Root).Returns(root);
-                fileSystem.Setup(fs => fs.GetFullPath(It.IsAny<string>()))
-                    .Returns<string>(p => Path.Combine(root, p));
-                fileSystem.Setup(fs => fs.OpenFile(It.IsAny<string>())).Returns(new MemoryStream());
-                fileSystem.Setup(fs => fs.GetLastModified(expectedPath)).Returns(date).Verifiable();
+                fileSystem.Verify();
+            }
+
+            [Test]
+            public void SetsPublishedDateToLastModified()
+            {
+                SetupFileSystem();
+                fileSystem.Setup(fs => fs.GetLastModified(It.IsAny<string>())).Returns(lastModified);
 
                 var result = repository.LoadFromFileSystem(expectedPath);
 
-                fileSystem.VerifyAll();
-                Assert.That(result.Published.GetValueOrDefault().DateTime, Is.EqualTo(date));
+                Assert.That(result.Published.GetValueOrDefault().DateTime, Is.EqualTo(lastModified));
+            }
+
+            [Test]
+            public void SetsPath()
+            {
+                SetupFileSystem();
+
+                var result = repository.LoadFromFileSystem(expectedPath);
+
+                Assert.That(result.Path, Is.EqualTo(expectedPath));
+            }
+
+            [Test]
+            public void MakesPathRelative()
+            {
+                SetupFileSystem();
+
+                var result = repository.LoadFromFileSystem(Path.Combine(Environment.CurrentDirectory, expectedPath));
+
+                Assert.That(result.Path, Is.EqualTo(expectedPath));
+            }
+
+            private void SetupFileSystem()
+            {
+                var root = Environment.CurrentDirectory;
+
+                fileSystem.Setup(fs => fs.Root).Returns(Environment.CurrentDirectory);
+                fileSystem.Setup(fs => fs.GetFullPath(It.IsAny<string>()))
+                    .Returns<string>(p => Path.Combine(root, p));
+                fileSystem.Setup(fs => fs.OpenFile(It.IsAny<string>())).Returns(new MemoryStream());
             }
         }
 
@@ -357,7 +402,7 @@ namespace NuGet.Lucene.Tests
             public async Task DownloadAndIndex()
             {
                 var package = new FakeDataServicePackage(new Uri("http://example.com/packages/Foo/1.0"));
-                fileSystem.Setup(fs => fs.GetFullPath(It.IsAny<string>())).Returns<string>(n => n);
+                fileSystem.Setup(fs => fs.GetFullPath(It.IsAny<string>())).Returns<string>(n => Path.Combine(Environment.CurrentDirectory, n));
 
                 await repository.AddPackageAsync(package, CancellationToken.None);
 
