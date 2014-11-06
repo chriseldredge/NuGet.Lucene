@@ -88,10 +88,7 @@ namespace NuGet.Lucene
 
         protected virtual string StagingDirectory
         {
-            get
-            {
-                return FileSystem.GetFullPath(".tmp");
-            }
+            get { return FileSystem.GetTempFolder(); }
         }
 
         public async Task AddPackageAsync(IPackage package, CancellationToken cancellationToken)

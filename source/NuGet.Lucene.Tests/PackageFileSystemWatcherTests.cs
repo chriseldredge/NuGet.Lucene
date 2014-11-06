@@ -121,6 +121,16 @@ namespace NuGet.Lucene.Tests
         }
 
         [Test]
+        public async Task PackageRenamed_IgnoresTempFolder()
+        {
+            await watcher.OnPackageRenamed(@".\.tmp\Sample.1.0.nupkg", @".\.tmp\Sample.2.0.nupkg");
+            
+            indexer.Verify();
+            loader.Verify();
+            log.Verify(l => l.Error(It.IsAny<Exception>()), Times.Never);
+        }
+
+        [Test]
         public void SynchronizeAfterDirectoryCreated()
         {
             const string dir = @"c:\sample\dir";

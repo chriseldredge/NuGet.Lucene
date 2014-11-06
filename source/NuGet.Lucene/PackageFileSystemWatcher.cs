@@ -5,6 +5,7 @@ using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Common.Logging;
+using NuGet.Lucene.Util;
 
 #if NET_4_5
 using TaskEx=System.Threading.Tasks.Task;
@@ -116,30 +117,26 @@ namespace NuGet.Lucene
 
         private async Task AddToIndex(string fullPath)
         {
-            LucenePackage package = null;
+            if (FileSystem.IsTempFile(fullPath)) return;
 
-            Action checkTimestampAndLoadPackage = () =>
-                {
-                    var existingPackage = PackageRepository.LoadFromIndex(fullPath);
+            var existingPackage = PackageRepository.LoadFromIndex(fullPath);
 
-                    var flag = (existingPackage == null ||
-                            IndexDifferenceCalculator.TimestampsMismatch(existingPackage,
-                                                                         FileSystem.GetLastModified(fullPath)));
-                    if (!flag) return;
-
-                    package = PackageRepository.LoadFromFileSystem(fullPath);
-                };
-
-            await Task.Factory.StartNew(checkTimestampAndLoadPackage);
-
-            if (package != null)
+            if (existingPackage != null &&
+                !IndexDifferenceCalculator.TimestampsMismatch(
+                    existingPackage, FileSystem.GetLastModified(fullPath)))
             {
-                await Indexer.AddPackageAsync(package, CancellationToken.None);
+                return;
             }
+
+            var package = PackageRepository.LoadFromFileSystem(fullPath);
+
+            await Indexer.AddPackageAsync(package, CancellationToken.None);
         }
 
         private async Task RemoveFromIndex(string fullPath)
         {
+            if (FileSystem.IsTempFile(fullPath)) return;
+
             var package = PackageRepository.LoadFromIndex(fullPath);
             if (package != null)
             {
@@ -149,7 +146,7 @@ namespace NuGet.Lucene
 
         private void LogOnFault(Task task)
         {
-            if (task.IsFaulted)
+            if (task.IsFaulted && task.Exception != null)
             {
                 task.Exception.Handle(ex => { Log.Error(ex); return true; });
             }

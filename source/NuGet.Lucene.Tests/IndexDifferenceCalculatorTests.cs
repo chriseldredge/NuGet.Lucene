@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using Moq;
@@ -61,6 +62,17 @@ namespace NuGet.Lucene.Tests
             var diff = IndexDifferenceCalculator.FindDifferences(fileSystem.Object, indexedPackages, CancellationToken.None);
 
             Assert.AreEqual(new[] { "b" }, diff.NewPackages);
+        }
+
+        [Test]
+        public void IgnoresTempFolder()
+        {
+            SetupFileSystemPackagePaths("a", Path.Combine(Util.FileSystemExtensions.TempFolderName, "b"));
+            var indexedPackages = CreateLucenePackages("a");
+
+            var diff = IndexDifferenceCalculator.FindDifferences(fileSystem.Object, indexedPackages, CancellationToken.None);
+
+            Assert.That(diff.NewPackages, Is.Empty);
         }
 
         [Test]

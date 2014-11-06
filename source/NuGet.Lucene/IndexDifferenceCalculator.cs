@@ -37,6 +37,7 @@ namespace NuGet.Lucene
 
             var fileSystemPackages = fileSystem.GetFiles(string.Empty, "*" + Constants.PackageExtension, true)
                                                .WithCancellation(cancellationToken)
+                                               .Where(file => !fileSystem.IsTempFile(file))
                                                .ToArray();
 
             setState(SynchronizationState.ScanningIndex);
