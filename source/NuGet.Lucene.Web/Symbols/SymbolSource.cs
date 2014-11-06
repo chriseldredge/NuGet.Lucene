@@ -32,16 +32,27 @@ namespace NuGet.Lucene.Web.Symbols
 
         public async Task AddSymbolsAsync(IPackage package, string symbolSourceUri)
         {
-            // Copy the package unmodified to the target path if KeepSourcesCompressed is true
-            if (KeepSourcesCompressed)
+            try
             {
-                await CopyNupkgToTargetPathAsync(package);
+                // Copy the package unmodified to the target path if KeepSourcesCompressed is true
+                if (KeepSourcesCompressed)
+                {
+                    await CopyNupkgToTargetPathAsync(package);
+                }
+                else
+                {
+                    await UnzipPackageAsync(package);
+                }
+                await ProcessSymbolsAsync(package, symbolSourceUri);
             }
-            else
+            finally
             {
-                await UnzipPackageAsync(package);
+                var disposablePackage = package as IDisposable;
+                if (disposablePackage != null)
+                {
+                    disposablePackage.Dispose();
+                }
             }
-            await ProcessSymbolsAsync(package, symbolSourceUri);
         }
 
         protected async Task CopyNupkgToTargetPathAsync(IPackage package)
@@ -52,7 +63,19 @@ namespace NuGet.Lucene.Web.Symbols
             {
                 targetFile.Directory.Create();
             }
-            
+            else if (targetFile.Exists)
+            {
+                targetFile.Delete();
+            }
+
+            var fastZipPackage = package as FastZipPackage;
+            if (fastZipPackage != null)
+            {
+                File.Move(fastZipPackage.GetFileLocation(), targetFile.FullName);
+                fastZipPackage.FileLocation = targetFile.FullName;
+                return;
+            }
+
             using (var sourceStream = package.GetStream())
             {
                 using (var targetStream = targetFile.Open(FileMode.Create, FileAccess.Write))
