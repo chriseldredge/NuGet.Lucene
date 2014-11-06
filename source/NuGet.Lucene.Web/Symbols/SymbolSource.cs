@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using NuGet.Lucene.IO;
 using NuGet.Lucene.Web.Util;
 
 namespace NuGet.Lucene.Web.Symbols
@@ -135,9 +136,10 @@ namespace NuGet.Lucene.Web.Symbols
             if (!File.Exists(packagePath)) return null;
 
             var srcPath = Path.Combine("src", relativePath);
-            var packageFile = new ZipPackage(packagePath);
+            var packageFile = FastZipPackage.Open(packagePath, new byte[0]);
+            
             var file = packageFile.GetFiles().SingleOrDefault(f => f.Path.Equals(srcPath, StringComparison.InvariantCultureIgnoreCase));
-            return file != null ? file.GetStream() : null;
+            return file != null ? new PackageDisposingStream(packageFile, file.GetStream()) : null;
         }
 
         public async Task UnzipPackageAsync(IPackage package)
@@ -241,6 +243,23 @@ namespace NuGet.Lucene.Web.Symbols
         protected TempFolder CreateTempFolderForPackage(IPackageName package)
         {
             return new TempFolder(GetTempFolderPathForPackage(package));
+        }
+
+        class PackageDisposingStream : ReadStream
+        {
+            private readonly IFastZipPackage package;
+
+            public PackageDisposingStream(IFastZipPackage package, Stream stream) : base(stream)
+            {
+                this.package = package;
+            }
+
+            protected override void Dispose(bool disposing)
+            {
+                base.Dispose(disposing);
+                
+                package.Dispose();
+            }
         }
     }
 }
