@@ -14,7 +14,7 @@ namespace NuGet.Lucene
     ///     Implementations are <b>not</b> thread-safe.
     ///   </para>
     ///   <para>
-    ///     <see cref="IFastZipPackage.Dispose"/> must be invoked
+    ///     <see cref="IDisposable.Dispose"/> must be invoked
     ///     after any streams are accessed either via <see cref="GetZipEntryStream"/>
     ///     or via <see cref="IPackageFile.GetStream"/>.
     ///   </para>
