@@ -365,6 +365,17 @@ namespace NuGet.Lucene.Tests
             }
 
             [Test]
+            public async Task DownloadAndIndex_DeletesTempFile()
+            {
+                var package = new FakeDataServicePackage(new Uri("http://example.com/packages/Foo/1.0"));
+                fileSystem.Setup(fs => fs.GetFullPath(It.IsAny<string>())).Returns<string>(n => Path.Combine(Environment.CurrentDirectory, n));
+
+                await repository.AddPackageAsync(package, CancellationToken.None);
+
+                fileSystem.Verify(fs => fs.DeleteFile(It.IsRegex(@"\.tmp[\\/].+\.nupkg.tmp")));
+            }
+
+            [Test]
             public async Task DenyPackageOverwrite()
             {
                 var p = MakeSamplePackage("Foo", "1.0");
@@ -422,7 +433,6 @@ namespace NuGet.Lucene.Tests
                 {
                     Assert.That(ex, Is.SameAs(exception), "Expected spcific instance of TaskCanceledException");
                 }
-
             }
         }
 

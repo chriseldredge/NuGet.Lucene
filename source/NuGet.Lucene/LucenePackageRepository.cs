@@ -96,42 +96,63 @@ namespace NuGet.Lucene
 
         public async Task AddPackageAsync(IPackage package, CancellationToken cancellationToken)
         {
-            if (PackageOverwriteMode == PackageOverwriteMode.Deny && FindPackage(package.Id, package.Version) != null)
-            {
-                throw new PackageOverwriteDeniedException(package);
-            }
-
-            var fastZipPackage = package as IFastZipPackage;
-            var dataPackage = package as DataServicePackage;
-            LucenePackage lucenePackage = null;
-
-            if (dataPackage != null)
-            {
-                fastZipPackage = await DownloadDataServicePackage(dataPackage, cancellationToken);
-                lucenePackage = Convert(fastZipPackage);
-                lucenePackage.OriginUrl = dataPackage.DownloadUrl;
-                lucenePackage.IsMirrored = true;
-            }
-            
-            if (fastZipPackage != null && !string.IsNullOrEmpty(fastZipPackage.GetFileLocation()))
-            {
-                MoveFileWithOverwrite(fastZipPackage.GetFileLocation(), base.GetPackageFilePath(fastZipPackage));
-                if (lucenePackage == null)
-                {
-                    lucenePackage = Convert(fastZipPackage);
-                }
-            }
-            else
-            {
-                lucenePackage = await AddPackageToFileSystemAsync(package, cancellationToken);
-            }
+            var lucenePackage = await DownloadOrMoveOrAddPackageToFileSystemAsync(package, cancellationToken);
 
             Log.Info(m => m("Indexing package {0} {1}", package.Id, package.Version));
 
             await Indexer.AddPackageAsync(lucenePackage, cancellationToken);
         }
 
-        private Task<LucenePackage> AddPackageToFileSystemAsync(IPackage package, CancellationToken cancellationToken)
+        private async Task<LucenePackage> DownloadOrMoveOrAddPackageToFileSystemAsync(IPackage package, CancellationToken cancellationToken)
+        {
+            string temporaryLocation = null;
+
+            try
+            {
+                if (PackageOverwriteMode == PackageOverwriteMode.Deny && FindPackage(package.Id, package.Version) != null)
+                {
+                    throw new PackageOverwriteDeniedException(package);
+                }
+
+                LucenePackage lucenePackage = null;
+                var fastZipPackage = package as IFastZipPackage;
+                var dataPackage = package as DataServicePackage;
+
+                if (dataPackage != null)
+                {
+                    fastZipPackage = await DownloadDataServicePackage(dataPackage, cancellationToken);
+                    lucenePackage = Convert(fastZipPackage);
+                    lucenePackage.OriginUrl = dataPackage.DownloadUrl;
+                    lucenePackage.IsMirrored = true;
+                }
+
+                temporaryLocation = fastZipPackage != null ? fastZipPackage.GetFileLocation() : null;
+
+                if (!string.IsNullOrEmpty(temporaryLocation))
+                {
+                    MoveFileWithOverwrite(temporaryLocation, base.GetPackageFilePath(fastZipPackage));
+                    if (lucenePackage == null)
+                    {
+                        lucenePackage = Convert(fastZipPackage);
+                    }
+                    
+                    return lucenePackage;
+                }
+                else
+                {
+                    return await AddPackageToFileSystemAsync(package);
+                }
+            }
+            finally
+            {
+                if (!string.IsNullOrEmpty(temporaryLocation))
+                {
+                    FileSystem.DeleteFile(temporaryLocation);
+                }
+            }
+        }
+
+        private Task<LucenePackage> AddPackageToFileSystemAsync(IPackage package)
         {
             Log.Info(m => m("Adding package {0} {1} to file system", package.Id, package.Version));
 
@@ -187,7 +208,7 @@ namespace NuGet.Lucene
             lock (fileSystemLock)
             {
                 var parent = Path.GetDirectoryName(dest);
-                if (!Directory.Exists(parent))
+                if (parent != null && !Directory.Exists(parent))
                 {
                     Directory.CreateDirectory(parent);
                 }
@@ -473,7 +494,7 @@ namespace NuGet.Lucene
 
             if (string.IsNullOrWhiteSpace(lucenePackage.Path))
             {
-                lucenePackage.Path = GetPackageFilePath(lucenePackage);    
+                lucenePackage.Path = GetPackageFilePath(lucenePackage);
             }
 
             CalculateDerivedData(package, lucenePackage, lucenePackage.Path, lucenePackage.GetStream);
