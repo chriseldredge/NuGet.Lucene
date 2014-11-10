@@ -257,31 +257,39 @@ namespace NuGet.Lucene
         {
             Log.Info(m => m("Processing {0} updates.", items.Count()));
 
-            using (var session = OpenSession())
+            try
             {
-                using (UpdateStatus(IndexingState.Updating))
+                using (var session = OpenSession())
                 {
-                    var removals =
-                        items.Where(i => i.UpdateType == UpdateType.Remove).ToList();
-                    removals.ForEach(pkg => RemovePackageInternal(pkg, session));
+                    using (UpdateStatus(IndexingState.Updating))
+                    {
+                        var removals =
+                            items.Where(i => i.UpdateType == UpdateType.Remove).ToList();
+                        removals.ForEach(pkg => RemovePackageInternal(pkg, session));
 
-                    var removalsByPath =
-                        items.Where(i => i.UpdateType == UpdateType.RemoveByPath).ToList();
-                    RemovePackagesByPath(removalsByPath, session);
+                        var removalsByPath =
+                            items.Where(i => i.UpdateType == UpdateType.RemoveByPath).ToList();
+                        RemovePackagesByPath(removalsByPath, session);
 
-                    var additions = items.Where(i => i.UpdateType == UpdateType.Add).ToList();
-                    ApplyPendingAdditions(additions, session);
+                        var additions = items.Where(i => i.UpdateType == UpdateType.Add).ToList();
+                        ApplyPendingAdditions(additions, session);
 
-                    var downloadUpdates =
-                        items.Where(i => i.UpdateType == UpdateType.Increment).Select(i => i.Package).ToList();
-                    ApplyPendingDownloadIncrements(downloadUpdates, session);
+                        var downloadUpdates =
+                            items.Where(i => i.UpdateType == UpdateType.Increment).Select(i => i.Package).ToList();
+                        ApplyPendingDownloadIncrements(downloadUpdates, session);
+                    }
+
+                    using (UpdateStatus(IndexingState.Committing))
+                    {
+                        session.Commit();
+                        items.ForEach(i => i.SetComplete());
+                    }
                 }
-
-                using (UpdateStatus(IndexingState.Committing))
-                {
-                    session.Commit();
-                    items.ForEach(i => i.SetComplete());
-                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Error while indexing packages", ex);
+                items.ForEach(i => i.SetException(ex));
             }
         }
 
