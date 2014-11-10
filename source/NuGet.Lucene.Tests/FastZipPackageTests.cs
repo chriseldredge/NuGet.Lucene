@@ -70,6 +70,24 @@ namespace NuGet.Lucene.Tests
         }
 
         [Test]
+        public void ComputesOnlyOnce()
+        {
+            var package = new FastZipPackage();
+            package.Files = new[]
+            {
+                new FastZipPackageFile(package, "lib/net35/Neato.dll"),
+            };
+
+            package.FrameworkAssemblies = new[]
+            {
+                new FrameworkAssemblyReference("Neato", new[] {FrameworkNet40})
+            };
+
+            var first = package.GetSupportedFrameworks();
+            Assert.That(package.GetSupportedFrameworks(), Is.SameAs(first), "Should only compute supported frameworks once.");
+        }
+
+        [Test]
         public void Distinct()
         {
             var package = new FastZipPackage();

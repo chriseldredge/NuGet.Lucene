@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Packaging;
 using System.Linq;
 using System.Runtime.Versioning;
+using System.Threading;
 
 namespace NuGet.Lucene
 {
@@ -12,11 +13,15 @@ namespace NuGet.Lucene
         private static readonly ISet<string> PackageFileExcludeExtensions
             = new HashSet<string>{ ".pdscmp", ".psmdcp", ".nuspec", ".rels" };
 
+        private readonly Lazy<IList<FrameworkName>> supportedFrameworks;
+
         protected internal FastZipPackage()
         {
             FrameworkAssemblies = Enumerable.Empty<FrameworkAssemblyReference>();
             DependencySets = Enumerable.Empty<PackageDependencySet>();
             Files = Enumerable.Empty<IPackageFile>();
+
+            supportedFrameworks = new Lazy<IList<FrameworkName>>(ComputeSupportedFrameworks, LazyThreadSafetyMode.ExecutionAndPublication);
         }
 
         private static FastZipPackage Open(string fileLocation, Stream stream, byte[] hash)
@@ -84,9 +89,15 @@ namespace NuGet.Lucene
 
         public IEnumerable<FrameworkName> GetSupportedFrameworks()
         {
+            return supportedFrameworks.Value;
+        }
+
+        public IList<FrameworkName> ComputeSupportedFrameworks()
+        {
             return FrameworkAssemblies.SelectMany(f => f.SupportedFrameworks)
                 .Union(Files.SelectMany(f => f.SupportedFrameworks))
-                .Where(f => f != null && f != VersionUtility.UnsupportedFrameworkName);
+                .Where(f => f != null && f != VersionUtility.UnsupportedFrameworkName)
+                .ToArray();
         }
 
         public string Id { get; set; }
