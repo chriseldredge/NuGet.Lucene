@@ -95,7 +95,16 @@ namespace NuGet.Lucene
                     break;
                 }
 
-                targetFramework = new FrameworkName(framework, new Version(version), profile);
+                try
+                {
+                    targetFramework = new FrameworkName(framework, new Version(version), profile);
+                }
+                catch (ArgumentException)
+                {
+                }
+                catch (FormatException)
+                {
+                }
 
                 return targetFramework;
             }

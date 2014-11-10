@@ -117,6 +117,24 @@ namespace NuGet.Lucene.Tests
         }
 
         [Test]
+        public void ParseUnrecognizedFramework_MultidigitVersion_Profile_NoHyphen_Unsupported()
+        {
+            // Castle.ActiveRecord 3.0.0.1 has this invalid library folder:
+            var file = new FastZipPackageFile(package, Path.Combine("lib", "net40cp", "Castle.ActiveRecord.dll"));
+
+            Assert.That(file.TargetFramework, Is.EqualTo(VersionUtility.UnsupportedFrameworkName));
+        }
+
+        [Test]
+        public void ParseUnrecognizedFramework_UriEscapedSpaces_Unsupported()
+        {
+            // Spackle 5.0.0 has this invalid library folder:
+            var file = new FastZipPackageFile(package, Path.Combine("lib", ".NetFramework%204.0", "Spackle.dll"));
+
+            Assert.That(file.TargetFramework, Is.EqualTo(VersionUtility.UnsupportedFrameworkName));
+        }
+
+        [Test]
         public void ParseUnrecognizedFramework_NoVersion()
         {
             var file = new FastZipPackageFile(package, Path.Combine("lib", "java", "Foo.jar"));
