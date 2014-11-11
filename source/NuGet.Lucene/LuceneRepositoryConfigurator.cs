@@ -78,7 +78,7 @@ namespace NuGet.Lucene
         public LuceneRepositoryConfigurator()
         {
             GroupPackageFilesById = true;
-            PackageHashAlgorithm = "SHA512";
+            PackageHashAlgorithm = "SHA256";
         }
 
         public void Initialize()
