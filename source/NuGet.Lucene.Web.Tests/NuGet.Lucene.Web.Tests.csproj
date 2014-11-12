@@ -173,6 +173,8 @@
     <Compile Include="Formatters\MultipartFormDataMediaFormatterTests.cs" />
     <Compile Include="Formatters\PackageFormDataMediaFormatterTests.cs" />
     <Compile Include="CrossOriginMessageHandlerTests.cs" />
+    <Compile Include="Integration\IntegrationTestBase.cs" />
+    <Compile Include="Integration\WebServerSetUp.cs" />
     <Compile Include="Middleware\AnonymousPackageManagerMiddlewareTests.cs" />
     <Compile Include="Middleware\ApiKeyAuthenticationMiddlewareTests.cs" />
     <Compile Include="Middleware\AuthenticationHandlerBaseTests.cs" />
