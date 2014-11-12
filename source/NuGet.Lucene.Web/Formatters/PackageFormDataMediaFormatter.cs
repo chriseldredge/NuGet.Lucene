@@ -18,12 +18,12 @@ namespace NuGet.Lucene.Web.Formatters
             this.repository = repository;
         }
 
-        protected override HashingMultipartFileStreamProvider CreateStreamProvider()
+        public override HashingMultipartFileStreamProvider CreateStreamProvider()
         {
             return new HashingMultipartFileStreamProvider(repository);
         }
 
-        protected override Task<IPackage> ReadFormDataFromStreamAsync(HashingMultipartFileStreamProvider streamProvider)
+        public override Task<IPackage> ReadFormDataFromStreamAsync(HashingMultipartFileStreamProvider streamProvider)
         {
             IFastZipPackage package = null;
 
@@ -51,7 +51,7 @@ namespace NuGet.Lucene.Web.Formatters
     public class HashingMultipartFileStreamProvider : MultipartStreamProvider
     {
         private readonly ILucenePackageRepository repository;
-        private readonly IDictionary<ContentDispositionHeaderValue, HashingWriteStream> streams = new Dictionary<ContentDispositionHeaderValue, HashingWriteStream>();
+        private readonly IDictionary<string, HashingWriteStream> streams = new Dictionary<string, HashingWriteStream>();
 
         public HashingMultipartFileStreamProvider(ILucenePackageRepository repository)
         {
@@ -63,39 +63,42 @@ namespace NuGet.Lucene.Web.Formatters
             get { return streams.Values; }
         }
 
-        public byte[] GetStreamHash(HttpContentHeaders headers)
+        public void AddStream(string contentDispositionHeaderValue, HashingWriteStream stream)
         {
-            if (headers == null)
-            {
-                throw new ArgumentNullException("headers");
-            }
-            if (headers.ContentDisposition == null)
-            {
-                throw new ArgumentException("headers.ContentDisposition must not be null.");
-            }
-
-            return streams[headers.ContentDisposition].Hash;
+            streams.Add(contentDispositionHeaderValue, stream);
         }
 
         public override Stream GetStream(HttpContent parent, HttpContentHeaders headers)
         {
+            var key = GetKey(headers);
+            HashingWriteStream stream;
+            if (!streams.TryGetValue(key, out stream))
+            {
+                stream = repository.CreateStreamForStagingPackage();
+                AddStream(key, stream);
+            }
+
+            return stream;
+        }
+
+        static string GetKey(HttpContentHeaders headers)
+        {
             if (headers == null)
             {
                 throw new ArgumentNullException("headers");
             }
-            if (headers.ContentDisposition == null)
+
+            // N.B. Mono 3.8.0 and earlier do not correctly support
+            // the headers.ContentDisposition property, so we
+            // access the underlying string value instead.
+
+            IEnumerable<string> values;
+            if (!headers.TryGetValues("Content-Disposition", out values))
             {
                 throw new ArgumentException("headers.ContentDisposition must not be null.");
             }
 
-            HashingWriteStream stream;
-            if (!streams.TryGetValue(headers.ContentDisposition, out stream))
-            {
-                stream = repository.CreateStreamForStagingPackage();
-                streams.Add(headers.ContentDisposition, stream);
-            }
-
-            return stream;
+            return values.First();
         }
     }
 }

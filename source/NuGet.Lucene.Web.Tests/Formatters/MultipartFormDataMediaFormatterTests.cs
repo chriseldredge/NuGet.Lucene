@@ -104,12 +104,12 @@ Content-Type: application/octet-stream
 
         class TestableMultipartFormDataMediaFormatter : MultipartFormDataMediaFormatter<string, MultipartMemoryStreamProvider>
         {
-            protected override MultipartMemoryStreamProvider CreateStreamProvider()
+            public override MultipartMemoryStreamProvider CreateStreamProvider()
             {
                 return new MultipartMemoryStreamProvider();
             }
 
-            protected override async Task<string> ReadFormDataFromStreamAsync(MultipartMemoryStreamProvider streamProvider)
+            public override async Task<string> ReadFormDataFromStreamAsync(MultipartMemoryStreamProvider streamProvider)
             {
                 return await streamProvider.Contents.Single().ReadAsStringAsync();
             }

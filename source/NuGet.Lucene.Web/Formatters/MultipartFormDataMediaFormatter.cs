@@ -18,8 +18,8 @@ namespace NuGet.Lucene.Web.Formatters
             SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/octet-stream"));
         }
 
-        protected abstract TMultipartStreamProvider CreateStreamProvider();
-        protected abstract Task<TModel> ReadFormDataFromStreamAsync(TMultipartStreamProvider streamProvider);
+        public abstract TMultipartStreamProvider CreateStreamProvider();
+        public abstract Task<TModel> ReadFormDataFromStreamAsync(TMultipartStreamProvider streamProvider);
 
         public override async Task<object> ReadFromStreamAsync(Type type, Stream readStream, HttpContent content, IFormatterLogger formatterLogger)
         {
