@@ -134,7 +134,7 @@ namespace NuGet.Lucene
             LuceneDirectory.Dispose();
         }
 
-        private void CreateDirectories()
+        protected virtual void CreateDirectories()
         {
             if (!Directory.Exists(LuceneIndexPath))
             {
@@ -146,7 +146,7 @@ namespace NuGet.Lucene
             }
         }
 
-        private void InitializeFileSystemWatcher(IFileSystem fileSystem, ILucenePackageRepository repository)
+        protected virtual void InitializeFileSystemWatcher(IFileSystem fileSystem, ILucenePackageRepository repository)
         {
             if (!EnablePackageFileWatcher) return;
 
@@ -159,21 +159,21 @@ namespace NuGet.Lucene
 
             PackageFileSystemWatcher.Initialize();
         }
-        
-        private void InitializeLucene()
+
+        protected virtual void InitializeLucene()
         {
             LuceneDirectory = OpenLuceneDirectory(LuceneIndexPath);
 
             Provider = new LuceneDataProvider(LuceneDirectory, Version.LUCENE_30);
             Provider.Settings.EnableMultipleEntities = false;
         }
-        
-        private IPackagePathResolver CreatePackagePathResolver()
+
+        protected virtual IPackagePathResolver CreatePackagePathResolver()
         {
             return new GroupingPackagePathResolver(PackagePath, GroupPackageFilesById);
         }
 
-        private static LuceneDirectory OpenLuceneDirectory(string luceneIndexPath)
+        protected virtual LuceneDirectory OpenLuceneDirectory(string luceneIndexPath)
         {
             var directoryInfo = new DirectoryInfo(luceneIndexPath);
             return FSDirectory.Open(directoryInfo, new NativeFSLockFactory(directoryInfo));

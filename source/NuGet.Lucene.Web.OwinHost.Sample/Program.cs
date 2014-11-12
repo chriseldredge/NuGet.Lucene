@@ -1,56 +1,101 @@
 ﻿using System;
+using Autofac;
 using Common.Logging;
 using Microsoft.Owin.Hosting;
 using Owin;
 
 namespace NuGet.Lucene.Web.OwinHost.Sample
 {
-    class Program
+    public class Program : IDisposable
     {
-        private Startup startup;
+        private CustomStartup startup;
+        private IDisposable webapp;
 
         static void Main()
         {
-            new Program().Run();
-        }
-
-        private void Run()
-        {
             var log = LogManager.GetCurrentClassLogger();
-            const string baseAddress = "http://*:9001/";
 
             try
             {
-                using (WebApp.Start(baseAddress, Start))
+                using (var program = new Program())
                 {
-                    Console.WriteLine("Listening on " + baseAddress + ". Press <ctrl>+c to stop listening.");
+                    program.Start();
+                    Console.WriteLine("Listening on " + program.BaseAddress + ". Press <ctrl>+c to stop listening.");
                     Console.WriteLine("Press enter to stop.");
                     Console.ReadLine();
                 }
-
-                startup.WaitForShutdown(TimeSpan.FromMinutes(1));
             }
             catch (Exception ex)
             {
                 log.Fatal(m => m(ex.Message), ex);
-                Console.WriteLine("Press enter to quit.");
-                Console.ReadLine();
             }
+
             Console.WriteLine("Press enter to exit.");
             Console.ReadLine();
         }
 
-        private void Start(IAppBuilder app)
+        public void Start(string baseAddress="http://*:9001/")
         {
-            app.Use(async (ctx, next) =>
+            BaseAddress = baseAddress;
+            webapp = WebApp.Start(baseAddress, WebAppStartup);
+        }
+
+        public string BaseAddress { get; private set; }
+
+        public void Dispose()
+        {
+            if (webapp != null)
             {
-                LogManager.GetLogger<Program>().Info(m => m("{0} {1}", ctx.Request.Method, ctx.Request.Uri));
-                await next();
-            });
+                webapp.Dispose();
+                webapp = null;
+            }
 
-            startup = new Startup();
+            if (startup != null)
+            {
+                startup.WaitForShutdown(TimeSpan.FromMinutes(1));
+                startup = null;
+            }
+        }
+
+        protected virtual void WebAppStartup(IAppBuilder app)
+        {
+            startup = new CustomStartup(this);
             startup.Configuration(app);
+        }
 
+        protected virtual INuGetWebApiSettings CreateSettings()
+        {
+            return new NuGetWebApiSettings();
+        }
+
+        protected virtual IContainer CreateContainer(IAppBuilder app)
+        {
+            return startup.CreateDefaultContainer(app);
+        }
+
+        class CustomStartup : Startup
+        {
+            readonly Program program;
+
+            public CustomStartup(Program program)
+            {
+                this.program = program;
+            }
+
+            protected override INuGetWebApiSettings CreateSettings()
+            {
+                return program.CreateSettings();
+            }
+
+            public IContainer CreateDefaultContainer(IAppBuilder app)
+            {
+                return base.CreateContainer(app);
+            }
+
+            protected override IContainer CreateContainer(IAppBuilder app)
+            {
+                return program.CreateContainer(app);
+            }
         }
     }
 }

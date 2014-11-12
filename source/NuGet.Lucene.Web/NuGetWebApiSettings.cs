@@ -9,6 +9,8 @@ namespace NuGet.Lucene.Web
     public class NuGetWebApiSettings : INuGetWebApiSettings
     {
         public const string DefaultAppSettingPrefix = "NuGet.Lucene.Web:";
+        public const string BlankAppSettingPrefix = "";
+
         public const string DefaultRoutePathPrefix = "api/";
 
         private readonly string prefix;
