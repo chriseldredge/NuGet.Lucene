@@ -123,7 +123,9 @@ namespace NuGet.Lucene.Tests
         [Test]
         public async Task PackageRenamed_IgnoresTempFolder()
         {
-            await watcher.OnPackageRenamed(@".\.tmp\Sample.1.0.nupkg", @".\.tmp\Sample.2.0.nupkg");
+            var oldPath = Path.Combine(".", ".tmp", "Sample.1.0.nupkg");
+            var newPath = Path.Combine(".", ".tmp", "Sample.2.0.nupkg");
+            await watcher.OnPackageRenamed(oldPath, newPath);
             
             indexer.Verify();
             loader.Verify();
