@@ -66,7 +66,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
 
             repository.Verify(r => r.SynchronizeWithFileSystem(controller.UserRequestedCancellationTokenSource.Token), Times.Once());
 
-            Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+            Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.Accepted));
         }
 
         [Test]

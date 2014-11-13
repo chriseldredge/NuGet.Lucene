@@ -69,7 +69,7 @@ namespace NuGet.Lucene.Web.Controllers
                 }
             });
 
-            return Request.CreateResponse(HttpStatusCode.OK);
+            return Request.CreateResponse(HttpStatusCode.Accepted);
         }
 
         /// <summary>
