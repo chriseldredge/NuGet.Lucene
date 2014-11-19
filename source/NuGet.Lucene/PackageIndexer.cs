@@ -331,14 +331,18 @@ namespace NuGet.Lucene
                 package.DownloadCount = totalDownloadCount;
                 package.VersionDownloadCount = packageToReplace != null ? packageToReplace.VersionDownloadCount : 0;
 
-                if (packageToReplace != null)
+                if (packageToReplace == null)
+                {
+                    session.Add(KeyConstraint.None, package);
+                }
+                else
                 {
                     currentPackages.Remove(packageToReplace);
-                    session.Delete(packageToReplace);
+                    session.Add(KeyConstraint.Unique, package);
                 }
                 
                 currentPackages.Add(package);
-                session.Add(package);
+                
             }
 
             UpdatePackageVersionFlags(currentPackages.OrderByDescending(p => p.Version));

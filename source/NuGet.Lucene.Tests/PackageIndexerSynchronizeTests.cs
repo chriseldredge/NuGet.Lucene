@@ -59,8 +59,8 @@ namespace NuGet.Lucene.Tests
 
             var pkg = MakeSamplePackage("A", "1.0");
             loader.Setup(l => l.LoadFromFileSystem(newPackages[0])).Returns(pkg);
-
-            session.Setup(s => s.Add(It.IsAny<LucenePackage>())).Verifiable();
+            
+            session.Setup(s => s.Add(KeyConstraint.None, It.IsAny<LucenePackage>())).Verifiable();
 
             session.Setup(s => s.Commit()).Verifiable();
 
@@ -79,7 +79,7 @@ namespace NuGet.Lucene.Tests
             loader.Setup(l => l.LoadFromFileSystem(newPackages[0])).Throws(new Exception("invalid package"));
             loader.Setup(l => l.LoadFromFileSystem(newPackages[1])).Returns(pkg);
 
-            session.Setup(s => s.Add(It.IsAny<LucenePackage>())).Verifiable();
+            session.Setup(s => s.Add(KeyConstraint.None, It.IsAny<LucenePackage>())).Verifiable();
 
             session.Setup(s => s.Commit()).Verifiable();
 
