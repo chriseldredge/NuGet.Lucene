@@ -120,8 +120,15 @@ namespace NuGet.Lucene.Web
             var usersIndexPath = settings.LuceneUsersIndexPath;
             var directoryInfo = new DirectoryInfo(usersIndexPath);
             var dir = FSDirectory.Open(directoryInfo, new NativeFSLockFactory(directoryInfo));
-            var provider = new LuceneDataProvider(dir, Version.LUCENE_30);
-            provider.Settings.EnableMultipleEntities = false;
+            var provider = new LuceneDataProvider(dir, Version.LUCENE_30)
+            {
+                Settings =
+                {
+                    EnableMultipleEntities = false,
+                    MergeFactor = 2
+                }
+            };
+
             return provider;
         }
     }
