@@ -104,6 +104,7 @@
     <Compile Include="FastZipPackageFile.cs" />
     <Compile Include="IFastZipPackage.cs" />
     <Compile Include="InvalidSearchCriteriaException.cs" />
+    <Compile Include="NuGetQueryParser.cs" />
     <Compile Include="LuceneRepositoryConfigurator.cs" />
     <Compile Include="Mapping\CachingVersionConverter.cs" />
     <Compile Include="GroupingPackagePathResolver.cs" />

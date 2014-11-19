@@ -8,9 +8,11 @@ using System.Reflection;
 using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
+using Lucene.Net.Linq;
 using Moq;
 using NuGet.Lucene.IO;
 using NUnit.Framework;
+using Remotion.Linq.Clauses.ResultOperators;
 
 namespace NuGet.Lucene.Tests
 {
@@ -347,6 +349,65 @@ namespace NuGet.Lucene.Tests
                 var result = repository.Search(new SearchCriteria("Baz"));
 
                 Assert.That(result.Select(r => r.Id).ToArray(), Is.EqualTo(new[] { "Foo.Bar" }));
+            }
+
+            [Test]
+            public void UsesAdvancedWhenColonPresent()
+            {
+                var query = repository.Search("Tags:remoting", Enumerable.Empty<string>(), allowPrereleaseVersions: true);
+
+                AssertComputedQueryEquals(query, "Tags:remot");
+            }
+
+            [Test]
+            public void AdvancedQueryCaseInsensitiveField()
+            {
+                var query = repository.Search("tags:remoting", Enumerable.Empty<string>(), allowPrereleaseVersions: true);
+
+                AssertComputedQueryEquals(query, "Tags:remot");
+            }
+
+            [Test]
+            public void AdvancedSearchUsesFallbackField()
+            {
+                var query = repository.Search("NoSuchField:foo", Enumerable.Empty<string>(), allowPrereleaseVersions: true);
+
+                AssertComputedQueryEquals(query, "SearchId:foo");
+            }
+
+            [Test]
+            public void AdvancedSearchMalformedQueryThrows()
+            {
+                TestDelegate call = () => repository.Search("(Tags:foo", Enumerable.Empty<string>(), allowPrereleaseVersions: true);
+
+                Assert.That(call, Throws.InstanceOf<InvalidSearchCriteriaException>());
+            }
+
+            [Test]
+            [Description("See http://docs.nuget.org/docs/reference/search-syntax")]
+            public void AdvancedSearch_PackageId_ExactMatch()
+            {
+                var query = repository.Search("PackageId:Foo.Bar", Enumerable.Empty<string>(), allowPrereleaseVersions: true);
+
+                AssertComputedQueryEquals(query, "Id:foo.bar");
+            }
+
+            [Test]
+            [Description("See http://docs.nuget.org/docs/reference/search-syntax")]
+            public void AdvancedSearch_Id_FuzzyMatch()
+            {
+                var query = repository.Search("Id:Foo", Enumerable.Empty<string>(), allowPrereleaseVersions: true);
+
+                AssertComputedQueryEquals(query, "SearchId:foo");
+            }
+
+            private static void AssertComputedQueryEquals(IQueryable<IPackage> query, string expectedQuery)
+            {
+                LuceneQueryStatistics stats = null;
+
+                var result = query.CaptureStatistics(s => { stats = s; }).ToArray();
+
+                Assert.That(stats.Query.ToString(), Is.EqualTo(expectedQuery));
             }
         }
 

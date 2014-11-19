@@ -83,15 +83,25 @@ namespace NuGet.Lucene
         [NumericField(Converter = typeof(BoolToIntConverter))]
         public bool RequireLicenseAcceptance { get; set; }
 
-        [Field(Store = StoreMode.No, Analyzer = typeof (PorterStemAnalyzer))]
+        [Field(Store = StoreMode.No, Analyzer = typeof (StandardAnalyzer))]
+        public string SearchId
+        {
+            get
+            {
+                var text = Id.Replace('.', ' ');
+
+                // Convert "PascalCase" or "camelCase" to "pascal case" or "camel case".
+                text = Regex.Replace(text, @"(?<a>(?<!^)((?:[A-Z][a-z])|(?:(?<!^[A-Z]+)[A-Z0-9]+(?:(?=[A-Z][a-z])|$))|(?:[0-9]+)))", @" ${a}");
+                return text;
+            }
+        }
+
+        [Field(Store = StoreMode.No, Analyzer = typeof(PorterStemAnalyzer))]
         public string SearchTitle
         {
             get
             {
-                var text = string.IsNullOrWhiteSpace(Title)
-                    ? Id
-                    : Id + " " + Title;
-                text = text.Replace('.', ' ');
+                var text = (Title ?? "").Replace('.', ' ');
 
                 // Convert "PascalCase" or "camelCase" to "pascal case" or "camel case".
                 text = Regex.Replace(text, @"(?<a>(?<!^)((?:[A-Z][a-z])|(?:(?<!^[A-Z]+)[A-Z0-9]+(?:(?=[A-Z][a-z])|$))|(?:[0-9]+)))", @" ${a}");

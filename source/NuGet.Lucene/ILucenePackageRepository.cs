@@ -70,9 +70,7 @@ namespace NuGet.Lucene
         /// using parameter object for better flexibility.
         /// </summary>
         /// <exception cref="InvalidSearchCriteriaException">
-        /// When search criteria is invalid. For example, if
-        /// <see cref="SearchCriteria.Advanced"/> is <c>true</c>
-        /// and <see cref="SearchCriteria.SearchTerm"/> fails to parse.
+        /// When <see cref="SearchCriteria.SearchTerm"/> cannot be parsed.
         /// </exception>
         IQueryable<IPackage> Search(SearchCriteria criteria);
 

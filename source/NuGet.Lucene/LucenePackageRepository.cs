@@ -10,7 +10,6 @@ using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Common.Logging;
-using Lucene.Net.Index;
 using Lucene.Net.Linq;
 using NuGet.Lucene.IO;
 using Lucene.Net.QueryParsers;
@@ -24,6 +23,8 @@ namespace NuGet.Lucene
 {
     public class LucenePackageRepository : LocalPackageRepository, ILucenePackageRepository
     {
+        private static readonly ISet<char> AdvancedQueryCharacters = new HashSet<char>(new[] {':', '+', '-', '[', ']', '(', ')'});
+
         private static readonly ILog Log = LogManager.GetLogger<LucenePackageRepository>();
 
         public LuceneDataProvider LuceneDataProvider { get; set; }
@@ -284,7 +285,9 @@ namespace NuGet.Lucene
 
         public IEnumerable<string> GetAvailableSearchFieldNames()
         {
-            return LuceneDataProvider.GetIndexedPropertyNames<LucenePackage>();
+            var propertyNames =  LuceneDataProvider.GetIndexedPropertyNames<LucenePackage>();
+            var aliasMap = NuGetQueryParser.IndexedPropertyAliases;
+            return propertyNames.Except(aliasMap.Values).Union(aliasMap.Keys);
         }
 
         public IQueryable<IPackage> Search(string searchTerm, IEnumerable<string> targetFrameworks, bool allowPrereleaseVersions)
@@ -323,11 +326,14 @@ namespace NuGet.Lucene
 
         protected virtual IQueryable<LucenePackage> ApplySearchCriteria(SearchCriteria criteria, IQueryable<LucenePackage> packages)
         {
-            if (criteria.Advanced)
+            var advancedQuerySyntax = criteria.SearchTerm.Any(c => AdvancedQueryCharacters.Contains(c));
+
+            if (advancedQuerySyntax)
             {
-                var queryParser = LuceneDataProvider.CreateQueryParser<LucenePackage>();
-                queryParser.DefaultSearchProperty = "SearchText";
-                queryParser.AllowLeadingWildcard = true;
+                var queryParser = new NuGetQueryParser(LuceneDataProvider.CreateQueryParser<LucenePackage>())
+                {
+                    AllowLeadingWildcard = true
+                };
 
                 try
                 {
@@ -343,8 +349,9 @@ namespace NuGet.Lucene
             return from
                 pkg in packages
                 where
-                    ((pkg.Id == criteria.SearchTerm || pkg.Title == criteria.SearchTerm).Boost(4) ||
-                     (pkg.SearchTitle == criteria.SearchTerm).Boost(3) ||
+                    ((pkg.Id == criteria.SearchTerm).Boost(5) ||
+                     (pkg.Title == criteria.SearchTerm).Boost(4) ||
+                     (pkg.SearchTitle == criteria.SearchTerm || pkg.SearchId == criteria.SearchTerm).Boost(3) ||
                      (pkg.Tags == criteria.SearchTerm).Boost(2) ||
                      (pkg.Authors.Contains(criteria.SearchTerm) || pkg.Owners.Contains(criteria.SearchTerm)).Boost(2) ||
                      (pkg.Files.Contains(criteria.SearchTerm)) ||

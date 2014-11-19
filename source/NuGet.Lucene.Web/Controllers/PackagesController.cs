@@ -146,7 +146,6 @@ namespace NuGet.Lucene.Web.Controllers
         /// <param name="query">Search terms. May include special characters to support prefix,
         /// wildcard or phrase queries.
         /// </param>
-        /// <param name="advanced">Specify <c>true</c> to use advanced search syntax.</param>
         /// <param name="includePrerelease">Specify <c>true</c> to look for pre-release packages.</param>
         /// <param name="latestOnly">Specify <c>true</c> to only search most recent package version or <c>false</c> to search all versions</param>
         /// <param name="offset">Number of results to skip, for pagination.</param>
@@ -157,7 +156,6 @@ namespace NuGet.Lucene.Web.Controllers
         [HttpGet]
         public dynamic Search(
             string query = "",
-            bool advanced = false,
             bool includePrerelease = false,
             bool latestOnly = true,
             int offset = 0,
@@ -168,7 +166,6 @@ namespace NuGet.Lucene.Web.Controllers
         {
             var criteria = new SearchCriteria(query)
             {
-                Advanced = advanced,
                 AllowPrereleaseVersions = includePrerelease,
                 PackageOriginFilter = originFilter,
                 SortField = sort,
