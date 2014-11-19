@@ -41,5 +41,6 @@ namespace NuGet.Lucene.Web
         bool EnablePackageFileWatcher { get; }
         bool KeepSourcesCompressed { get; }
         PackageOverwriteMode PackageOverwriteMode { get; }
+        int LuceneMergeFactor { get; }
     }
 }

@@ -21,6 +21,7 @@ class and set the following properties:
 * GroupPackageFilesById (default: true; store packages grouped into subdirectories by package ID)
 * EnablePackageFileWatcher (default: false; use a file system watcher to keep package and index in sync)
 * PackageHashAlgorithm (default: SHA512)
+* LuceneMergeFactor (default: 10; set the merge factor for the Lucene.Net IndexWriter)
 
 Once you have set properties, call Initialize(). Then you can access the following properties:
 

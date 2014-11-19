@@ -74,7 +74,8 @@ namespace NuGet.Lucene.Web
                 GroupPackageFilesById = settings.GroupPackageFilesById,
                 LuceneIndexPath = settings.LucenePackagesIndexPath,
                 PackagePath = settings.PackagesPath,
-                PackageOverwriteMode = settings.PackageOverwriteMode
+                PackageOverwriteMode = settings.PackageOverwriteMode,
+                LuceneMergeFactor = settings.LuceneMergeFactor
             };
 
             cfg.Initialize();

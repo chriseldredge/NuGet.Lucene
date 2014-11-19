@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using Common.Logging;
+using Lucene.Net.Index;
 using Lucene.Net.Linq;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
@@ -70,6 +71,21 @@ namespace NuGet.Lucene
         /// <see cref="Initialize"/> has been invoked.
         /// </summary>
         public LuceneDirectory LuceneDirectory { get; set; }
+
+        /// <summary>
+        /// Expert: overrides the default merge factor (10)
+        /// for the Lucene.Net <see cref="IndexWriter"/>.
+        /// 
+        /// Lower merge factors result in a smaller index
+        /// with less segments which improves search performance
+        /// but degrades indexing performance.
+        /// 
+        /// Higher merge factors result in faster indexing
+        /// but slower search performance.
+        /// 
+        /// The value must never be less than <c>2</c>.
+        /// </summary>
+        public int LuceneMergeFactor { get; set; }
 
         protected PackageIndexer PackageIndexer { get; set; }
 
@@ -164,8 +180,18 @@ namespace NuGet.Lucene
         {
             LuceneDirectory = OpenLuceneDirectory(LuceneIndexPath);
 
-            Provider = new LuceneDataProvider(LuceneDirectory, Version.LUCENE_30);
-            Provider.Settings.EnableMultipleEntities = false;
+            Provider = new LuceneDataProvider(LuceneDirectory, Version.LUCENE_30)
+            {
+                Settings =
+                {
+                    EnableMultipleEntities = false
+                }
+            };
+
+            if (LuceneMergeFactor >= 2)
+            {
+                Provider.Settings.MergeFactor = LuceneMergeFactor;
+            }
         }
 
         protected virtual IPackagePathResolver CreatePackagePathResolver()

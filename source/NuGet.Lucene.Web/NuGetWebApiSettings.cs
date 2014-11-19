@@ -181,6 +181,15 @@ namespace NuGet.Lucene.Web
             }
         }
 
+        public int LuceneMergeFactor
+        {
+            get
+            {
+                int value;
+                return int.TryParse(GetAppSetting("luceneMergeFactor", "0"), out value) ? value : 0;
+            }
+        }
+
         protected bool GetFlagFromAppSetting(string key, bool defaultValue)
         {
             var flag = GetAppSetting(key, String.Empty);
