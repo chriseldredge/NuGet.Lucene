@@ -94,8 +94,10 @@
     </Compile>
     <Compile Include="Analysis\BoolNormalizingAnalyzer.cs" />
     <Compile Include="Analysis\DependencyAnalyzer.cs" />
+    <Compile Include="Analysis\DotTokenizer.cs" />
+    <Compile Include="Analysis\PackageIdAnalyzer.cs" />
     <Compile Include="Analysis\PathAnalyzer.cs" />
-    <Compile Include="Analysis\PorterStemAnalyzer.cs" />
+    <Compile Include="Analysis\TextAnalyzer.cs" />
     <Compile Include="FastZipPackage.cs" />
     <Compile Include="FastZipPackageBase.cs" />
     <Compile Include="ILuceneRepositoryConfigurator.cs" />

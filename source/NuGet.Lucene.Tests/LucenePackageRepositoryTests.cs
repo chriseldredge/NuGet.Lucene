@@ -281,14 +281,35 @@ namespace NuGet.Lucene.Tests
             }
 
             [Test]
-            public void TokenizePascalCase()
+            public void TokenizeIdPrefix()
             {
-                InsertPackage("Foo.BarThingUpdater", "1.0");
-                InsertPackage("Foo.Baz", "1.0");
+                InsertPackage("Foo.BarBell.ThingUpdater", "1.0");
+                InsertPackage("Foo.BarBell.OtherThing", "1.0");
 
-                var result = repository.Search(new SearchCriteria("thing"));
+                var result = repository.Search(new SearchCriteria("Foo.BarBell"));
+                result = result.CaptureStatistics(s => Console.WriteLine(s.Query));
+                Assert.That(result.Select(r => r.Id).ToArray(), Is.EquivalentTo(new[] { "Foo.BarBell.ThingUpdater", "Foo.BarBell.OtherThing" }));
+            }
 
-                Assert.That(result.Select(r => r.Id).ToArray(), Is.EqualTo(new[] { "Foo.BarThingUpdater" }));
+            [Test]
+            public void TokenizeIdPrefix_LowerCase()
+            {
+                InsertPackage("Foo.BarBell.ThingUpdater", "1.0");
+                InsertPackage("Foo.BarBell.OtherThing", "1.0");
+
+                var result = repository.Search(new SearchCriteria("foo.barbell"));
+                result = result.CaptureStatistics(s => Console.WriteLine(s.Query));
+                Assert.That(result.Select(r => r.Id).ToArray(), Is.EquivalentTo(new[] { "Foo.BarBell.ThingUpdater", "Foo.BarBell.OtherThing" }));
+            }
+
+            [Test]
+            public void TokenizeIdPrefix_LowerCase_Full()
+            {
+                InsertPackage("Microsoft.AspNet.Razor", "1.0");
+
+                var result = repository.Search(new SearchCriteria("id:microsoft.aspnet.razor"));
+                result = result.CaptureStatistics(s => Console.WriteLine(s.Query));
+                Assert.That(result.Select(r => r.Id).ToArray(), Is.EquivalentTo(new[] { "Microsoft.AspNet.Razor" }));
             }
 
             [Test]

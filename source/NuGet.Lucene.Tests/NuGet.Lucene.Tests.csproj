@@ -82,6 +82,7 @@
     <Compile Include="..\..\build\VersionInfo.cs" Condition="Exists('..\..\build\VersionInfo.cs')">
       <Link>Properties\VersionInfo.cs</Link>
     </Compile>
+    <Compile Include="Analysis\PackageIdAnalyzerTests.cs" />
     <Compile Include="AssertEx.cs" />
     <Compile Include="FastZipPackageTests.cs" />
     <Compile Include="GroupingPackagePathResolverTests.cs" />

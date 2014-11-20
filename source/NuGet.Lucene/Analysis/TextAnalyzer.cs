@@ -5,9 +5,9 @@ using Lucene.Net.Util;
 
 namespace NuGet.Lucene.Analysis
 {
-    public class PorterStemAnalyzer : StandardAnalyzer
+    public class TextAnalyzer : StandardAnalyzer
     {
-        public PorterStemAnalyzer(Version version) : base(version)
+        public TextAnalyzer(Version version) : base(version)
         {
         }
 
