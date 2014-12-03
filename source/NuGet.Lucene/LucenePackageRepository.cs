@@ -418,13 +418,11 @@ namespace NuGet.Lucene
                     matchedPackages = matchedPackages.Where(pkg => targetFrameworkList.Any(fwk => VersionUtility.IsCompatible(fwk, pkg.GetSupportedFrameworks())));
                 }
 
+                matchedPackages = matchedPackages.Where(pkg => pkg.Version > currentVersion);
+
                 if (versionConstraintList.Any() && versionConstraintList[ii] != null)
                 {
                     matchedPackages = matchedPackages.Where(pkg => versionConstraintList[ii].Satisfies(pkg.Version.SemanticVersion));
-                }
-                else
-                {
-                    matchedPackages = matchedPackages.Where(pkg => pkg.Version > currentVersion);
                 }
 
                 if (includeAllVersions)

@@ -216,6 +216,44 @@ namespace NuGet.Lucene.Tests
             }
 
             [Test]
+            public void FilterByVersionConstraint()
+            {
+                var a1 = MakeSamplePackage("a", "1.0");
+                var a2 = MakeSamplePackage("a", "2.0");
+                var a3 = MakeSamplePackage("a", "3.0");
+
+                a3.IsLatestVersion = true;
+
+                InsertPackage(a1);
+                InsertPackage(a2);
+                InsertPackage(a3);
+
+                var constraints = new[] { VersionUtility.ParseVersionSpec("[1.0,2.0]") };
+                var result = repository.GetUpdates(new[] { a1 }, false, false, new FrameworkName[0], constraints);
+
+                Assert.That(result.Single().Version.ToString(), Is.EqualTo(a2.Version.ToString()));
+            }
+
+            [Test]
+            public void FilterByVersionConstraint_ExcludesCurrentVersion()
+            {
+                var a1 = MakeSamplePackage("a", "1.0");
+                var a2 = MakeSamplePackage("a", "2.0");
+                var a3 = MakeSamplePackage("a", "3.0");
+
+                a3.IsLatestVersion = true;
+
+                InsertPackage(a1);
+                InsertPackage(a2);
+                InsertPackage(a3);
+
+                var constraints = new[] { VersionUtility.ParseVersionSpec("[1.0,2.0]") };
+                var result = repository.GetUpdates(new[] { a2 }, false, false, new FrameworkName[0], constraints);
+
+                Assert.That(result.ToList(), Is.Empty);
+            }
+
+            [Test]
             public void FilterByTargetFrameworkVersion()
             {
                 var b1 = MakeSamplePackage("b", "1.0");
@@ -441,7 +479,7 @@ namespace NuGet.Lucene.Tests
             public void LoadFromFileSystem()
             {
                 SetupFileSystem();
-                
+
                 repository.LoadFromFileSystem(expectedPath);
 
                 fileSystem.Verify();
@@ -534,7 +572,7 @@ namespace NuGet.Lucene.Tests
                 catch (PackageOverwriteDeniedException)
                 {
                 }
-                
+
 
                 indexer.Verify(i => i.AddPackageAsync(It.IsAny<LucenePackage>(), It.IsAny<CancellationToken>()), Times.Never);
             }
@@ -586,7 +624,7 @@ namespace NuGet.Lucene.Tests
             package.SetupGet(p => p.Id).Returns("Sample");
             package.SetupGet(p => p.Version).Returns(new SemanticVersion("1.0"));
             package.SetupGet(p => p.DependencySets).Returns(new List<PackageDependencySet>());
-            
+
             fileSystem.Setup(fs => fs.OpenFile(It.IsAny<string>())).Returns(new MemoryStream());
             package.Setup(p => p.GetStream()).Returns(new MemoryStream());
             Assert.That(package.Object.Version, Is.Not.Null);
