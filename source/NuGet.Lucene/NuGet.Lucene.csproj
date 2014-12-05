@@ -134,6 +134,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StrictSemanticVersion.cs" />
     <Compile Include="Util\FileSystemExtensions.cs" />
+    <Compile Include="Util\FrameworkCompatibilityTool.cs" />
     <Compile Include="Util\PackageExtensions.cs" />
     <Compile Include="Util\PackageQueryableExtensions.cs" />
   </ItemGroup>

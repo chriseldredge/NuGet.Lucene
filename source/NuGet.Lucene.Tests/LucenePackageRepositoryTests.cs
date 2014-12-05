@@ -325,7 +325,6 @@ namespace NuGet.Lucene.Tests
                 InsertPackage("Foo.BarBell.OtherThing", "1.0");
 
                 var result = repository.Search(new SearchCriteria("Foo.BarBell"));
-                result = result.CaptureStatistics(s => Console.WriteLine(s.Query));
                 Assert.That(result.Select(r => r.Id).ToArray(), Is.EquivalentTo(new[] { "Foo.BarBell.ThingUpdater", "Foo.BarBell.OtherThing" }));
             }
 
@@ -336,7 +335,6 @@ namespace NuGet.Lucene.Tests
                 InsertPackage("Foo.BarBell.OtherThing", "1.0");
 
                 var result = repository.Search(new SearchCriteria("foo.barbell"));
-                result = result.CaptureStatistics(s => Console.WriteLine(s.Query));
                 Assert.That(result.Select(r => r.Id).ToArray(), Is.EquivalentTo(new[] { "Foo.BarBell.ThingUpdater", "Foo.BarBell.OtherThing" }));
             }
 
@@ -346,8 +344,126 @@ namespace NuGet.Lucene.Tests
                 InsertPackage("Microsoft.AspNet.Razor", "1.0");
 
                 var result = repository.Search(new SearchCriteria("id:microsoft.aspnet.razor"));
-                result = result.CaptureStatistics(s => Console.WriteLine(s.Query));
                 Assert.That(result.Select(r => r.Id).ToArray(), Is.EquivalentTo(new[] { "Microsoft.AspNet.Razor" }));
+            }
+
+            [Test]
+            public void FilterOnTargetFramework_ExactMatch()
+            {
+                var pkg1 = MakeSamplePackage("Foo.Bar", "1.0");
+                pkg1.SupportedFrameworks = new[] {"net40"};
+                var pkg2 = MakeSamplePackage("Foo.Bar", "2.0");
+                pkg2.SupportedFrameworks = new[] { "net45" };
+
+                InsertPackage(pkg1);
+                InsertPackage(pkg2);
+                repository.Initialize();
+
+                var result = repository.Search(new SearchCriteria("id:Foo.Bar") { TargetFrameworks = new[] {"net40"} });
+
+                Assert.That(result.Select(r => r.Version).ToArray(), Is.EquivalentTo(new[] { pkg1.Version.SemanticVersion }));
+            }
+
+            [Test]
+            public void FilterOnTargetFramework_ExactMatch_NonStandardFramework()
+            {
+                var pkg1 = MakeSamplePackage("Foo.Bar", "1.0");
+                pkg1.SupportedFrameworks = new[] { "mono38" };
+                var pkg2 = MakeSamplePackage("Foo.Bar", "2.0");
+                pkg2.SupportedFrameworks = new[] { "net45" };
+
+                InsertPackage(pkg1);
+                InsertPackage(pkg2);
+                repository.Initialize();
+
+                var result = repository.Search(new SearchCriteria("id:Foo.Bar") { TargetFrameworks = new[] { "mono38" } });
+
+                Assert.That(result.Select(r => r.Version).ToArray(), Is.EquivalentTo(new[] { pkg1.Version.SemanticVersion }));
+            }
+
+            [Test]
+            public void FilterOnTargetFramework_CompatibleMatch()
+            {
+                var pkg1 = MakeSamplePackage("Foo.Bar", "1.0");
+                pkg1.SupportedFrameworks = new[] { "net20" };
+                var pkg2 = MakeSamplePackage("Foo.Bar", "2.0");
+                pkg2.SupportedFrameworks = new[] { "net45" };
+
+                InsertPackage(pkg1);
+                InsertPackage(pkg2);
+                repository.Initialize();
+
+                var result = repository.Search(new SearchCriteria("id:Foo.Bar") { TargetFrameworks = new[] { "net35" } });
+
+                Assert.That(result.Select(r => r.Version).ToArray(), Is.EquivalentTo(new[] { pkg1.Version.SemanticVersion }));
+            }
+
+            [Test]
+            public void FilterOnTargetFramework_CompatibleMatch_WithProfile()
+            {
+                var pkg1 = MakeSamplePackage("Foo.Bar", "1.0");
+                pkg1.SupportedFrameworks = new[] { "net40-cf" };
+                var pkg2 = MakeSamplePackage("Foo.Bar", "2.0");
+                pkg2.SupportedFrameworks = new[] { "net45" };
+
+                InsertPackage(pkg1);
+                InsertPackage(pkg2);
+                repository.Initialize();
+
+                var result = repository.Search(new SearchCriteria("id:Foo.Bar") { TargetFrameworks = new[] { "net40-cf" } });
+
+                Assert.That(result.Select(r => r.Version).ToArray(), Is.EquivalentTo(new[] { pkg1.Version.SemanticVersion }));
+            }
+
+            [Test]
+            public void FilterOnTargetFramework_Portable_ExactMatch()
+            {
+                var pkg1 = MakeSamplePackage("Foo.Bar", "1.0");
+                pkg1.SupportedFrameworks = new[] { "portable-net40+sl50+wp80+win80" };
+                var pkg2 = MakeSamplePackage("Foo.Bar", "2.0");
+                pkg2.SupportedFrameworks = new[] { "net45" };
+
+                InsertPackage(pkg1);
+                InsertPackage(pkg2);
+                repository.Initialize();
+
+                var result = repository.Search(new SearchCriteria("id:Foo.Bar") { TargetFrameworks = new[] { "portable-net40+sl50+wp80+win80" } });
+
+                Assert.That(result.Select(r => r.Version).ToArray(), Is.EquivalentTo(new[] { pkg1.Version.SemanticVersion }));
+            }
+
+            [Test]
+            public void FilterOnTargetFramework_CompatibleProfile()
+            {
+                var pkg1 = MakeSamplePackage("Foo.Bar", "1.0");
+                pkg1.SupportedFrameworks = new[] { "net40-client" };
+                var pkg2 = MakeSamplePackage("Foo.Bar", "2.0");
+                pkg2.SupportedFrameworks = new[] { "net45" };
+
+                InsertPackage(pkg1);
+                InsertPackage(pkg2);
+                repository.Initialize();
+
+                var result = repository.Search(new SearchCriteria("") { TargetFrameworks = new[] { "net40" } });
+
+                Assert.That(result.Select(r => r.Version).ToArray(), Is.EquivalentTo(new[] { pkg1.Version.SemanticVersion }));
+            }
+
+            [Test]
+            public void FilterOnTargetFramework_AllowsPackagesWithNoSupportedFrameworks()
+            {
+                var pkg1 = MakeSamplePackage("Foo.Bar", "1.0");
+                pkg1.SupportedFrameworks = new string[0];
+                var pkg2 = MakeSamplePackage("Yaz.Jazz", "2.0");
+                pkg2.SupportedFrameworks = new[] { "net45" };
+
+                InsertPackage(pkg1);
+                InsertPackage(pkg2);
+                repository.Initialize();
+
+                var result = repository.Search(new SearchCriteria("") { TargetFrameworks = new[] { "net40" } });
+
+                Assert.That(result.Select(r => r.Version).ToArray(), Is.EquivalentTo(new[] { pkg1.Version.SemanticVersion }));
             }
 
             [Test]

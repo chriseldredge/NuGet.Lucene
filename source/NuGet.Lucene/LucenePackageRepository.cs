@@ -41,6 +41,8 @@ namespace NuGet.Lucene
 
         public PackageOverwriteMode PackageOverwriteMode { get; set; }
 
+        private readonly FrameworkCompatibilityTool frameworkCompatibilityTool = new FrameworkCompatibilityTool();
+
         private readonly object fileSystemLock = new object();
 
         private volatile int packageCount;
@@ -56,6 +58,8 @@ namespace NuGet.Lucene
             LuceneDataProvider.RegisterCacheWarmingCallback(UpdatePackageCount, () => new LucenePackage(FileSystem));
 
             UpdatePackageCount(LucenePackages);
+
+            frameworkCompatibilityTool.InitializeKnownFrameworkShortNamesFromIndex(LuceneDataProvider);
         }
 
         public override string Source
@@ -313,6 +317,11 @@ namespace NuGet.Lucene
                 packages = packages.Where(p => !p.IsPrerelease);
             }
 
+            if (criteria.TargetFrameworks != null && criteria.TargetFrameworks.Any())
+            {
+                packages = ApplyTargetFrameworkFilter(criteria, packages);
+            }
+
             if (criteria.PackageOriginFilter != PackageOriginFilter.Any)
             {
                 var flag = criteria.PackageOriginFilter == PackageOriginFilter.Mirror;
@@ -322,6 +331,11 @@ namespace NuGet.Lucene
             packages = ApplySort(criteria, packages);
 
             return packages;
+        }
+
+        protected virtual IQueryable<LucenePackage> ApplyTargetFrameworkFilter(SearchCriteria criteria, IQueryable<LucenePackage> packages)
+        {
+            return frameworkCompatibilityTool.FilterByTargetFramework(packages, criteria.TargetFrameworks.First());
         }
 
         protected virtual IQueryable<LucenePackage> ApplySearchCriteria(SearchCriteria criteria, IQueryable<LucenePackage> packages)
@@ -511,11 +525,16 @@ namespace NuGet.Lucene
         public LucenePackage Convert(IPackage package)
         {
             var lucenePackage = package as LucenePackage;
-            if (lucenePackage != null) return lucenePackage;
+            if (lucenePackage == null)
+            {
+                lucenePackage = new LucenePackage(FileSystem);
 
-            lucenePackage = new LucenePackage(FileSystem);
+                Convert(package, lucenePackage);
+            }
 
-            return Convert(package, lucenePackage);
+            frameworkCompatibilityTool.AddKnownFrameworkShortNames(lucenePackage.SupportedFrameworks);
+
+            return lucenePackage;
         }
 
         private LucenePackage Convert(IPackage package, LucenePackage lucenePackage)

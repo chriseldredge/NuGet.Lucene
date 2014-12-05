@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Web.Http;
 using System.Web.Http.OData;
 using System.Web.Http.OData.Query;
@@ -19,6 +21,14 @@ namespace NuGet.Lucene.Web.Controllers
     /// </summary>
     public class PackagesODataController : ODataController
     {
+        private static readonly ODataQuerySettings SearchQuerySettings = new ODataQuerySettings
+        {
+            HandleNullPropagation = HandleNullPropagationOption.False,
+            EnsureStableOrdering = false
+        };
+
+        private const int DefaultSearchPageSize = 30;
+
         public IMirroringPackageRepository Repository { get; set; }
 
         [EnableQuery(PageSize = 20, HandleNullPropagation = HandleNullPropagationOption.False)]
@@ -55,23 +65,15 @@ namespace NuGet.Lucene.Web.Controllers
 
         [HttpPost]
         [HttpGet]
-        [EnableQuery(PageSize = 20, HandleNullPropagation = HandleNullPropagationOption.False, EnsureStableOrdering = false)]
-        public IQueryable<ODataPackage> Search(
+        public IEnumerable<ODataPackage> Search(
             [FromODataUri] string searchTerm,
             [FromODataUri] string targetFramework,
             [FromODataUri] bool includePrerelease,
             ODataQueryOptions<ODataPackage> options)
         {
-            var targetFrameworks = Enumerable.Empty<string>();
-
-            if (!string.IsNullOrWhiteSpace(targetFramework))
-            {
-                targetFrameworks = targetFramework.Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries).Distinct();
-            }
-
-            var searchQuery = Repository.Search(searchTerm, targetFrameworks, includePrerelease);
-
-            return from package in searchQuery select package.ToODataPackage();
+            var pageSize = options.Top != null ? (int?)null : DefaultSearchPageSize;
+            var settings = new ODataQuerySettings(SearchQuerySettings) {PageSize = pageSize};
+            return Search(searchTerm, targetFramework, includePrerelease, options, settings);
         }
 
         [HttpGet]
@@ -81,10 +83,43 @@ namespace NuGet.Lucene.Web.Controllers
             [FromODataUri] bool includePrerelease,
             ODataQueryOptions<ODataPackage> options)
         {
-            var queryResults = (IQueryable<ODataPackage>)options.ApplyTo(Search(searchTerm, targetFramework, includePrerelease, options));
+            var queryResults = Search(searchTerm, targetFramework, includePrerelease, options, SearchQuerySettings);
+
             var count = queryResults.Count();
 
             return OkCount(count);
+        }
+
+        private IEnumerable<ODataPackage> Search(
+            string searchTerm,
+            string targetFramework,
+            bool includePrerelease,
+            ODataQueryOptions<ODataPackage> options,
+            ODataQuerySettings settings)
+        {
+            var targetFrameworks = Enumerable.Empty<string>();
+
+            if (!string.IsNullOrWhiteSpace(targetFramework))
+            {
+                targetFrameworks = targetFramework.Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries).Distinct();
+                options = RemoveFilter(options);
+            }
+
+            var searchQuery = Repository.Search(searchTerm, targetFrameworks, includePrerelease);
+
+            var odataQuery = from package in searchQuery select package.ToODataPackage();
+
+            return (IEnumerable<ODataPackage>)options.ApplyTo(odataQuery, settings);
+        }
+
+
+        private ODataQueryOptions<ODataPackage> RemoveFilter(ODataQueryOptions<ODataPackage> options)
+        {
+            if (options.Filter == null) return options;
+
+            var uriBuilder = new UriBuilder(options.Request.RequestUri);
+            uriBuilder.Query = Regex.Replace(uriBuilder.Query.Substring(1), @"\$filter=(IsLatestVersion|IsAbsoluteLatestVersion)", "", RegexOptions.IgnoreCase);
+            return new ODataQueryOptions<ODataPackage>(options.Context, new HttpRequestMessage(Request.Method, uriBuilder.Uri));
         }
 
         [HttpPost]

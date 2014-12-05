@@ -67,7 +67,7 @@ namespace NuGet.Lucene.Tests
         [Test]
         public void IgnoresTempFolder()
         {
-            SetupFileSystemPackagePaths("a", Path.Combine(Util.FileSystemExtensions.TempFolderName, "b"));
+            SetupFileSystemPackagePaths("a", Path.Combine(Lucene.Util.FileSystemExtensions.TempFolderName, "b"));
             var indexedPackages = CreateLucenePackages("a");
 
             var diff = IndexDifferenceCalculator.FindDifferences(fileSystem.Object, indexedPackages, CancellationToken.None);

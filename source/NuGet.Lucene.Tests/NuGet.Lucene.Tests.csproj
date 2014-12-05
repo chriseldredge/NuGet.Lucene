@@ -101,6 +101,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestBase.cs" />
     <Compile Include="TestPackage.cs" />
+    <Compile Include="Util\FrameworkCompatibilityToolTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

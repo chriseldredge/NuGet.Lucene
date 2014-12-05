@@ -9,7 +9,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
     public class PackagesODataControllerSearchTests : PackagesODataControllerTestBase
     {
         [Test]
-        public void NoSortWhenOrderSpecified()
+        public void Search()
         {
             var packages = new LucenePackage[0];
             repo.Setup(r => r.Search("foo", new string[0], false)).Returns(packages.AsQueryable()).Verifiable();
@@ -18,6 +18,39 @@ namespace NuGet.Lucene.Web.Tests.Controllers
             var query = controller.Search("foo", "", includePrerelease: false, options: queryOptions);
 
             repo.VerifyAll();
+        }
+
+        [Test]
+        public void Search_IgnoresLatestVersionFilter()
+        {
+            var packages = new[]
+            {
+                new TestPackage("Foo", "1.0") { SupportedFrameworks = new[] {"net35"}, IsLatestVersion = false }
+            };
+
+            repo.Setup(r => r.Search("foo", new[] {"net35"}, false)).Returns(packages.AsQueryable());
+            var queryOptions = SetUpRequestWithOptions("/api/odata/Search()?$take=20&$filter=IsLatestVersion");
+
+            var result = controller.Search("foo", "net35", includePrerelease: false, options: queryOptions);
+
+            Assert.That(result.Select(p => p.Id + "." + p.Version).ToArray(), Is.EquivalentTo(new[] {"Foo.1.0"}));
+        }
+
+        [Test]
+        public void Search_AllowsOtherFilters()
+        {
+            var packages = new[]
+            {
+                new TestPackage("Foo", "1.0") { VersionDownloadCount = 0 },
+                new TestPackage("Foo", "2.0") { VersionDownloadCount = 5 }
+            };
+
+            repo.Setup(r => r.Search("foo", new[] { "net35" }, false)).Returns(packages.AsQueryable());
+            var queryOptions = SetUpRequestWithOptions("/api/odata/Search()?$filter=VersionDownloadCount gt 1");
+
+            var result = controller.Search("foo", "net35", includePrerelease: false, options: queryOptions);
+
+            Assert.That(result.Select(p => p.Id + "." + p.Version).ToArray(), Is.EquivalentTo(new[] { "Foo.2.0" }));
         }
 
         [Test]
