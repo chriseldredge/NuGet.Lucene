@@ -15,7 +15,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
             repo.Setup(r => r.Search("foo", new string[0], false)).Returns(packages.AsQueryable()).Verifiable();
             var queryOptions = SetUpRequestWithOptions("/api/odata/Search()?$orderby=Id");
 
-            var query = controller.Search("foo", "", includePrerelease: false, options: queryOptions);
+            controller.Search("foo", "", includePrerelease: false, options: queryOptions);
 
             repo.VerifyAll();
         }
@@ -98,7 +98,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
 
             var response = controller.CountSearch("foo", "", false, queryOptions);
 
-            Assert.That(await response.Content.ReadAsStringAsync(), Is.EqualTo(packages.Count().ToString()));
+            Assert.That(int.Parse(await response.Content.ReadAsStringAsync()), Is.EqualTo(packages.Count()));
         }
     }
 }
