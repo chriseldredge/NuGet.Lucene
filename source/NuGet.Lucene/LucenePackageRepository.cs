@@ -364,8 +364,8 @@ namespace NuGet.Lucene
                 pkg in packages
                 where
                     ((pkg.Id == criteria.SearchTerm).Boost(5) ||
-                     (pkg.Title == criteria.SearchTerm).Boost(4) ||
-                     (pkg.SearchTitle == criteria.SearchTerm || pkg.SearchId == criteria.SearchTerm).Boost(3) ||
+                     (pkg.SearchId == criteria.SearchTerm).Boost(4) ||
+                     (pkg.Title == criteria.SearchTerm).Boost(3) ||
                      (pkg.Tags == criteria.SearchTerm).Boost(2) ||
                      (pkg.Authors.Contains(criteria.SearchTerm) || pkg.Owners.Contains(criteria.SearchTerm)).Boost(2) ||
                      (pkg.Files.Contains(criteria.SearchTerm)) ||

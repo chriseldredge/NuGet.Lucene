@@ -28,6 +28,8 @@ namespace NuGet.Lucene.Web.Models
             #region Basic Properties
             Id = package.Id;
             Title = package.Title;
+            DisplayTitle = package.DisplayTitle;
+
             RequireLicenseAcceptance = package.RequireLicenseAcceptance;
             Description = package.Description;
             Summary = package.Summary;
@@ -63,6 +65,7 @@ namespace NuGet.Lucene.Web.Models
 
             Id = package.Id;
             Title = package.Title;
+            DisplayTitle = string.IsNullOrEmpty(Title) ? Id : Title;
             RequireLicenseAcceptance = package.RequireLicenseAcceptance;
             Description = package.Description;
             Summary = package.Summary;
@@ -103,6 +106,8 @@ namespace NuGet.Lucene.Web.Models
         public string Version { get; set; }
 
         public string Title { get; set; }
+
+        public string DisplayTitle { get; set; }
 
         public string Authors { get; set; }
 

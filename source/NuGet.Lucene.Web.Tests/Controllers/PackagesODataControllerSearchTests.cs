@@ -54,6 +54,42 @@ namespace NuGet.Lucene.Web.Tests.Controllers
         }
 
         [Test]
+        public void Search_TranslatesConcatOrderByClause()
+        {
+            var packages = new[]
+            {
+                new TestPackage("another.thing", "1.0"),
+                new TestPackage("b", "2.0") { Title = "a thing"}
+            };
+
+            repo.Setup(r => r.Search("foo", new[] { "net35" }, false)).Returns(packages.AsQueryable());
+
+            var queryOptions = SetUpRequestWithOptions("/api/odata/Search()?$orderby=concat(Title,Id),Id");
+
+            var result = controller.Search("foo", "net35", includePrerelease: false, options: queryOptions);
+
+            Assert.That(result.Select(p => p.Id).ToArray(), Is.EqualTo(new[] { "b", "another.thing" }));
+        }
+
+        [Test]
+        public void Search_TranslatesConcatOrderByClause_Desc()
+        {
+            var packages = new[]
+            {
+                new TestPackage("another.thing", "1.0"),
+                new TestPackage("b", "2.0") { Title = "a thing"}
+            };
+
+            repo.Setup(r => r.Search("foo", new[] { "net35" }, false)).Returns(packages.AsQueryable());
+
+            var queryOptions = SetUpRequestWithOptions("/api/odata/Search()?$orderby=concat(Title,Id)+desc,Id");
+
+            var result = controller.Search("foo", "net35", includePrerelease: false, options: queryOptions);
+
+            Assert.That(result.Select(p => p.Id).ToArray(), Is.EqualTo(new[] { "another.thing", "b" }));
+        }
+
+        [Test]
         public async Task CountSearch()
         {
             var packages = new [] { new TestPackage("a", "1.0")};

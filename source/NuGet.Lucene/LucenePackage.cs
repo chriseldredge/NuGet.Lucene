@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
-using System.Text.RegularExpressions;
 using Lucene.Net.Analysis.Standard;
 using Lucene.Net.Linq.Mapping;
 using NuGet.Lucene.Analysis;
@@ -66,6 +65,7 @@ namespace NuGet.Lucene
         [Field("MinClientVersion", Converter = typeof(CachingVersionConverter))]
         public Version MinClientVersion { get; set; }
 
+        [Field(Analyzer = typeof(TextAnalyzer))]
         public string Title { get; set; }
 
         [Field(IndexMode.NotIndexed)]
@@ -89,10 +89,9 @@ namespace NuGet.Lucene
             get { return Id; }
         }
 
-        [Field(Store = StoreMode.No, Analyzer = typeof(TextAnalyzer))]
-        public string SearchTitle
+        public string DisplayTitle
         {
-            get { return Title; }
+            get { return string.IsNullOrEmpty(Title) ? Id : Title; }
         }
 
         [Field(Analyzer = typeof(TextAnalyzer))]
@@ -158,7 +157,7 @@ namespace NuGet.Lucene
 
         [IgnoreField]
         public IEnumerable<FrameworkAssemblyReference> FrameworkAssemblies { get; set; }
-        
+
         [IgnoreField]
         public IEnumerable<IPackageAssemblyReference> AssemblyReferences { get; set; }
 
@@ -215,7 +214,7 @@ namespace NuGet.Lucene
 
         [Field(Analyzer = typeof(PathAnalyzer))]
         public IEnumerable<string> Files { get; set; }
-        
+
         [Field(IndexMode.NotIndexed)]
         public Uri OriginUrl { get; set; }
 

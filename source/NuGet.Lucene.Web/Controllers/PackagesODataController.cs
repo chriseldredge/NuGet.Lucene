@@ -99,6 +99,8 @@ namespace NuGet.Lucene.Web.Controllers
         {
             var targetFrameworks = Enumerable.Empty<string>();
 
+            options = SimplifyOrderingClause(options);
+
             if (!string.IsNullOrWhiteSpace(targetFramework))
             {
                 targetFrameworks = targetFramework.Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries).Distinct();
@@ -112,6 +114,17 @@ namespace NuGet.Lucene.Web.Controllers
             return (IEnumerable<ODataPackage>)options.ApplyTo(odataQuery, settings);
         }
 
+        private ODataQueryOptions<ODataPackage> SimplifyOrderingClause(ODataQueryOptions<ODataPackage> options)
+        {
+            if (options.OrderBy == null) return options;
+            
+            var uriBuilder = new UriBuilder(options.Request.RequestUri);
+            uriBuilder.Query = uriBuilder.Query
+                .Substring(1)
+                .Replace("$orderby=concat(Title,Id)", "$orderby=DisplayTitle");
+
+            return new ODataQueryOptions<ODataPackage>(options.Context, new HttpRequestMessage(Request.Method, uriBuilder.Uri));
+        }
 
         private ODataQueryOptions<ODataPackage> RemoveFilter(ODataQueryOptions<ODataPackage> options)
         {
