@@ -24,7 +24,7 @@ namespace NuGet.Lucene
         /// packages in the Lucene index, then applies changes
         /// to the Lucene index to synchronize it.
         /// </summary>
-        Task SynchronizeWithFileSystem(CancellationToken cancellationToken);
+        Task SynchronizeWithFileSystem(SynchronizationMode mode, CancellationToken cancellationToken);
 
         /// <summary>
         /// Gets an object that contains information about
@@ -33,7 +33,7 @@ namespace NuGet.Lucene
         RepositoryInfo GetStatus();
 
         IObservable<RepositoryInfo> StatusChanged { get; }
-        
+
         /// <summary>
         /// Loads pacakge data from the Lucene index with a given path.
         /// </summary>
@@ -59,7 +59,7 @@ namespace NuGet.Lucene
         IQueryable<LucenePackage> LucenePackages { get; }
 
         /// <summary>
-        /// Increments the <see cref="LucenePackage.VersionDownloadCount"/> for 
+        /// Increments the <see cref="LucenePackage.VersionDownloadCount"/> for
         /// this package and the <see cref="LucenePackage.DownloadCount"/> for
         /// all packages with the same <see cref="LucenePackage.Id"/>.
         /// </summary>
@@ -88,7 +88,7 @@ namespace NuGet.Lucene
         /// <summary>
         /// Creates a stream appropriate for staging a package that will be added
         /// after the contents are written into place.
-        /// 
+        ///
         /// The stream returned automatically calculates a hash of the package contents
         /// while the stream is being written to avoid additional I/O.
         /// </summary>

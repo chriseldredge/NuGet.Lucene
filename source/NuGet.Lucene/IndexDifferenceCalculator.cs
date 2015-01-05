@@ -24,14 +24,15 @@ namespace NuGet.Lucene
             IEnumerable<LucenePackage> indexedPackages,
             CancellationToken cancellationToken)
         {
-            return FindDifferences(fileSystem, indexedPackages, cancellationToken, _ => { });
+            return FindDifferences(fileSystem, indexedPackages, cancellationToken, _ => { }, SynchronizationMode.Incremental);
         }
 
         public static IndexDifferences FindDifferences(
             IFileSystem fileSystem,
             IEnumerable<LucenePackage> indexedPackages,
             CancellationToken cancellationToken,
-            Action<SynchronizationState> setState)
+            Action<SynchronizationState> setState,
+            SynchronizationMode mode)
         {
             setState(SynchronizationState.ScanningFiles);
 
@@ -50,14 +51,19 @@ namespace NuGet.Lucene
 
             var calc = new IndexDifferenceCalculator(fileSystem, fileSystemPackages, indexedPackagesByPath);
 
-            return calc.Calculate();
+            return calc.Calculate(mode);
         }
 
-        private IndexDifferences Calculate()
+        private IndexDifferences Calculate(SynchronizationMode mode)
         {
             var newPackages = fileSystemPackages.Except(indexedPackagesByPath.Keys, StringComparer.InvariantCultureIgnoreCase);
             var missingPackages = indexedPackagesByPath.Keys.Except(fileSystemPackages, StringComparer.InvariantCultureIgnoreCase);
-            var modifiedPackages = fileSystemPackages.Intersect(indexedPackagesByPath.Keys, StringComparer.InvariantCultureIgnoreCase).Where(ModifiedDateMismatch);
+            var modifiedPackages = fileSystemPackages.Intersect(indexedPackagesByPath.Keys, StringComparer.InvariantCultureIgnoreCase);
+
+            if (mode == SynchronizationMode.Incremental)
+            {
+                modifiedPackages = modifiedPackages.Where(ModifiedDateMismatch);
+            }
 
             return new IndexDifferences(newPackages.ToList(), missingPackages.ToList(), modifiedPackages.ToList());
         }

@@ -1,6 +1,8 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Net.Http;
 using System.Web.Http;
+using NuGet.Lucene.Web.Models;
 using NuGet.Lucene.Web.Util;
 
 namespace NuGet.Lucene.Web.Controllers
@@ -50,13 +52,18 @@ namespace NuGet.Lucene.Web.Controllers
         /// </returns>
         [HttpPost]
         [Authorize(Roles = RoleNames.PackageManager)]
-        public HttpResponseMessage Synchronize()
+        public HttpResponseMessage Synchronize([FromBody]SynchronizationOptions options)
         {
             if (Repository.GetStatus().SynchronizationState != SynchronizationState.Idle)
             {
                 return Request.CreateResponse(HttpStatusCode.Conflict, "Synchronization is already in progress.");
             }
-            
+
+            if (options == null)
+            {
+                options = new SynchronizationOptions();
+            }
+
             TaskRunner.QueueBackgroundWorkItem(async cancellationToken =>
             {
                 var registration = cancellationToken.Register(
@@ -65,6 +72,7 @@ namespace NuGet.Lucene.Web.Controllers
                 using (registration)
                 {
                     await Repository.SynchronizeWithFileSystem(
+                        options.Mode,
                         UserRequestedCancellationTokenSource.Token);
                 }
             });

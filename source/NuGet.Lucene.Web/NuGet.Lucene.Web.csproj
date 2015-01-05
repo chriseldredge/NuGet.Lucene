@@ -194,6 +194,7 @@
     <Compile Include="Models\MirroringPackageRepository.cs" />
     <Compile Include="Models\ODataPackage.cs" />
     <Compile Include="Models\PackageVersionSummary.cs" />
+    <Compile Include="Models\SynchronizationOptions.cs" />
     <Compile Include="Models\UpdateUserAttributes.cs" />
     <Compile Include="Models\UserAttributes.cs" />
     <Compile Include="Middleware\AnonymousPackageManagerMiddleware.cs" />

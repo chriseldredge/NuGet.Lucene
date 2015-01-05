@@ -131,7 +131,7 @@ namespace NuGet.Lucene
             }
         }
 
-        public async Task SynchronizeIndexWithFileSystemAsync(CancellationToken cancellationToken)
+        public async Task SynchronizeIndexWithFileSystemAsync(SynchronizationMode mode, CancellationToken cancellationToken)
         {
             lock (synchronizationStatusLock)
             {
@@ -141,13 +141,11 @@ namespace NuGet.Lucene
                 }
                 UpdateSynchronizationStatus(SynchronizationState.ScanningFiles);
             }
-            
+
             try
             {
-                IndexDifferences differences = null;
-
-                differences = IndexDifferenceCalculator.FindDifferences(
-                    FileSystem, PackageRepository.LucenePackages, cancellationToken, UpdateSynchronizationStatus);
+                var differences = IndexDifferenceCalculator.FindDifferences(
+                    FileSystem, PackageRepository.LucenePackages, cancellationToken, UpdateSynchronizationStatus, mode);
 
                 await SynchronizeIndexWithFileSystemAsync(differences, cancellationToken);
             }
@@ -208,7 +206,7 @@ namespace NuGet.Lucene
                 pendingUpdates.Add(update, cancellationToken);
                 tasks.Enqueue(update.Task);
             }
-            
+
             var pathsToIndex = diff.NewPackages.Union(diff.ModifiedPackages).OrderBy(p => p).ToArray();
             var packagesToIndex = pathsToIndex.Length;
             var i = 0;
@@ -228,7 +226,7 @@ namespace NuGet.Lucene
             var package = PackageRepository.LoadFromFileSystem(path);
             await AddPackageAsync(package, cancellationToken);
         }
-        
+
         private void IndexUpdateLoop()
         {
             var items = new List<Update>();
@@ -340,9 +338,9 @@ namespace NuGet.Lucene
                     currentPackages.Remove(packageToReplace);
                     session.Add(KeyConstraint.Unique, package);
                 }
-                
+
                 currentPackages.Add(package);
-                
+
             }
 
             UpdatePackageVersionFlags(currentPackages.OrderByDescending(p => p.Version));

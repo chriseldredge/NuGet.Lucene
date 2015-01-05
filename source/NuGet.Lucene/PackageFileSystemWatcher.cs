@@ -53,7 +53,7 @@ namespace NuGet.Lucene
                 .GroupBy(path => path)
                 .Select(groupByPath => groupByPath.Throttle(QuietTime))
                 .SelectMany(obs => obs);
-            
+
             fileObserver = modifiedFilesThrottledByPath.Subscribe(async path => await OnPackageModified(path));
             fileWatcher.Deleted += async (s, e) => await OnPackageDeleted(e.FullPath);
             fileWatcher.Renamed += async (s, e) => await OnPackageRenamed(e.OldFullPath, e.FullPath);
@@ -83,7 +83,7 @@ namespace NuGet.Lucene
                 return;
             }
 
-            Indexer.SynchronizeIndexWithFileSystemAsync(CancellationToken.None);
+            Indexer.SynchronizeIndexWithFileSystemAsync(SynchronizationMode.Incremental, CancellationToken.None);
         }
 
         public async Task OnPackageModified(string fullPath)
@@ -97,14 +97,14 @@ namespace NuGet.Lucene
             Log.Info(m => m("Package path {0} renamed to {1}.", oldFullPath, fullPath));
 
             var task = RemoveFromIndex(oldFullPath).ContinueWith(LogOnFault);
-            
+
             if (fullPath.EndsWith(Constants.PackageExtension))
             {
                 var addToIndex = AddToIndex(fullPath).ContinueWith(LogOnFault);
                 await TaskEx.WhenAll(addToIndex, task);
                 return;
             }
-            
+
             await task;
         }
 
@@ -157,7 +157,7 @@ namespace NuGet.Lucene
             if (e.GetException() is InternalBufferOverflowException)
             {
                 Log.Warn(m => m("InternalBufferOverflowException in FileSystemWatcher; forcing full synchronization."));
-                Indexer.SynchronizeIndexWithFileSystemAsync(CancellationToken.None);
+                Indexer.SynchronizeIndexWithFileSystemAsync(SynchronizationMode.Incremental, CancellationToken.None);
             }
             else
             {

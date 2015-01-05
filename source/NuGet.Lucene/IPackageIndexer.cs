@@ -16,7 +16,7 @@ namespace NuGet.Lucene
         /// </summary>
         IObservable<IndexingStatus> StatusChanged { get; }
 
-        Task SynchronizeIndexWithFileSystemAsync(CancellationToken cancellationToken);
+        Task SynchronizeIndexWithFileSystemAsync(SynchronizationMode mode, CancellationToken cancellationToken);
         Task AddPackageAsync(LucenePackage package, CancellationToken cancellationToken);
         Task RemovePackageAsync(IPackage package, CancellationToken cancellationToken);
         Task IncrementDownloadCountAsync(IPackage package, CancellationToken cancellationToken);

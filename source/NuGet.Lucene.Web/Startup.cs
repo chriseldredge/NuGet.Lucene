@@ -74,7 +74,7 @@ namespace NuGet.Lucene.Web
                     ShowSourceCode = true
                 });
             }
-            
+
             app.UseAutofacMiddleware(container);
             app.UseAutofacWebApi(config);
             app.UseWebApi(config);
@@ -83,7 +83,7 @@ namespace NuGet.Lucene.Web
             app.UseStageMarker(PipelineStage.MapHandler);
 
             RegisterServices(container, app, config);
-            
+
             RegisterShutdown(app, container);
 
             StartIndexingIfConfigured(container);
@@ -217,7 +217,7 @@ namespace NuGet.Lucene.Web
             {
                 using (shutdownCancellationToken.Register(tcs.Cancel))
                 {
-                    await repository.SynchronizeWithFileSystem(tcs.Token);
+                    await repository.SynchronizeWithFileSystem(SynchronizationMode.Incremental, tcs.Token);
                 }
             });
         }

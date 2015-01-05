@@ -16,7 +16,7 @@ namespace NuGet.Lucene.Web.Models
         /// Roles granted to this user.
         /// </summary>
         public string[] Roles { get; set; }
-        
+
         /// <summary>
         /// When <c>false</c>, prevent overwriting existing users.
         /// Default is <c>true</c>.

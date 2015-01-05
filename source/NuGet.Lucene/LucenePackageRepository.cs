@@ -458,10 +458,10 @@ namespace NuGet.Lucene
             return results;
         }
 
-        public Task SynchronizeWithFileSystem(CancellationToken cancellationToken)
+        public Task SynchronizeWithFileSystem(SynchronizationMode mode, CancellationToken cancellationToken)
         {
             Log.Info(m => m("Synchronizing packages with filesystem."));
-            return Indexer.SynchronizeIndexWithFileSystemAsync(cancellationToken);
+            return Indexer.SynchronizeIndexWithFileSystemAsync(mode, cancellationToken);
         }
 
         public RepositoryInfo GetStatus()

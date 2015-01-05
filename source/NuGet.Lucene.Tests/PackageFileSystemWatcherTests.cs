@@ -36,7 +36,7 @@ namespace NuGet.Lucene.Tests
         public async Task PackageModified()
         {
             SetupPackageIsModified("Sample.1.0.nupkg");
-            
+
             await watcher.OnPackageModified(@".\Sample.1.0.nupkg");
 
             loader.Verify();
@@ -113,9 +113,9 @@ namespace NuGet.Lucene.Tests
         public async Task PackageRenamed_IgnoresNonPackageExtension()
         {
             SetupDeletePackage("Sample.1.0.nupkg");
-            
+
             await watcher.OnPackageRenamed(@".\Sample.1.0.nupkg", @".\IgnoreMe.tmp");
-            
+
             loader.Verify();
             indexer.Verify();
         }
@@ -126,7 +126,7 @@ namespace NuGet.Lucene.Tests
             var oldPath = Path.Combine(".", ".tmp", "Sample.1.0.nupkg");
             var newPath = Path.Combine(".", ".tmp", "Sample.2.0.nupkg");
             await watcher.OnPackageRenamed(oldPath, newPath);
-            
+
             indexer.Verify();
             loader.Verify();
             log.Verify(l => l.Error(It.IsAny<Exception>()), Times.Never);
@@ -138,7 +138,7 @@ namespace NuGet.Lucene.Tests
             const string dir = @"c:\sample\dir";
 
             fileSystem.Setup(fs => fs.GetFiles(dir, "*.nupkg", true)).Returns(new[] { "Sample.1.0.nupkg" });
-            indexer.Setup(idx => idx.SynchronizeIndexWithFileSystemAsync(CancellationToken.None));
+            indexer.Setup(idx => idx.SynchronizeIndexWithFileSystemAsync(SynchronizationMode.Incremental, CancellationToken.None));
 
             watcher.OnDirectoryMoved(Path.GetDirectoryName(dir));
 

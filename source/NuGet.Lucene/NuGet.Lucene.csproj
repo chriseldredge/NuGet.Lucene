@@ -116,6 +116,7 @@
     <Compile Include="PackageOverwriteMode.cs" />
     <Compile Include="SearchCriteria.cs" />
     <Compile Include="SearchSortField.cs" />
+    <Compile Include="SynchronizationMode.cs" />
     <Compile Include="Util\CollectionExtensions.cs" />
     <Compile Include="Util\DateTimeUtils.cs" />
     <Compile Include="ILucenePackageRepository.cs" />
