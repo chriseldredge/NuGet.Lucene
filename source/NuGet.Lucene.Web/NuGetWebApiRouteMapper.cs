@@ -68,7 +68,7 @@ namespace NuGet.Lucene.Web
         public void MapApiRoutes(HttpConfiguration config)
         {
             var routes = config.Routes;
-            
+
             routes.MapHttpRoute(AspNet.WebApi.HtmlMicrodataFormatter.RouteNames.ApiDocumentation,
                                 pathPrefix,
                                 new { controller = "NuGetDocumentation", action = "GetApiDocumentation" });
@@ -76,11 +76,11 @@ namespace NuGet.Lucene.Web
             routes.MapHttpRoute(AspNet.WebApi.HtmlMicrodataFormatter.RouteNames.TypeDocumentation,
                                 pathPrefix + "schema/{typeName}",
                                 new { controller = "NuGetDocumentation", action = "GetTypeDocumentation" });
-            
+
             routes.MapHttpRoute(RouteNames.Indexing,
                                 pathPrefix + "indexing/{action}",
                                 new { controller = "Indexing" });
-            
+
             routes.MapHttpRoute(RouteNames.Users.All,
                                 pathPrefix + "users",
                                 new { controller = "Users", action = "GetAllUsers" },
@@ -122,7 +122,7 @@ namespace NuGet.Lucene.Web
             routes.MapHttpRoute(RouteNames.Users.GetRequiredAuthenticationInfo,
                                 pathPrefix + "authenticate",
                                 new { controller = "Users", action = "GetRequiredAuthenticationInfo" });
-            
+
             routes.MapHttpRoute(RouteNames.TabCompletionPackageIds,
                                 pathPrefix + "v2/package-ids",
                                 new { controller = "TabCompletion", action = "GetMatchingPackages" });
@@ -130,7 +130,7 @@ namespace NuGet.Lucene.Web
             routes.MapHttpRoute(RouteNames.TabCompletionPackageVersions,
                                 pathPrefix + "v2/package-versions/{packageId}",
                                 new { controller = "TabCompletion", action = "GetPackageVersions" });
-            
+
             routes.MapHttpRoute(RouteNames.Packages.Search,
                                 pathPrefix + "packages",
                                 new { controller = "Packages", action = "Search" },
@@ -140,12 +140,12 @@ namespace NuGet.Lucene.Web
                                 pathPrefix + "packages/$searchable-fields",
                                 new { controller = "Packages", action = "GetAvailableSearchFieldNames" },
                                 new { httpMethod = new HttpMethodConstraint(HttpMethod.Get, HttpMethod.Options) });
-            
+
             routes.MapHttpRoute(RouteNames.Packages.Upload,
                                 pathPrefix + "packages",
                                 new { controller = "Packages" },
                                 new { httpMethod = new HttpMethodConstraint(HttpMethod.Put, HttpMethod.Options) });
-            
+
             routes.MapHttpRoute(RouteNames.Packages.DownloadLatestVersion,
                                 pathPrefix + "packages/{id}/content",
                                 new { controller = "Packages", action = "DownloadPackage" });
@@ -159,7 +159,7 @@ namespace NuGet.Lucene.Web
                                 pathPrefix + "packages/{id}/{version}",
                                 new { controller = "Packages", action = "GetPackageInfo", version = RouteParameter.Optional },
                                 new { httpMethod = new HttpMethodConstraint(HttpMethod.Get), version = new OptionalSemanticVersionConstraint() });
-            
+
             routes.MapHttpRoute(RouteNames.Packages.Delete,
                                 pathPrefix + "packages/{id}/{version}",
                                 new { controller = "Packages", action = "DeletePackage" },
@@ -178,6 +178,11 @@ namespace NuGet.Lucene.Web
             routes.MapHttpRoute(RouteNames.Symbols.Settings,
                         pathPrefix + "symbol-settings",
                         new { controller = "Symbols", action = "GetSettings" });
+
+            routes.MapHttpRoute(RouteNames.Symbols.Upload,
+                                pathPrefix + "symbols",
+                                new { controller = "Symbols" },
+                                new { httpMethod = new HttpMethodConstraint(HttpMethod.Put, HttpMethod.Options) });
 
             routes.MapHttpRoute(RouteNames.Symbols.GetFile,
                         pathPrefix + "symbols/{*path}",
@@ -202,11 +207,11 @@ namespace NuGet.Lucene.Web
                 new EntitySetCountRoutingConvention(),
                 new NonBindableActionCountRoutingConvention("PackagesOData")
             };
-            
+
             conventions.AddRange(ODataRoutingConventions.CreateDefault());
 
             conventions = conventions.Select(c => new ControllerAliasingODataRoutingConvention(c, "Packages", "PackagesOData")).Cast<IODataRoutingConvention>().ToList();
-            
+
             config.Routes.MapODataServiceRoute(
                 RouteNames.Packages.Feed,
                 ODataRoutePath,

@@ -6,7 +6,7 @@ namespace NuGet.Lucene.Util
 {
     public static class PackageExtensions
     {
-        public static bool IsSymbolPackage(this IPackage package)
+        public static bool HasSourceAndSymbols(this IPackage package)
         {
             var hasSymbols = package.GetFiles("lib")
                 .Any(pf => string.Equals(Path.GetExtension(pf.Path), ".pdb",

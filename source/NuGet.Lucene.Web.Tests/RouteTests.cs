@@ -24,6 +24,7 @@ namespace NuGet.Lucene.Web.Tests
             var routeMapper = new NuGetWebApiRouteMapper("api/");
             routeMapper.MapApiRoutes(configuration);
             routeMapper.MapODataRoutes(configuration);
+            routeMapper.MapSymbolSourceRoutes(configuration);
         }
 
         public RouteResolveContstraint HasRouteFor(string url)

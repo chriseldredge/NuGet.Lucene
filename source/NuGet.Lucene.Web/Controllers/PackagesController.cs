@@ -11,6 +11,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
+using System.Web.Http.Controllers;
+using System.Web.Http.ModelBinding;
 using AspNet.WebApi.HtmlMicrodataFormatter;
 using Lucene.Net.Linq;
 using NuGet.Lucene.Util;
@@ -269,15 +271,15 @@ namespace NuGet.Lucene.Web.Controllers
                 return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "Must provide package with valid id and version.");
             }
 
+            if (package.HasSourceAndSymbols())
+            {
+                var response = Request.CreateResponse(HttpStatusCode.RedirectKeepVerb);
+                response.Headers.Location = new Uri(Url.Link(RouteNames.Symbols.Upload, null), UriKind.RelativeOrAbsolute);
+                return response;
+            }
+
             try
             {
-                if (package.IsSymbolPackage())
-                {
-                    Audit("Add symbols package {0} version {1}", package.Id, package.Version);
-                    await SymbolSource.AddSymbolsAsync(package, Url.GetSymbolSourceUri());
-                    return Request.CreateResponse(HttpStatusCode.OK); ;
-                }
-
                 Audit("Add package {0} version {1}", package.Id, package.Version);
                 await LuceneRepository.AddPackageAsync(package, CancellationToken.None);
             }

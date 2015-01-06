@@ -10,7 +10,7 @@ namespace NuGet.Lucene.Web.Util
             var uri = url.RequiredLink(RouteNames.Sources, new {id = "DUMMY", version = "1.0", path = ""});
 
             // Remove path components to get root URI
-            return uri.Substring(0, uri.IndexOf("/DUMMY"));
+            return uri.Substring(0, uri.IndexOf("/DUMMY", StringComparison.Ordinal));
         }
 
         public static string GetSymbolsUri(this UrlHelper url)
@@ -18,7 +18,7 @@ namespace NuGet.Lucene.Web.Util
             var uri = url.RequiredLink(RouteNames.Symbols.GetFile, new { path = "DUMMY" });
 
             // Remove path components to get root URI
-            return uri.Substring(0, uri.IndexOf("/DUMMY"));
+            return uri.Substring(0, uri.IndexOf("/DUMMY", StringComparison.Ordinal));
         }
 
         public static string RequiredLink(this UrlHelper url, string routeName, object routeValues = null)

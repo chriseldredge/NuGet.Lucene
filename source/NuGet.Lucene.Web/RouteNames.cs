@@ -40,8 +40,9 @@
 
         public static class Symbols
         {
-            public const string GetFile = "GetFile";
-            public const string Settings = "Settings";
+            public const string GetFile = "Symbols.GetFile";
+            public const string Settings = "Symbols.Settings";
+            public const string Upload = "Symbols.Upload";
         }
 
         public const string TabCompletionPackageIds = "Package Manager Console Tab Completion - Package IDs";

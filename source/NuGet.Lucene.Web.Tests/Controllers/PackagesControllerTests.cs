@@ -158,7 +158,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
             Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.OK));
             Assert.That(await GetContent(result), Is.EqualTo("<fake package contents>"));
         }
-        
+
         [Test]
         public async Task PutPackage()
         {
@@ -170,6 +170,19 @@ namespace NuGet.Lucene.Web.Tests.Controllers
 
             Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.Created));
             Assert.That(result.Headers.Location, Is.EqualTo(new Uri("http://localhost/api/packages/Sample/1.0")));
+        }
+
+        [Test]
+        public async Task PutPackageRedirectsForSymbolPackage()
+        {
+            package.Files = new[] {Path.Combine("lib", "net35", "Sample.pdb"), Path.Combine("src", "Class1.cs")};
+
+            var result = await controller.PutPackage(package);
+
+            luceneRepository.Verify(r => r.AddPackageAsync(package, CancellationToken.None), Times.Never);
+
+            Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.RedirectKeepVerb));
+            Assert.That(result.Headers.Location, Is.EqualTo(new Uri("http://localhost/api/symbols")));
         }
 
         [Test]
@@ -245,7 +258,7 @@ namespace NuGet.Lucene.Web.Tests.Controllers
             symbolSource.Setup(s => s.RemoveSymbolsAsync(package)).Returns(Task.FromResult(true));
 
             var result = await controller.DeletePackage(package.Id, package.Version.ToString());
-            
+
             luceneRepository.VerifyAll();
 
             Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.OK));

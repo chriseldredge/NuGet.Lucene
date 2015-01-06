@@ -163,6 +163,7 @@
     <Compile Include="Controllers\IndexingControllerTests.cs" />
     <Compile Include="Controllers\PackagesControllerTests.cs" />
     <Compile Include="Controllers\PackagesODataControllerTests.cs" />
+    <Compile Include="Controllers\SymbolsControllerTests.cs" />
     <Compile Include="Controllers\TabCompletionControllerTests.cs" />
     <Compile Include="Controllers\ApiControllerTests.cs" />
     <Compile Include="Controllers\UsersControllerTests.cs" />
