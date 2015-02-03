@@ -12,14 +12,14 @@ namespace NuGet.Lucene.Web
 
         public static void LogException(Exception exception)
         {
-            LogException(exception, string.Format("Unhandled exception: {0}: {1}", exception.GetType(), exception.Message));
+            LogException(exception, m => m("Unhandled exception: {0}: {1}", exception.GetType(), exception.Message));
         }
 
-        public static void LogException(Exception exception, string message)
+        public static void LogException(Exception exception, Action<FormatMessageHandler> formatMessageCallback)
         {
             var log = GetLogSeverityDelegate(exception);
 
-            log(m => m(message), exception.StackTrace != null ? exception : null);
+            log(formatMessageCallback, exception.StackTrace != null ? exception : null);
         }
 
         private static Action<Action<FormatMessageHandler>, Exception> GetLogSeverityDelegate(Exception exception)
