@@ -336,6 +336,7 @@ namespace NuGet.Lucene
                 else
                 {
                     currentPackages.Remove(packageToReplace);
+                    package.OriginUrl = packageToReplace.OriginUrl;
                     session.Add(KeyConstraint.Unique, package);
                 }
 

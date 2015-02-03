@@ -59,7 +59,7 @@ namespace NuGet.Lucene.Tests
 
             var pkg = MakeSamplePackage("A", "1.0");
             loader.Setup(l => l.LoadFromFileSystem(newPackages[0])).Returns(pkg);
-            
+
             session.Setup(s => s.Add(KeyConstraint.None, It.IsAny<LucenePackage>())).Verifiable();
 
             session.Setup(s => s.Commit()).Verifiable();
@@ -67,6 +67,39 @@ namespace NuGet.Lucene.Tests
             await indexer.SynchronizeIndexWithFileSystemAsync(new IndexDifferences(newPackages, Empty, Empty), CancellationToken.None);
 
             session.VerifyAll();
+        }
+
+        [Test]
+        public async Task PreservesDownloadCountOnModifiedPackage()
+        {
+            var currentPackage = MakeSamplePackage("A", "1.0");
+            currentPackage.DownloadCount = 123;
+
+            var updatedPackage = await SimulateUpdatePackage(currentPackage);
+
+            Assert.That(updatedPackage.DownloadCount, Is.EqualTo(currentPackage.DownloadCount));
+        }
+
+        [Test]
+        public async Task PreservesVersionDownloadCountOnModifiedPackage()
+        {
+            var currentPackage = MakeSamplePackage("A", "1.0");
+            currentPackage.VersionDownloadCount = 456;
+
+            var updatedPackage = await SimulateUpdatePackage(currentPackage);
+
+            Assert.That(updatedPackage.VersionDownloadCount, Is.EqualTo(currentPackage.VersionDownloadCount));
+        }
+
+        [Test]
+        public async Task PreservesOrigin()
+        {
+            var currentPackage = MakeSamplePackage("A", "1.0");
+            currentPackage.OriginUrl = new Uri("http://example.com/nuget/");
+
+            var updatedPackage = await SimulateUpdatePackage(currentPackage);
+
+            Assert.That(updatedPackage.OriginUrl, Is.EqualTo(currentPackage.OriginUrl));
         }
 
         [Test]
@@ -96,5 +129,34 @@ namespace NuGet.Lucene.Tests
 
             session.VerifyAll();
         }
+
+        private async Task<LucenePackage> SimulateUpdatePackage(LucenePackage currentPackage)
+        {
+            var date = new DateTimeOffset(2015, 1, 29, 0, 0, 0, TimeSpan.Zero);
+            var modifiedPackages = new[] { "A.1.0.nupkg" };
+            currentPackage.Published = date;
+
+            InsertPackage(currentPackage);
+
+            var newPackage = MakeSamplePackage("A", "1.0");
+            newPackage.Published = date.AddDays(1);
+            loader.Setup(l => l.LoadFromFileSystem(modifiedPackages[0])).Returns(newPackage);
+
+            LucenePackage updatedPackage = null;
+
+            session.Setup(s => s.Add(KeyConstraint.Unique, It.IsAny<LucenePackage>()))
+                .Callback<KeyConstraint, LucenePackage[]>((c, p) => { updatedPackage = p.FirstOrDefault(); })
+                .Verifiable();
+
+            session.Setup(s => s.Commit()).Verifiable();
+
+            await
+                indexer.SynchronizeIndexWithFileSystemAsync(new IndexDifferences(Empty, Empty, modifiedPackages),
+                    CancellationToken.None);
+
+            session.VerifyAll();
+            return updatedPackage;
+        }
+
     }
 }
