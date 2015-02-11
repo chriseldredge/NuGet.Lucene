@@ -76,6 +76,8 @@ namespace NuGet.Lucene.Web
             }
 
             app.UseAutofacMiddleware(container);
+            app.UseStageMarker(PipelineStage.Authenticate);
+
             app.UseAutofacWebApi(config);
             app.UseWebApi(config);
             RegisterSignalR(container, app);
