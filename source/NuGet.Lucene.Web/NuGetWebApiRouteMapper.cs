@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Web.Http;
@@ -23,29 +24,24 @@ namespace NuGet.Lucene.Web
         }
 
         /// <summary>
-        /// See <see cref="MapNuGetClientRedirectRoutes(System.Web.Http.HttpConfiguration, string)"/>
-        /// </summary>
-        public void MapNuGetClientRedirectRoutes(HttpConfiguration config)
-        {
-            MapNuGetClientRedirectRoutes(config, string.Empty);
-        }
-
-        /// <summary>
         /// Adds route handlers that will redirect NuGet User Agents so that
         /// a single source URL can be used in the client.
         /// </summary>
         /// <param name="config">
         /// The configuration in which to register routes
         /// </param>
-        /// <param name="routeTemplate">
-        /// Where the primary redirect should take place.
-        /// The empty string should be used in most cases, but if you want to
-        /// point your clients to http://foo/api you could use <c>"api"</c> instead.
-        /// </param>
-        public void MapNuGetClientRedirectRoutes(HttpConfiguration config, string routeTemplate)
+        public void MapNuGetClientRedirectRoutes(HttpConfiguration config)
         {
-            config.Routes.MapHttpRoute(RouteNames.Redirect.Feed,
-                                routeTemplate,
+            // redirect NuGet user agents from / to /api/odata
+            config.Routes.MapHttpRoute(RouteNames.Redirect.RootFeed,
+                                string.Empty,
+                                new { },
+                                new { userAgent = new NuGetUserAgentConstraint() },
+                                new ODataRedirectHandler(RouteNames.Packages.Feed));
+
+            // redirect NuGet user agents from /api to /api/odata
+            config.Routes.MapHttpRoute(RouteNames.Redirect.ApiFeed,
+                                pathPrefix,
                                 new { },
                                 new { userAgent = new NuGetUserAgentConstraint() },
                                 new ODataRedirectHandler(RouteNames.Packages.Feed));
@@ -63,6 +59,12 @@ namespace NuGet.Lucene.Web
                                 new { },
                                 new { method = new HttpMethodConstraint(HttpMethod.Delete) },
                                 new RedirectHandler(RouteNames.Packages.Delete));
+        }
+
+        [Obsolete("Use overload without routeTemplate")]
+        public void MapNuGetClientRedirectRoutes(HttpConfiguration config, string routeTemplate)
+        {
+            MapNuGetClientRedirectRoutes(config);
         }
 
         public void MapApiRoutes(HttpConfiguration config)

@@ -31,7 +31,8 @@
 
         public static class Redirect
         {
-            public const string Feed = "NuGetClient.Redirect.Feed";
+            public const string RootFeed = "NuGetClient.Redirect.RootFeed";
+            public const string ApiFeed = "NuGetClient.Redirect.ApiFeed";
             public const string Upload = "NuGetClient.Redirect.Upload";
             public const string Delete = "NuGetClient.Redirect.Delete";
         }
