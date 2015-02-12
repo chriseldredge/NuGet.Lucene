@@ -308,6 +308,18 @@ namespace NuGet.Lucene.Tests
             }
 
             [Test]
+            public void AllVersions_OrderById_ImplicitlyThenByVersion()
+            {
+                InsertPackage("Foo.Bar", "1.0");
+                InsertPackage("Foo.Bar", "1.1");
+                InsertPackage("Foo.Bar", "1.2");
+
+                var result = repository.Search(new SearchCriteria("Foo.Bar") { SortField = SearchSortField.Id });
+
+                Assert.That(result.Select(r => r.Id + ' ' + r.Version).ToArray(), Is.EqualTo(new[] { "Foo.Bar 1.2", "Foo.Bar 1.1", "Foo.Bar 1.0" }));
+            }
+
+            [Test]
             public void TokenizeId()
             {
                 InsertPackage("Foo.Bar", "1.0");

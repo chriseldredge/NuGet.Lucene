@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
@@ -11,8 +10,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
-using System.Web.Http.Controllers;
-using System.Web.Http.ModelBinding;
 using AspNet.WebApi.HtmlMicrodataFormatter;
 using Lucene.Net.Linq;
 using NuGet.Lucene.Util;

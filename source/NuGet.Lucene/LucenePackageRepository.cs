@@ -399,9 +399,16 @@ namespace NuGet.Lucene
                 return packages;
             }
 
-            return criteria.SortDirection == SearchSortDirection.Ascending
+            var orderedPackages = criteria.SortDirection == SearchSortDirection.Ascending
                     ? packages.OrderBy(sortSelector)
                     : packages.OrderByDescending(sortSelector);
+
+            if (criteria.SortField == SearchSortField.Id)
+            {
+                orderedPackages = orderedPackages.ThenByDescending(p => p.Version);
+            }
+
+            return orderedPackages;
         }
 
         public IEnumerable<IPackage> GetUpdates(IEnumerable<IPackageName> packages, bool includePrerelease, bool includeAllVersions,
