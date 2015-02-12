@@ -24,7 +24,7 @@ namespace NuGet.Lucene.Web.Controllers
         private static readonly ODataQuerySettings SearchQuerySettings = new ODataQuerySettings
         {
             HandleNullPropagation = HandleNullPropagationOption.False,
-            EnsureStableOrdering = false
+            EnsureStableOrdering = true
         };
 
         private const int DefaultSearchPageSize = 30;
@@ -117,7 +117,7 @@ namespace NuGet.Lucene.Web.Controllers
         private ODataQueryOptions<ODataPackage> SimplifyOrderingClause(ODataQueryOptions<ODataPackage> options)
         {
             if (options.OrderBy == null) return options;
-            
+
             var uriBuilder = new UriBuilder(options.Request.RequestUri);
             uriBuilder.Query = uriBuilder.Query
                 .Substring(1)
