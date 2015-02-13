@@ -191,6 +191,7 @@
     <Compile Include="Models\ODataPackageTests.cs" />
     <Compile Include="Models\MirroringPackageRepositoryTests.cs" />
     <Compile Include="NuGetWebApiModuleTests.cs" />
+    <Compile Include="OData\Batch\HeaderCascadingODataBatchHandlerTests.cs" />
     <Compile Include="PackagesRouteTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReusableCancellationTokenSourceTests.cs" />

@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Web.Http;
+using System.Web.Http.OData.Batch;
 using System.Web.Http.OData.Extensions;
 using System.Web.Http.OData.Formatter;
 using System.Web.Http.OData.Formatter.Deserialization;
 using System.Web.Http.OData.Routing.Conventions;
 using System.Web.Http.Routing;
+using NuGet.Lucene.Web.OData.Batch;
 using NuGet.Lucene.Web.OData.Formatter.Serialization;
 using NuGet.Lucene.Web.OData.Routing;
 using NuGet.Lucene.Web.OData.Routing.Conventions;
@@ -219,11 +221,39 @@ namespace NuGet.Lucene.Web
                 ODataRoutePath,
                 builder.Model,
                 new CountODataPathHandler(),
-                conventions);
+                conventions,
+                new HeaderCascadingODataBatchHandler(new BatchHttpServer(config)));
         }
 
         public string PathPrefix { get { return pathPrefix; } }
         public string ODataRoutePath { get { return PathPrefix + "odata"; } }
         public string SignalrRoutePath { get { return PathPrefix + "signalr"; } }
+
+        /// <summary>
+        /// See https://trocolate.wordpress.com/2012/07/19/mitigate-issue-260-in-batching-scenario/
+        /// </summary>
+        public class BatchHttpServer : HttpServer
+        {
+            private readonly HttpConfiguration config;
+
+            public BatchHttpServer(HttpConfiguration config)
+                : base(config)
+            {
+                this.config = config;
+            }
+
+            protected override void Initialize()
+            {
+                var firstInPipeline = config.MessageHandlers.FirstOrDefault();
+                if (firstInPipeline != null && firstInPipeline.InnerHandler != null)
+                {
+                    InnerHandler = firstInPipeline;
+                }
+                else
+                {
+                    base.Initialize();
+                }
+            }
+        }
     }
 }

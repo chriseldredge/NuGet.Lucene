@@ -223,6 +223,7 @@
     <Compile Include="NuGetWebApiSettings.cs" />
     <Compile Include="NuGetWebApiWebHostSettings.cs" />
     <Compile Include="ODataRedirectHandler.cs" />
+    <Compile Include="OData\Batch\HeaderCascadingODataBatchHandler.cs" />
     <Compile Include="OData\Formatter\Serialization\DefaultStreamAwareEntityTypeSerializer.cs" />
     <Compile Include="OData\Formatter\Serialization\ODataPackageDefaultStreamAwareEntityTypeSerializer.cs" />
     <Compile Include="OData\Formatter\Serialization\ODataPackageDefaultStreamAwareSerializerProvider.cs" />
