@@ -126,7 +126,11 @@ namespace NuGet.Lucene.Web.Models
             {
                 try
                 {
-                    return origin.FindPackage(packageId, version);
+                    var package =  origin.FindPackage(packageId, version);
+                    if (package != null)
+                    {
+                      return package;
+                    }
                 }
                 catch (Exception ex)
                 {
