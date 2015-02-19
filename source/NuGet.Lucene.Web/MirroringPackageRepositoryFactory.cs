@@ -21,7 +21,7 @@ namespace NuGet.Lucene.Web
 
             if (alwaysCheckMirror)
             {
-              return new EagerMirroringPackageRepository(localRepository, remoteRepositories, new WebCache());
+                return new EagerMirroringPackageRepository(localRepository, remoteRepositories, new WebCache());
             }
 
             return new MirroringPackageRepository(localRepository, remoteRepositories, new WebCache());

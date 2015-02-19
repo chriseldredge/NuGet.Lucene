@@ -66,10 +66,9 @@ namespace NuGet.Lucene.Web.Models
         /// Determines if origin should be checked for additional package versions.
         /// The default implementation returns <c>true</c> if <paramref name="localPackages"/>
         /// is empty or if any of the local packages are mirrored.
-        /// 
+        ///
         /// An alternate implementation could use a whitelist or blacklist.
         /// </summary>
-        /// <returns></returns>
         protected virtual bool ShouldLookInOrigin(string id, List<IPackage> localPackages)
         {
             return localPackages.IsEmpty() || localPackages.OfType<LucenePackage>().All(p => p.IsMirrored);
@@ -99,25 +98,28 @@ namespace NuGet.Lucene.Web.Models
 
             if (result != null) return result;
 
+            result = new List<IPackage>();
+
             foreach (var origin in origins)
             {
                 try
                 {
-                    result = origin.FindPackagesById(id).ToList();
-                    cache.Add(key, result, TimeSpan.FromMinutes(5));
-                    if (result.Any())
+                    var originPackages = origin.FindPackagesById(id).ToList();
+
+                    if (originPackages.Any())
                     {
                         Log.Info(m => m("Found package {0} at {1}", id, origin.Source));
-                        return result;
+                        result.AddRange(originPackages);
                     }
                 }
                 catch (Exception ex)
                 {
                     Log.Error(m => m("Exception on FindPackagesById('{0}') for package origin {1}: {2}", id, origin.Source, ex.Message), ex);
-                    return Enumerable.Empty<IPackage>();
                 }
             }
-            return Enumerable.Empty<IPackage>();
+
+            cache.Add(key, result, TimeSpan.FromMinutes(5));
+            return result;
         }
 
         public virtual IPackage FindPackageInOrigin(string packageId, SemanticVersion version)
@@ -135,7 +137,6 @@ namespace NuGet.Lucene.Web.Models
                 catch (Exception ex)
                 {
                     Log.Error(m => m("Exception on FindPackage('{0}', '{1}') for package origin {2}: {3}", packageId, version, origin.Source, ex.Message), ex);
-                    return null;
                 }
             }
             return null;
