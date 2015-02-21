@@ -53,7 +53,7 @@ namespace NuGet.Lucene.Web.Middleware
 
                 var origRoles = (apiUser.Roles ?? Empty).ToArray();
                 var missingRoles = RoleNames.All.Except(origRoles);
-                var implicitGrants = GetUserRoles(Request.User, missingRoles).ToArray();
+                var implicitGrants = GetMappedUserRoles(Request.User, missingRoles).ToArray();
                 apiUser.Roles = origRoles.Union(implicitGrants).Distinct().ToArray();
 
                 if (isNew || !apiUser.Roles.SequenceEqual(origRoles))
@@ -61,7 +61,7 @@ namespace NuGet.Lucene.Web.Middleware
                     store.Add(apiUser, UserUpdateMode.Overwrite);
                 }
 
-                if (implicitGrants.Any())
+                if (apiUser.Roles.Any())
                 {
                     Request.User = new SupplementalRolePrincipalWrapper(Request.User, apiUser.Roles);
                 }
@@ -69,7 +69,7 @@ namespace NuGet.Lucene.Web.Middleware
                 return completedTask;
             }
 
-            private IEnumerable<string> GetUserRoles(IPrincipal user, IEnumerable<string> missingRoles)
+            private IEnumerable<string> GetMappedUserRoles(IPrincipal user, IEnumerable<string> missingRoles)
             {
                 return missingRoles.Where(role =>
                 {

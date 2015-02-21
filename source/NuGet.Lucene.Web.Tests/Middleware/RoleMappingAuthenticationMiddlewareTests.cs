@@ -80,6 +80,18 @@ namespace NuGet.Lucene.Web.Tests.Middleware
         }
 
         [Test]
+        public async Task Authenticated_GrantsRolesFromUserStore()
+        {
+            request.User = domainAdminUser;
+            store.Add(new ApiUser { Username = domainAdminUser.Identity.Name, Key = "idemponent", Roles = new[] { RoleNames.AccountAdministrator } });
+            mappings.Add(RoleNames.AccountAdministrator, "Domain Administrators");
+
+            await middleware.Invoke(context);
+
+            Assert.That(request.User.IsInRole(RoleNames.AccountAdministrator), Is.True, "request.User.IsInRole(RoleNames.AccountAdministrator)");
+        }
+
+        [Test]
         public async Task Authenticated_GrantsMappedRole_PreservesIdentity()
         {
             request.User = domainAdminUser;
