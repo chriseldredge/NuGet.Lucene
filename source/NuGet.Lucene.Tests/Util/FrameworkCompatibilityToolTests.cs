@@ -46,18 +46,20 @@ namespace NuGet.Lucene.Tests.Util
         }
 
         [Test]
-        public void IncludesKnownCompatibleFramework()
+        [TestCase("net20", "net35")]
+        [TestCase("net40-client", "net40")]
+        public void IncludesKnownCompatibleFramework(string knownFrameworkShortName, string projectFrameworkShortName)
         {
-            tool.AddKnownFrameworkShortNames(new[] {"net20"});
+            tool.AddKnownFrameworkShortNames(new[] {knownFrameworkShortName});
 
-            var query = tool.GetOrBuildQuery("net35");
+            var query = tool.GetOrBuildQuery(projectFrameworkShortName);
 
             var termQueries = GetSupportedFrameworkTermQueries(query);
 
             Assert.That(termQueries, Is.EquivalentTo(new[]
                 {
-                    new TermQuery(new Term(FrameworkCompatibilityTool.SupportedFrameworksFieldName, "net20")),
-                    new TermQuery(new Term(FrameworkCompatibilityTool.SupportedFrameworksFieldName, "net35"))
+                    new TermQuery(new Term(FrameworkCompatibilityTool.SupportedFrameworksFieldName, knownFrameworkShortName)),
+                    new TermQuery(new Term(FrameworkCompatibilityTool.SupportedFrameworksFieldName, projectFrameworkShortName))
                 }));
         }
 

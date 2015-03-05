@@ -377,6 +377,20 @@ namespace NuGet.Lucene.Tests
             }
 
             [Test]
+            public void FilterOnTargetFramework_CaseInsensitive()
+            {
+                var pkg1 = MakeSamplePackage("Foo.Bar", "1.0");
+                pkg1.SupportedFrameworks = new[] { "net40-Client" };
+
+                InsertPackage(pkg1);
+                repository.Initialize();
+
+                var result = repository.Search(new SearchCriteria("id:Foo.Bar") { TargetFrameworks = new[] { "net40" } });
+
+                Assert.That(result.Select(r => r.Version).ToArray(), Is.EquivalentTo(new[] { pkg1.Version.SemanticVersion }));
+            }
+
+            [Test]
             public void FilterOnTargetFramework_ExactMatch_NonStandardFramework()
             {
                 var pkg1 = MakeSamplePackage("Foo.Bar", "1.0");

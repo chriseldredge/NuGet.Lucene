@@ -210,6 +210,7 @@ namespace NuGet.Lucene
         [Field(IndexMode.NotAnalyzed)]
         public string Path { get; set; }
 
+        [Field(CaseSensitive = false)]
         public IEnumerable<string> SupportedFrameworks { get; set; }
 
         [Field(Analyzer = typeof(PathAnalyzer))]
