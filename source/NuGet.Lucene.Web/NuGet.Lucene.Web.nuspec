@@ -4,7 +4,7 @@
     <id>NuGet.Lucene.Web</id>
     <title>NuGet.Lucene.Web</title>
     <version>$version$</version>
-    <owners>The Motley Fool, LLC</owners>
+    <owners>The Motley Fool LLC</owners>
     <authors>Chris Eldredge</authors>
     <copyright>Copyright 2013 The Motley Fool, LLC</copyright>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>

@@ -4,7 +4,7 @@
     <id>NuGet.Lucene</id>
     <title>NuGet.Lucene</title>
     <version>$version$</version>
-    <owners>The Motley Fool, LLC</owners>
+    <owners>The Motley Fool LLC</owners>
     <authors>Chris Eldredge</authors>
     <copyright>Copyright 2013 The Motley Fool, LLC</copyright>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
@@ -57,6 +57,5 @@
     <file src="bin\$Configuration$40\NuGet.Lucene.dll" target="lib\net40"/>
     <file src="bin\$Configuration$40\NuGet.Lucene.pdb" target="lib\net40"/>
     <file src="bin\$Configuration$40\NuGet.Lucene.xml" target="lib\net40"/>
-    <file src="**\*.cs" target="src"/>
   </files>
 </package>
