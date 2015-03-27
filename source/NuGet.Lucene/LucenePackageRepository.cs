@@ -37,6 +37,8 @@ namespace NuGet.Lucene
 
         public string HashAlgorithmName { get; set; }
 
+        public bool DisablePackageHash { get; set; }
+
         public string LucenePackageSource { get; set; }
 
         public PackageOverwriteMode PackageOverwriteMode { get; set; }
@@ -526,7 +528,14 @@ namespace NuGet.Lucene
 
         protected override IPackage OpenPackage(string path)
         {
-            return FastZipPackage.Open(path, HashProvider);
+            if (DisablePackageHash)
+            {
+                return FastZipPackage.Open(path, new byte[0]);
+            }
+            else
+            {
+                return FastZipPackage.Open(path, HashProvider);
+            }
         }
 
         public LucenePackage Convert(IPackage package)

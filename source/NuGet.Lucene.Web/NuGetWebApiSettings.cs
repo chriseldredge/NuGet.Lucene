@@ -128,6 +128,14 @@ namespace NuGet.Lucene.Web
             }
         }
 
+        public bool DisablePackageHash
+        {
+            get
+            {
+                return GetFlagFromAppSetting("disablePackageHash", false);
+            }
+        }
+
         public bool SynchronizeOnStart
         {
             get

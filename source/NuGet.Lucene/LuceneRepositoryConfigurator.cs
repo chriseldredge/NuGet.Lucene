@@ -48,6 +48,11 @@ namespace NuGet.Lucene
         public string PackageHashAlgorithm { get; set; }
 
         /// <summary>
+        /// Disable package hashing
+        /// </summary>
+        public bool DisablePackageHash { get; set; }
+
+        /// <summary>
         /// Holds a reference to the configured package repository
         /// after <see cref="Initialize"/> has been invoked.
         /// </summary>
@@ -117,6 +122,7 @@ namespace NuGet.Lucene
                 {
                     HashProvider = hashProvider,
                     HashAlgorithmName = PackageHashAlgorithm,
+                    DisablePackageHash = DisablePackageHash,
                     PathResolver = packagePathResolver,
                     Indexer = PackageIndexer,
                     LuceneDataProvider = Provider,

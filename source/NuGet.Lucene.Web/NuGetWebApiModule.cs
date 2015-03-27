@@ -75,7 +75,8 @@ namespace NuGet.Lucene.Web
                 LuceneIndexPath = settings.LucenePackagesIndexPath,
                 PackagePath = settings.PackagesPath,
                 PackageOverwriteMode = settings.PackageOverwriteMode,
-                LuceneMergeFactor = settings.LuceneMergeFactor
+                LuceneMergeFactor = settings.LuceneMergeFactor,
+                DisablePackageHash = settings.DisablePackageHash
             };
 
             cfg.Initialize();
