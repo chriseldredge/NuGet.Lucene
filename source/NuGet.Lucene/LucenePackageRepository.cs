@@ -532,10 +532,8 @@ namespace NuGet.Lucene
             {
                 return FastZipPackage.Open(path, new byte[0]);
             }
-            else
-            {
-                return FastZipPackage.Open(path, HashProvider);
-            }
+
+            return FastZipPackage.Open(path, HashProvider);
         }
 
         public LucenePackage Convert(IPackage package)
