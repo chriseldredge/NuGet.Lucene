@@ -169,6 +169,28 @@ namespace NuGet.Lucene.Tests
             }
 
             [Test]
+            public void FilesSkippedWhenDisabled()
+            {
+                var file1 = new Mock<IPackageFile>();
+                file1.SetupGet(f => f.Path).Returns("path1");
+
+                var package = new PackageWithFiles
+                {
+                    Id = "Sample",
+                    Version = new SemanticVersion("1.0"),
+                    Files = new[] { file1.Object }
+                };
+
+                fileSystem.Setup(fs => fs.OpenFile(It.IsAny<string>())).Returns(new MemoryStream());
+                repository.IgnorePackageFiles = true;
+
+                var result = repository.Convert(package);
+
+                Assert.That(result.Files, Is.Not.Null, "Files");
+                Assert.That(result.Files.ToArray(), Is.Empty);
+            }
+
+            [Test]
             public void RemovesPlaceholderUrls()
             {
                 var package = SetUpConvertPackage();

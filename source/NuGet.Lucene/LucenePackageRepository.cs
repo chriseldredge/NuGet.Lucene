@@ -43,6 +43,16 @@ namespace NuGet.Lucene
 
         public PackageOverwriteMode PackageOverwriteMode { get; set; }
 
+        /// <summary>
+        /// Flag that enables or disables including list of files on <see cref="LucenePackage.Files"/>.
+        /// Setting this flag to <c>true</c> keeps the index smaller when packages with many files
+        /// are added. Setting this flag to <c>false</c> enables queries that match packages that
+        /// contain a file path.
+        ///
+        /// Default: <c>false</c>.
+        /// </summary>
+        public bool IgnorePackageFiles { get; set; }
+
         private readonly FrameworkCompatibilityTool frameworkCompatibilityTool = new FrameworkCompatibilityTool();
 
         private readonly object fileSystemLock = new object();
@@ -625,7 +635,12 @@ namespace NuGet.Lucene
             package.Published = package.LastUpdated;
             package.Path = path;
             package.SupportedFrameworks = sourcePackage.GetSupportedFrameworks().Select(VersionUtility.GetShortFrameworkName);
-            package.Files = sourcePackage.GetFiles().Select(f => f.Path).ToArray();
+
+            var files = IgnorePackageFiles
+                ? Enumerable.Empty<string>()
+                : sourcePackage.GetFiles().Select(f => f.Path).ToArray();
+
+            package.Files = files;
         }
 
         private DateTimeOffset GetLastModified(LucenePackage package, string path)

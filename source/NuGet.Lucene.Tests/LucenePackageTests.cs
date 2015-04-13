@@ -1,6 +1,4 @@
-using System;
 using System.IO;
-using System.Runtime.Versioning;
 using NUnit.Framework;
 
 namespace NuGet.Lucene.Tests

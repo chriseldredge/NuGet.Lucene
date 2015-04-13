@@ -48,9 +48,14 @@ namespace NuGet.Lucene
         public string PackageHashAlgorithm { get; set; }
 
         /// <summary>
-        /// Disable package hashing
+        /// Disable package hashing.
         /// </summary>
         public bool DisablePackageHash { get; set; }
+
+        /// <summary>
+        /// Disable indexing package files.
+        /// </summary>
+        public bool IgnorePackageFiles { get; set; }
 
         /// <summary>
         /// Holds a reference to the configured package repository
@@ -80,14 +85,14 @@ namespace NuGet.Lucene
         /// <summary>
         /// Expert: overrides the default merge factor (10)
         /// for the Lucene.Net <see cref="IndexWriter"/>.
-        /// 
+        ///
         /// Lower merge factors result in a smaller index
         /// with less segments which improves search performance
         /// but degrades indexing performance.
-        /// 
+        ///
         /// Higher merge factors result in faster indexing
         /// but slower search performance.
-        /// 
+        ///
         /// The value must never be less than <c>2</c>.
         /// </summary>
         public int LuceneMergeFactor { get; set; }
@@ -110,7 +115,7 @@ namespace NuGet.Lucene
 
             CreateDirectories();
             InitializeLucene();
-            
+
             PackageIndexer = new PackageIndexer
                 {
                     FileSystem = fileSystem,
@@ -123,6 +128,7 @@ namespace NuGet.Lucene
                     HashProvider = hashProvider,
                     HashAlgorithmName = PackageHashAlgorithm,
                     DisablePackageHash = DisablePackageHash,
+                    IgnorePackageFiles = IgnorePackageFiles,
                     PathResolver = packagePathResolver,
                     Indexer = PackageIndexer,
                     LuceneDataProvider = Provider,

@@ -136,6 +136,14 @@ namespace NuGet.Lucene.Web
             }
         }
 
+        public bool IgnorePackageFiles
+        {
+            get
+            {
+                return GetFlagFromAppSetting("ignorePackageFiles", false);
+            }
+        }
+
         public bool SynchronizeOnStart
         {
             get

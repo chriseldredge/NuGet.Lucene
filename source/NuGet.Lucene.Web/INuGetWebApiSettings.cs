@@ -7,14 +7,14 @@ namespace NuGet.Lucene.Web
     {
         // Security
         bool ShowExceptionDetails { get; }
-        
+
         bool EnableCrossDomainRequests { get; }
-        
+
         bool HandleLocalRequestsAsAdmin { get; }
         string LocalAdministratorApiKey { get; }
 
         bool AllowAnonymousPackageChanges { get; }
-        
+
         bool RoleMappingsEnabled { get; }
         NameValueCollection RoleMappings { get; }
 
@@ -41,6 +41,7 @@ namespace NuGet.Lucene.Web
         bool EnablePackageFileWatcher { get; }
         bool KeepSourcesCompressed { get; }
         bool DisablePackageHash { get; }
+        bool IgnorePackageFiles { get; }
         PackageOverwriteMode PackageOverwriteMode { get; }
         int LuceneMergeFactor { get; }
     }
