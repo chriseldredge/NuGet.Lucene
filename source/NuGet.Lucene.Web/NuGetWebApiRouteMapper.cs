@@ -207,6 +207,7 @@ namespace NuGet.Lucene.Web
             var conventions = new List<IODataRoutingConvention>
             {
                 new CompositeKeyRoutingConvention(),
+                new CompositeKeyPropertyRoutingConvention(),
                 new NonBindableActionRoutingConvention("PackagesOData"),
                 new EntitySetCountRoutingConvention(),
                 new NonBindableActionCountRoutingConvention("PackagesOData")

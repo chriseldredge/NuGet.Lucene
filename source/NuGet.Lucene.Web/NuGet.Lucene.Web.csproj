@@ -227,9 +227,11 @@
     <Compile Include="OData\Formatter\Serialization\DefaultStreamAwareEntityTypeSerializer.cs" />
     <Compile Include="OData\Formatter\Serialization\ODataPackageDefaultStreamAwareEntityTypeSerializer.cs" />
     <Compile Include="OData\Formatter\Serialization\ODataPackageDefaultStreamAwareSerializerProvider.cs" />
+    <Compile Include="OData\Routing\Conventions\CompositeKeyPropertyRoutingConvention.cs" />
     <Compile Include="OData\Routing\Conventions\CompositeKeyRoutingConvention.cs" />
     <Compile Include="OData\Routing\Conventions\ControllerAliasingODataRoutingConvention.cs" />
     <Compile Include="OData\Routing\Conventions\EntitySetCountRoutingConvention.cs" />
+    <Compile Include="OData\Routing\Conventions\HttpRouteDataExtensions.cs" />
     <Compile Include="OData\Routing\Conventions\NonBindableActionCountRoutingConvention.cs" />
     <Compile Include="OData\Routing\Conventions\NonBindableActionRoutingConvention.cs" />
     <Compile Include="OData\Routing\CountODataPathHandler.cs" />

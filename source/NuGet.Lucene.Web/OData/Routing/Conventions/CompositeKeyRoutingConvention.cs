@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Net.Http;
 using System.Web.Http.Controllers;
 using System.Web.Http.OData.Routing;
@@ -28,20 +27,7 @@ namespace NuGet.Lucene.Web.OData.Routing.Conventions
                 return null;
             }
 
-            var routeValues = controllerContext.RouteData.Values;
-            object value;
-            if (!routeValues.TryGetValue(ODataRouteConstants.Key, out value)) return action;
-
-            var compoundKeyPairs = ((string)value).Split(',');
-
-            if (!compoundKeyPairs.Any())
-            {
-                return null;
-            }
-
-            var keyValues = compoundKeyPairs.Select(kv => kv.Split('=')).Select(kv => new KeyValuePair<string, object>(kv[0], kv[1]));
-
-            routeValues.AddRange(keyValues);
+            controllerContext.RouteData.DecomposeKey();
 
             return action;
         }
