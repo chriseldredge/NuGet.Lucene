@@ -47,6 +47,17 @@ namespace NuGet.Lucene.Web.Controllers
 
         public IHttpActionResult Get([FromODataUri] string id, [FromODataUri] string version)
         {
+            return Get(id, version, p => p.ToODataPackage());
+        }
+
+        [HttpGet]
+        public IHttpActionResult GetId([FromODataUri] string id, [FromODataUri] string version)
+        {
+            return Get(id, version, p => p.Id);
+        }
+
+        protected IHttpActionResult Get<T>(string id, string version, Func<IPackage, T> transform)
+        {
             SemanticVersion semanticVersion;
             if (!SemanticVersion.TryParse(version, out semanticVersion))
             {
@@ -60,7 +71,7 @@ namespace NuGet.Lucene.Web.Controllers
 
             var package = Repository.FindPackage(id, semanticVersion);
 
-            return package == null ? (IHttpActionResult)NotFound() : Ok(package.ToODataPackage());
+            return package == null ? (IHttpActionResult)NotFound() : Ok(transform(package));
         }
 
         [HttpPost]
