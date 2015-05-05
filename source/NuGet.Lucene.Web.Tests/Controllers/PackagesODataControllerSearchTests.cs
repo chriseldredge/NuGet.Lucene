@@ -1,5 +1,7 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
+using System.Web.Http.OData.Extensions;
 using NuGet.Lucene.Tests;
 using NUnit.Framework;
 
@@ -34,6 +36,19 @@ namespace NuGet.Lucene.Web.Tests.Controllers
             var result = controller.Search("foo", "net35", includePrerelease: false, options: queryOptions);
 
             Assert.That(result.Select(p => p.Id + "." + p.Version).ToArray(), Is.EquivalentTo(new[] {"Foo.1.0"}));
+        }
+
+        [Test]
+        public void Search_IgnoresLatestVersionFilter_PaginateIncludesNextLink()
+        {
+            var packages = Enumerable.Range(100, 199).Select(i => new TestPackage("Foo", "1." + i) { SupportedFrameworks = new[] {"net35"}});
+
+            repo.Setup(r => r.Search("foo", new[] { "net35" }, false)).Returns(packages.AsQueryable());
+            var queryOptions = SetUpRequestWithOptions("/api/odata/Search()?$filter=IsLatestVersion");
+
+            controller.Search("foo", "net35", includePrerelease: false, options: queryOptions);
+
+            Assert.That(request.ODataProperties().NextLink, Is.EqualTo(new Uri("http://localhost//api/odata/Search()?$skip=30")));
         }
 
         [Test]

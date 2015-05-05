@@ -133,8 +133,8 @@ namespace NuGet.Lucene.Web.Controllers
             uriBuilder.Query = uriBuilder.Query
                 .Substring(1)
                 .Replace("$orderby=concat(Title,Id)", "$orderby=DisplayTitle");
-
-            return new ODataQueryOptions<ODataPackage>(options.Context, new HttpRequestMessage(Request.Method, uriBuilder.Uri));
+            Request.RequestUri = uriBuilder.Uri;
+            return new ODataQueryOptions<ODataPackage>(options.Context, Request);
         }
 
         private ODataQueryOptions<ODataPackage> RemoveFilter(ODataQueryOptions<ODataPackage> options)
@@ -143,7 +143,8 @@ namespace NuGet.Lucene.Web.Controllers
 
             var uriBuilder = new UriBuilder(options.Request.RequestUri);
             uriBuilder.Query = Regex.Replace(uriBuilder.Query.Substring(1), @"\$filter=(IsLatestVersion|IsAbsoluteLatestVersion)", "", RegexOptions.IgnoreCase);
-            return new ODataQueryOptions<ODataPackage>(options.Context, new HttpRequestMessage(Request.Method, uriBuilder.Uri));
+            Request.RequestUri = uriBuilder.Uri;
+            return new ODataQueryOptions<ODataPackage>(options.Context, Request);
         }
 
         [HttpPost]
