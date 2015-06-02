@@ -137,7 +137,7 @@ namespace NuGet.Lucene.Web.Symbols
 
             var srcPath = Path.Combine("src", relativePath);
             var packageFile = FastZipPackage.Open(packagePath, new byte[0]);
-            
+
             var file = packageFile.GetFiles().SingleOrDefault(f => f.Path.Equals(srcPath, StringComparison.InvariantCultureIgnoreCase));
             return file != null ? new PackageDisposingStream(packageFile, file.GetStream()) : null;
         }
@@ -172,7 +172,7 @@ namespace NuGet.Lucene.Web.Symbols
 
         public async Task ProcessSymbolsAsync(IPackage package, string symbolSourceUri)
         {
-            var files = package.GetLibFiles().Where(f => f.Path.EndsWith("pdb", StringComparison.InvariantCultureIgnoreCase));
+            var files = package.GetFiles().Where(f => f.Path.EndsWith("pdb", StringComparison.InvariantCultureIgnoreCase));
 
             using (var tempFolder = CreateTempFolderForPackage(package))
             {
@@ -257,7 +257,7 @@ namespace NuGet.Lucene.Web.Symbols
             protected override void Dispose(bool disposing)
             {
                 base.Dispose(disposing);
-                
+
                 package.Dispose();
             }
         }
