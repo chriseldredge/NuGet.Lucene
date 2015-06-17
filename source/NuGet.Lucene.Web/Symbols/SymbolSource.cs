@@ -10,6 +10,10 @@ namespace NuGet.Lucene.Web.Symbols
 {
     public class SymbolSource : ISymbolSource
     {
+        private const string PdbExtension = ".pdb";
+        private const string ExeExtension = ".exe";
+        private const string DllExtension = ".dll";
+
         public string SymbolsPath { get; set; }
         public SymbolTools SymbolTools { get; set; }
         
@@ -114,7 +118,7 @@ namespace NuGet.Lucene.Web.Symbols
 
         public async Task ProcessSymbolsAsync(IPackage package, string symbolSourceUri)
         {
-            var files = package.GetFiles().Where(f => f.Path.EndsWith("pdb", StringComparison.InvariantCultureIgnoreCase));
+            var files = package.GetFiles().Where(IsSymbolSourceFile);
 
             using (var tempFolder = CreateTempFolderForPackage(package))
             {
@@ -141,7 +145,34 @@ namespace NuGet.Lucene.Web.Symbols
             }
         }
 
+        private static bool IsSymbolSourceFile(IPackageFile packageFile)
+        {
+            return IsPathExtensionAnyOf(packageFile.Path, PdbExtension, ExeExtension, DllExtension);
+        }
+
+        private static bool IsPathExtensionAnyOf(string filePath, params string[] extensions)
+        {
+            var fileExtension = Path.GetExtension(filePath);
+
+            if (string.IsNullOrEmpty(fileExtension))
+            {
+                return false;
+            }
+            var extensionComparer = StringComparison.InvariantCultureIgnoreCase;
+
+            return extensions.Any(extension => extension.Equals(fileExtension, extensionComparer));
+        }
+
         public async Task ProcessSymbolFileAsync(IPackage package, string symbolFilePath, string symbolSourceUri)
+        {
+            if (IsPdbFile(symbolFilePath))
+            {
+                await MapSourcesAsync(package, symbolFilePath, symbolSourceUri);
+            }
+            await SymbolTools.IndexSymbolFile(package, symbolFilePath);
+        }
+
+        private async Task MapSourcesAsync(IPackage package, string symbolFilePath, string symbolSourceUri)
         {
             var referencedSources = (await SymbolTools.GetSources(symbolFilePath)).ToList();
 
@@ -153,8 +184,12 @@ namespace NuGet.Lucene.Web.Symbols
                 var mappings = sourceMapper.CreateSourceMappingIndex(package, symbolSourceUri, referencedSources, sourceFiles);
 
                 await SymbolTools.MapSourcesAsync(symbolFilePath, mappings);
-                await SymbolTools.IndexSymbolFile(package, symbolFilePath);
             }
+        }
+
+        private static bool IsPdbFile(string filePath)
+        {
+            return IsPathExtensionAnyOf(filePath, PdbExtension);
         }
 
         public virtual string GetNupkgPath(IPackageName package)
