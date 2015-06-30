@@ -181,6 +181,30 @@ namespace NuGet.Lucene.Web.Tests.Models
         }
 
         [Test]
+        public void PackageInOriginSemanticallySameVersionInMirror()
+        {
+            var versionWithMoreZeros = new SemanticVersion("1.0.0.0");
+
+            mirror.Setup(r => r.FindPackage(package1.Id, versionWithMoreZeros)).Returns<string, SemanticVersion>((id, version) =>
+            {
+                if (version.ToString() == "1.0.0.0")
+                {
+                    return null;
+                }
+                return package1;
+            });
+
+            origin1.Setup(r => r.FindPackage(package1.Id, versionWithMoreZeros)).Returns(package1).Verifiable();
+
+            var result = repo.FindPackage(package1.Id, versionWithMoreZeros);
+
+            Assert.That(result, Is.SameAs(package1));
+
+            mirror.VerifyAll();
+            origin1.VerifyAll();
+        }
+
+        [Test]
         public void FindPackageInOriginHandlesExceptions()
         {
             var addedPackage = (IPackage)null;

@@ -84,6 +84,15 @@ namespace NuGet.Lucene.Web.Models
 
             if (package == null) return null;
 
+            if (new StrictSemanticVersion(package.Version) != new StrictSemanticVersion(version))
+            {
+                var localPackageWithSemanticallyEquivalentVersion = base.FindPackage(packageId, package.Version);
+                if (localPackageWithSemanticallyEquivalentVersion != null)
+                {
+                    return localPackageWithSemanticallyEquivalentVersion;
+                }
+            }
+
             Log.Info(m => m("Mirroring package {0} {1} from {2}", packageId, version, string.Join(", ", origins.Select(o => o.Source))));
 
             AddPackage(package);
