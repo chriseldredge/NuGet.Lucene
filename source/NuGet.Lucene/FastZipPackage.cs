@@ -143,7 +143,7 @@ namespace NuGet.Lucene
                 .Select(p => new FastZipPackageFile(this, p.Uri.OriginalString))
                 .ToArray();
         }
-        
+
         protected virtual void ProcessFileMetadata(Stream stream)
         {
             Created = GetPackageCreatedDateTime(stream);

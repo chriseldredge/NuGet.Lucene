@@ -124,10 +124,37 @@ namespace NuGet.Lucene.Tests
             }
             catch (Exception ex)
             {
-                Assert.That(ex.Message, Is.EqualTo("invalid package"));
+                Assert.That(ex.Message, Is.EqualTo("The package file 'A.1.0.nupkg' could not be loaded."));
+                Assert.That(ex.InnerException.Message, Is.EqualTo("invalid package"));
             }
 
+            loader.VerifyAll();
             session.VerifyAll();
+        }
+
+        [Test]
+        public async Task ThrowsAggregateExceptionOnMultipleFailures()
+        {
+            var newPackages = new[] { "A.1.0.nupkg", "B.1.0.nupkg" };
+
+            loader.Setup(l => l.LoadFromFileSystem(newPackages[0])).Throws(new Exception("invalid package"));
+            loader.Setup(l => l.LoadFromFileSystem(newPackages[1])).Throws(new Exception("unsupported package"));
+
+            try
+            {
+                await
+                    indexer.SynchronizeIndexWithFileSystemAsync(new IndexDifferences(newPackages, Empty, Empty),
+                        CancellationToken.None);
+            }
+            catch (AggregateException ex)
+            {
+                Assert.That(ex.InnerExceptions.Count, Is.EqualTo(2));
+                Assert.That(ex.InnerExceptions.Select(e => e.Message).ToArray(), Is.EquivalentTo(new[]
+                {
+                    "The package file 'A.1.0.nupkg' could not be loaded.",
+                    "The package file 'B.1.0.nupkg' could not be loaded."
+                }));
+            }
         }
 
         private async Task<LucenePackage> SimulateUpdatePackage(LucenePackage currentPackage)

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
@@ -218,13 +219,32 @@ namespace NuGet.Lucene
                     tasks.Enqueue(SynchronizePackage(p, cancellationToken));
                 });
 
-            await TaskEx.WhenAll(tasks.ToArray());
+            var task = TaskEx.WhenAll(tasks.ToArray());
+
+            try
+            {
+                await task;
+            }
+            finally
+            {
+                if (task.IsFaulted && task.Exception.InnerExceptions.Count > 1)
+                {
+                    throw new AggregateException(task.Exception.InnerExceptions);
+                }
+            }
         }
 
         private async Task SynchronizePackage(string path, CancellationToken cancellationToken)
         {
-            var package = PackageRepository.LoadFromFileSystem(path);
-            await AddPackageAsync(package, cancellationToken);
+            try
+            {
+                var package = PackageRepository.LoadFromFileSystem(path);
+                await AddPackageAsync(package, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                throw new IOException("The package file '" + path + "' could not be loaded.", ex);
+            }
         }
 
         private void IndexUpdateLoop()
