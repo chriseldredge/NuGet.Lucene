@@ -43,5 +43,10 @@ namespace NuGet.Lucene
                 .Select(f => f.DateTime)
                 .FirstOrDefault();
         }
+
+        public void ExtractContents(IFileSystem fileSystem, string extractPath)
+        {
+            throw new NotSupportedException();
+        }
     }
 }

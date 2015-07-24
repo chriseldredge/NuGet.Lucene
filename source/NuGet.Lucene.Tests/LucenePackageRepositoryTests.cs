@@ -804,6 +804,10 @@ namespace NuGet.Lucene.Tests
                 DependencySets = Enumerable.Empty<PackageDependencySet>();
             }
 
+            public override void ExtractContents(IFileSystem fileSystem, string extractPath)
+            {
+            }
+
             protected sealed override IEnumerable<IPackageFile> GetFilesBase()
             {
                 return Files ?? new IPackageFile[0];

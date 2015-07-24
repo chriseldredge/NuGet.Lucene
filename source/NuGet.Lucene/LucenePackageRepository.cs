@@ -536,7 +536,7 @@ namespace NuGet.Lucene
             return base.GetPackageFilePath(package.Id, package.Version);
         }
 
-        protected override IPackage OpenPackage(string path)
+        protected virtual IPackage OpenPackage(string path)
         {
             if (DisablePackageHash)
             {

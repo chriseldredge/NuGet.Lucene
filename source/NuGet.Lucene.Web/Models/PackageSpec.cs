@@ -37,6 +37,11 @@ namespace NuGet.Lucene.Web.Models
             throw new NotSupportedException();
         }
 
+        public override void ExtractContents(IFileSystem fileSystem, string extractPath)
+        {
+            throw new NotSupportedException();
+        }
+
         protected override IEnumerable<IPackageFile> GetFilesBase()
         {
             throw new NotSupportedException();
