@@ -39,7 +39,6 @@ namespace NuGet.Lucene.Web
         // Options
         bool SynchronizeOnStart { get; }
         bool EnablePackageFileWatcher { get; }
-        bool KeepSourcesCompressed { get; }
         bool DisablePackageHash { get; }
         bool IgnorePackageFiles { get; }
         PackageOverwriteMode PackageOverwriteMode { get; }

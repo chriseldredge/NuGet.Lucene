@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Specialized;
 using System.Configuration;
 using System.IO;
@@ -117,14 +117,6 @@ namespace NuGet.Lucene.Web
             get
             {
                 return MapPathFromAppSetting("debuggingToolsPath", "");
-            }
-        }
-
-        public bool KeepSourcesCompressed
-        {
-            get
-            {
-                return GetFlagFromAppSetting("keepSourcesCompressed", true);
             }
         }
 

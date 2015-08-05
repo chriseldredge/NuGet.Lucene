@@ -48,8 +48,7 @@ namespace NuGet.Lucene.Web
             var symbolsPath = settings.SymbolsPath;
             builder.RegisterInstance(new SymbolSource
             {
-                SymbolsPath = symbolsPath,
-                KeepSourcesCompressed = settings.KeepSourcesCompressed
+                SymbolsPath = symbolsPath
             }).As<ISymbolSource>().PropertiesAutowired();
 
             builder.RegisterInstance(new SymbolTools
