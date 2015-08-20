@@ -13,7 +13,7 @@ namespace NuGet.Lucene
         private FrameworkName targetFramework;
         private string effectivePath;
         private bool targetFrameworkParsed;
-        
+
         internal FastZipPackageFile(IFastZipPackage fastZipPackage, string path)
         {
             this.fastZipPackage = fastZipPackage;
@@ -46,10 +46,11 @@ namespace NuGet.Lucene
 
                 targetFrameworkParsed = true;
 
-                targetFramework = VersionUtility.ParseFrameworkNameFromFilePath(Path, out effectivePath);
+                var path = Uri.UnescapeDataString(Path);
+                targetFramework = VersionUtility.ParseFrameworkNameFromFilePath(path, out effectivePath);
                 if (targetFramework != VersionUtility.UnsupportedFrameworkName) return targetFramework;
 
-                var parts = Path.Split('/', '\\');
+                var parts = path.Split('/', '\\');
 
                 if (parts.Length < 3)
                 {

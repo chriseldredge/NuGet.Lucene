@@ -76,6 +76,14 @@ namespace NuGet.Lucene.Tests
         }
 
         [Test]
+        public void UrlDecodesFilePath()
+        {
+            var file = new FastZipPackageFile(package, "lib/portable-windows8%2Bnet45/Neato.dll");
+
+            Assert.That(file.TargetFramework, Is.EqualTo(VersionUtility.ParseFrameworkName("portable-windows8+net45")));
+        }
+
+        [Test]
         public void ParseUnrecognizedFramework_SingleVersion()
         {
             var file = new FastZipPackageFile(package, Path.Combine("lib", "java7", "Foo.jar"));
@@ -126,12 +134,11 @@ namespace NuGet.Lucene.Tests
         }
 
         [Test]
-        public void ParseUnrecognizedFramework_UriEscapedSpaces_Unsupported()
+        public void UriEscapedSpaces()
         {
-            // Spackle 5.0.0 has this invalid library folder:
             var file = new FastZipPackageFile(package, Path.Combine("lib", ".NetFramework%204.0", "Spackle.dll"));
 
-            Assert.That(file.TargetFramework, Is.EqualTo(VersionUtility.UnsupportedFrameworkName));
+            Assert.That(file.TargetFramework, Is.EqualTo(VersionUtility.ParseFrameworkName("net40")));
         }
 
         [Test]
