@@ -15,7 +15,12 @@ namespace NuGet.Lucene.Web
         public bool Match(HttpRequestMessage request, IHttpRoute route, string parameterName, IDictionary<string, object> values,
             HttpRouteDirection routeDirection)
         {
-            return request.Headers.UserAgent
+            var userAgent = request.Headers.UserAgent;
+
+            // dnx 1.0-beta6 does not send any User-Agent header at all.
+            if (!userAgent.Any()) return true;
+
+            return userAgent
                 .Where(ua => ua.Product != null)
                 .Where(ua => ua.Product.Name != null)
                 .Any(ua => ua.Product.Name.IndexOf("NuGet", StringComparison.InvariantCultureIgnoreCase) != -1);

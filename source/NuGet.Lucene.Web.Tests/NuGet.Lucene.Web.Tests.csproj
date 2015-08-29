@@ -188,6 +188,7 @@
     <Compile Include="MirroringPackageRepositoryFactoryTests.cs" />
     <Compile Include="Models\ODataPackageTests.cs" />
     <Compile Include="Models\MirroringPackageRepositoryTests.cs" />
+    <Compile Include="NuGetUserAgentConstraintTests.cs" />
     <Compile Include="NuGetWebApiModuleTests.cs" />
     <Compile Include="OData\Batch\HeaderCascadingODataBatchHandlerTests.cs" />
     <Compile Include="PackagesRouteTests.cs" />
