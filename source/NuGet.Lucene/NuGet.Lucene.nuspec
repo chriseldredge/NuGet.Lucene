@@ -57,5 +57,6 @@
     <file src="bin\$Configuration$40\NuGet.Lucene.dll" target="lib\net40"/>
     <file src="bin\$Configuration$40\NuGet.Lucene.pdb" target="lib\net40"/>
     <file src="bin\$Configuration$40\NuGet.Lucene.xml" target="lib\net40"/>
+    <file src="**\*.cs" target="src"/>
   </files>
 </package>
