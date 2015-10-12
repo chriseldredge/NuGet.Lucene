@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web.Http;
 using NuGet.Lucene.Util;
+using NuGet.Lucene.Web.Filters;
 using NuGet.Lucene.Web.Models;
 
 namespace NuGet.Lucene.Web.Controllers
@@ -10,6 +11,7 @@ namespace NuGet.Lucene.Web.Controllers
     /// Actions that enable fast tab-completion from the Package Manager Console in Visual Studio. The interface for
     /// these actions is documented at <a href="https://github.com/NuGet/NuGetGallery/wiki/Tab-Completion-API-Endpoints">https://github.com/NuGet/NuGetGallery/wiki/Tab-Completion-API-Endpoints</a>.
     /// </summary>
+    [DefaultAcceptJsonFilter]
     public class TabCompletionController : ApiController
     {
         public ILucenePackageRepository Repository { get; set; }

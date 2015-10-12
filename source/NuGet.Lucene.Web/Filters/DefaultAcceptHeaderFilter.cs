@@ -1,4 +1,4 @@
-using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -9,8 +9,15 @@ using System.Web.Http.Filters;
 
 namespace NuGet.Lucene.Web.Filters
 {
-    public class DefaultAcceptHeaderFilter : ActionFilterAttribute
+    public abstract class DefaultAcceptHeaderFilter : ActionFilterAttribute
     {
+        private readonly IEnumerable<MediaTypeWithQualityHeaderValue> defaultMediaTypes;
+
+        protected DefaultAcceptHeaderFilter(params MediaTypeWithQualityHeaderValue[] defaultMediaTypes)
+        {
+            this.defaultMediaTypes = defaultMediaTypes;
+        }
+
         public override void OnActionExecuting(HttpActionContext actionContext)
         {
             SetDefaultAcceptHeader(actionContext.Request);
@@ -27,8 +34,23 @@ namespace NuGet.Lucene.Web.Filters
         {
             if (request.Headers.Accept.Any()) return;
 
-            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/atom+xml"));
-            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/xml"));
+            request.Headers.Accept.AddRange(defaultMediaTypes);
+        }
+    }
+
+    public class DefaultAcceptAtomFilter : DefaultAcceptHeaderFilter
+    {
+        public DefaultAcceptAtomFilter() :
+            base(new MediaTypeWithQualityHeaderValue("application/atom+xml"), new MediaTypeWithQualityHeaderValue("application/xml"))
+        {
+        }
+    }
+
+    public class DefaultAcceptJsonFilter : DefaultAcceptHeaderFilter
+    {
+        public DefaultAcceptJsonFilter() :
+            base(new MediaTypeWithQualityHeaderValue("application/json"))
+        {
         }
     }
 }

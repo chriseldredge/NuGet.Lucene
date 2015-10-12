@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using System.Web.Http;
 using System.Web.Http.OData;
 using System.Web.Http.OData.Query;
+using NuGet.Lucene.Web.Filters;
 using NuGet.Lucene.Web.Models;
 using NuGet.Lucene.Web.Util;
 
@@ -19,6 +20,7 @@ namespace NuGet.Lucene.Web.Controllers
     /// This is the primary interface for the NuGet Command Line client,
     /// Visual Studio Package Manager and Package Manager Console.
     /// </summary>
+    [DefaultAcceptAtomFilter]
     public class PackagesODataController : ODataController
     {
         private static readonly ODataQuerySettings SearchQuerySettings = new ODataQuerySettings
