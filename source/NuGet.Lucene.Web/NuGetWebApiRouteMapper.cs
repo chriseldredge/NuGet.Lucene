@@ -127,12 +127,20 @@ namespace NuGet.Lucene.Web
                                 pathPrefix + "authenticate",
                                 new { controller = "Users", action = "GetRequiredAuthenticationInfo" });
 
-            routes.MapHttpRoute(RouteNames.TabCompletionPackageIds,
+            routes.MapHttpRoute(RouteNames.TabCompletion.VS2013PackageIds,
                                 pathPrefix + "v2/package-ids",
                                 new { controller = "TabCompletion", action = "GetMatchingPackages" });
 
-            routes.MapHttpRoute(RouteNames.TabCompletionPackageVersions,
+            routes.MapHttpRoute(RouteNames.TabCompletion.VS2013PackageVersions,
                                 pathPrefix + "v2/package-versions/{packageId}",
+                                new { controller = "TabCompletion", action = "GetPackageVersions" });
+
+            routes.MapHttpRoute(RouteNames.TabCompletion.VS2015PackageIds,
+                                ODataRoutePath + "/package-ids",
+                                new { controller = "TabCompletion", action = "GetMatchingPackages" });
+
+            routes.MapHttpRoute(RouteNames.TabCompletion.VS2015PackageVersions,
+                                ODataRoutePath + "/package-versions/{packageId}",
                                 new { controller = "TabCompletion", action = "GetPackageVersions" });
 
             routes.MapHttpRoute(RouteNames.Packages.Search,

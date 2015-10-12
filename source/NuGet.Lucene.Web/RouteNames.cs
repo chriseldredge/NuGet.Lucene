@@ -46,7 +46,13 @@
             public const string Upload = "Symbols.Upload";
         }
 
-        public const string TabCompletionPackageIds = "Package Manager Console Tab Completion - Package IDs";
-        public const string TabCompletionPackageVersions = "Package Manager Console Tab Completion - Package Versions";
+        public static class TabCompletion
+        {
+            public const string VS2013PackageIds = "Package Manager Console Tab Completion - Package IDs - VS2013";
+            public const string VS2013PackageVersions = "Package Manager Console Tab Completion - Package Versions - VS 2013";
+
+            public const string VS2015PackageIds = "Package Manager Console Tab Completion - Package IDs - VS2015";
+            public const string VS2015PackageVersions = "Package Manager Console Tab Completion - Package Versions - VS2015";
+        }
     }
 }
