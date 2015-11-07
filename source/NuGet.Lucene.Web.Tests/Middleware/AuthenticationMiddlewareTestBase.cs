@@ -8,6 +8,7 @@ namespace NuGet.Lucene.Web.Tests.Middleware
 {
     public abstract class AuthenticationMiddlewareTestBase
     {
+        protected const string Role1 = "Role1";
         protected Mock<OwinMiddleware> nextMock;
         protected OwinMiddleware next;
         protected Mock<IOwinContext> contextMock;
@@ -38,7 +39,7 @@ namespace NuGet.Lucene.Web.Tests.Middleware
             contextMock.SetupGet(m => m.Response).Returns(responseMock.Object);
             context = contextMock.Object;
 
-            user = new ApiUserPrincipal(new GenericIdentity("T-Rex"), new string[0]);
+            user = new ApiUserPrincipal(new GenericIdentity("T-Rex"), new[] { Role1 });
         }
 
     }
