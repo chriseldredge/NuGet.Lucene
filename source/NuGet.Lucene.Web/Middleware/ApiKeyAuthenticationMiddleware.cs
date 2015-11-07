@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Security.Authentication;
+using System.Security.Principal;
 using System.Threading.Tasks;
 using Microsoft.Owin;
 using NuGet.Lucene.Web.Authentication;
@@ -36,7 +37,7 @@ namespace NuGet.Lucene.Web.Middleware
                     var identity = service.AuthenticateRequest(Request);
                     if (identity != null)
                     {
-                        Request.User = identity;
+                        SetRequestUser(identity);
                     }
                     return Task.FromResult(true);
                 }
@@ -46,6 +47,16 @@ namespace NuGet.Lucene.Web.Middleware
                     Response.ReasonPhrase = InvalidApiKeyReasonPhrase;
                     return Task.FromResult(false);
                 }
+            }
+
+            protected virtual void SetRequestUser(IPrincipal identity)
+            {
+                if (IsAuthenticated)
+                {
+                    identity = new  CompositeRolePrincipalWrapper(Request.User, identity);
+                }
+
+                Request.User = identity;
             }
         }
     }
