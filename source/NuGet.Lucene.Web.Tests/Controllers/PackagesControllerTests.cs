@@ -160,6 +160,16 @@ namespace NuGet.Lucene.Web.Tests.Controllers
         }
 
         [Test]
+        public async Task DownloadPackageSendsRange()
+        {
+            request.Headers.Range = new RangeHeaderValue(0, package.PackageSize - 1);
+            var result = DownloadPackage(HttpMethod.Get, "SomePackage", SampleVersion.SemanticVersion);
+
+            Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.PartialContent));
+            Assert.That(await GetContent(result), Is.EqualTo("<fake package contents>"));
+        }
+
+        [Test]
         public async Task PutPackage()
         {
             luceneRepository.Setup(r => r.AddPackageAsync(package, CancellationToken.None)).Returns(completeTask);

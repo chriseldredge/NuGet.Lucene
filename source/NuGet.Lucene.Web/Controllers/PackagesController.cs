@@ -90,12 +90,24 @@ namespace NuGet.Lucene.Web.Controllers
                 return result;
             }
 
-            result = Request.CreateResponse(HttpStatusCode.OK);
+            if (Request.Headers.Range != null)
+            {
+                try
+                {
+                    HttpResponseMessage partialResponse = Request.CreateResponse(HttpStatusCode.PartialContent);
+                    partialResponse.Content = new ByteRangeStreamContent(package.GetStream(), Request.Headers.Range, new MediaTypeWithQualityHeaderValue("application/zip"));
+                    return partialResponse;
+                }
+                catch (InvalidByteRangeException e)
+                {
+                    return Request.CreateErrorResponse(HttpStatusCode.BadRequest, e);
+                }
+            }
 
+            result = Request.CreateResponse(HttpStatusCode.OK);
             if (Request.Method == HttpMethod.Get)
             {
                 result.Content = new StreamContent(package.GetStream());
-
                 TaskRunner.QueueBackgroundWorkItem(cancellationToken => LuceneRepository.IncrementDownloadCountAsync(package, cancellationToken));
             }
             else
