@@ -11,11 +11,12 @@ namespace NuGet.Lucene.Web.Formatters
     /// NuGet client (as of 2.8.2) uses wrong newline character before closing
     /// multi-part boundary when running on mono and <see cref="Environment.NewLine"/>
     /// is <c>\n</c>. It should always use <c>\r\n</c> but does not.
-    /// 
+    ///
     /// This stream decorator fixes these boundaries to be correct.
     /// </summary>
     public class MalformedMultipartFixingStream : ReadStream
     {
+        private readonly Stream stream;
         private readonly MemoryStream peekBuffer = new MemoryStream();
         private readonly byte[] boundary;
         private byte lastByteRead;
@@ -23,18 +24,8 @@ namespace NuGet.Lucene.Web.Formatters
         public MalformedMultipartFixingStream(Stream stream, string boundary)
             :base(stream)
         {
+            this.stream = stream;
             this.boundary = Encoding.UTF8.GetBytes('\n' + boundary);
-        }
-
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            var bytesRead = BufferedRead(buffer, offset, count);
-            if (bytesRead > 0)
-            {
-                lastByteRead = buffer[offset + bytesRead - 1];
-            }
-
-            return bytesRead;
         }
 
         public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
@@ -48,20 +39,6 @@ namespace NuGet.Lucene.Web.Formatters
             return bytesRead;
         }
 
-        public int BufferedRead(byte[] buffer, int offset, int count)
-        {
-            var bytesRead = peekBuffer.Read(buffer, offset, count);
-
-            var totalBytesRead = bytesRead;
-
-            if (bytesRead < count)
-            {
-                totalBytesRead += base.Read(buffer, offset + bytesRead, count - bytesRead);
-            }
-
-            return ProcessBytesRead(buffer, offset, count, totalBytesRead, bytesRead);
-        }
-
         public async Task<int> BufferedReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
             var bytesRead = await peekBuffer.ReadAsync(buffer, offset, count, cancellationToken);
@@ -70,13 +47,13 @@ namespace NuGet.Lucene.Web.Formatters
 
             if (bytesRead < count)
             {
-                totalBytesRead += await base.ReadAsync(buffer, offset + bytesRead, count - bytesRead, cancellationToken);
+                totalBytesRead += await stream.ReadAsync(buffer, offset + bytesRead, count - bytesRead, cancellationToken);
             }
 
-            return ProcessBytesRead(buffer, offset, count, totalBytesRead, bytesRead);
+            return await ProcessBytesReadAsync(buffer, offset, count, totalBytesRead, bytesRead);
         }
 
-        private int ProcessBytesRead(byte[] buffer, int offset, int count, int totalBytesRead, int bytesRead)
+        private async Task<int> ProcessBytesReadAsync(byte[] buffer, int offset, int count, int totalBytesRead, int bytesRead)
         {
             if (totalBytesRead == bytesRead)
             {
@@ -98,7 +75,7 @@ namespace NuGet.Lucene.Web.Formatters
 
                 if (!isMatch) continue;
 
-                totalBytesRead = ReplaceMalformedBoundary(buffer, offset, count, matchPosition, matchLength, totalBytesRead);
+                totalBytesRead = await ReplaceMalformedBoundaryAsync(buffer, offset, count, matchPosition, matchLength, totalBytesRead);
             }
 
             peekBuffer.Seek(0, SeekOrigin.Begin);
@@ -106,7 +83,7 @@ namespace NuGet.Lucene.Web.Formatters
             return totalBytesRead;
         }
 
-        private int ReplaceMalformedBoundary(byte[] buffer, int offset, int count, int matchIndex, int matchLength, int totalBytesRead)
+        private async Task<int> ReplaceMalformedBoundaryAsync(byte[] buffer, int offset, int count, int matchIndex, int matchLength, int totalBytesRead)
         {
             var origOffset = offset;
             var origBuffer = buffer;
@@ -120,7 +97,7 @@ namespace NuGet.Lucene.Web.Formatters
                 var bytesToRead = boundary.Length - matchLength;
                 do
                 {
-                    additionalBytesRead = base.Read(tmp, totalBytesRead + totalAdditionalBytesRead, bytesToRead);
+                    additionalBytesRead = await stream.ReadAsync(tmp, totalBytesRead + totalAdditionalBytesRead, bytesToRead);
                     totalAdditionalBytesRead += additionalBytesRead;
                     bytesToRead -= additionalBytesRead;
                 } while (additionalBytesRead != 0 && bytesToRead > 0);
@@ -169,7 +146,7 @@ namespace NuGet.Lucene.Web.Formatters
             {
                 peekBuffer.WriteByte(last);
             }
-            
+
             if (!ReferenceEquals(origBuffer, buffer))
             {
                 Array.Copy(buffer, 0, origBuffer, origOffset, totalBytesRead);
@@ -194,7 +171,18 @@ namespace NuGet.Lucene.Web.Formatters
 
         public override IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
         {
-            throw new NotSupportedException("Use ReadAsync.");
+            throw new NotSupportedException(typeof(MalformedMultipartFixingStream) + " only supports ReadAsync.");
         }
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            throw new NotSupportedException(typeof(MalformedMultipartFixingStream) + " only supports ReadAsync.");
+        }
+
+        public override int ReadByte()
+        {
+            throw new NotSupportedException(typeof(MalformedMultipartFixingStream) + " only supports ReadAsync.");
+        }
+
     }
 }
