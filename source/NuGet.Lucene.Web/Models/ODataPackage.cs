@@ -17,6 +17,8 @@ namespace NuGet.Lucene.Web.Models
         {
             #region Converted Properties
             Version = package.Version.ToString();
+            NormalizedVersion = package.NormalizedVersion;
+
             Authors = String.Join(",", package.Authors);
             Owners = String.Join(",", package.Owners);
             IconUrl = UriToString(package.IconUrl);
@@ -56,6 +58,8 @@ namespace NuGet.Lucene.Web.Models
         public ODataPackage(DataServicePackage package)
         {
             Version = package.Version;
+            NormalizedVersion = new SemanticVersion(package.Version).ToNormalizedString();
+
             Authors = package.Authors;
             Owners = package.Owners;
             IconUrl = UriToString(package.IconUrl);
@@ -104,6 +108,8 @@ namespace NuGet.Lucene.Web.Models
         public string Id { get; set; }
 
         public string Version { get; set; }
+
+        public string NormalizedVersion { get; set; }
 
         public string Title { get; set; }
 

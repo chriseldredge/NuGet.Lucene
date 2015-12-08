@@ -41,5 +41,13 @@ namespace NuGet.Lucene.Web.Tests.Models
 
             Assert.That(a1, Is.Not.EqualTo(a2));
         }
+
+        [Test]
+        public void SetsNormalizedVersionFromDataServicePackage()
+        {
+            var package = new ODataPackage(new DataServicePackage { Id = "a", Version = "1.0.0.0" });
+
+            Assert.That(package.NormalizedVersion, Is.EqualTo("1.0.0"));
+        }
     }
 }

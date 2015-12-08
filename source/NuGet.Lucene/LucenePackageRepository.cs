@@ -630,6 +630,7 @@ namespace NuGet.Lucene
                 package.Created = fastPackage.Created;
             }
 
+            package.NormalizedVersion = sourcePackage.Version.ToNormalizedString();
             package.PackageHashAlgorithm = HashAlgorithmName;
             package.LastUpdated = GetLastModified(package, path);
             package.Published = package.LastUpdated;

@@ -215,6 +215,17 @@ namespace NuGet.Lucene.Tests
 
                 Assert.That(result.Path, Is.EqualTo(Path.Combine("package-dir", "Sample.1.0")));
             }
+
+            [Test]
+            public void SetsNormalizedVersion()
+            {
+                var package = SetUpConvertPackage();
+                package.SetupGet(p => p.Version).Returns(new SemanticVersion("1.0.0.0"));
+
+                var result = repository.Convert(package.Object);
+
+                Assert.That(result.NormalizedVersion, Is.EqualTo("1.0.0"));
+            }
         }
 
         public class GetUpdatesTests : LucenePackageRepositoryTests

@@ -65,6 +65,8 @@ namespace NuGet.Lucene
         [Field("MinClientVersion", Converter = typeof(CachingVersionConverter))]
         public Version MinClientVersion { get; set; }
 
+        public string NormalizedVersion { get; set; }
+
         [Field(Analyzer = typeof(TextAnalyzer))]
         public string Title { get; set; }
 
