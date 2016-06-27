@@ -21,6 +21,7 @@ namespace NuGet.Lucene.Web.Controllers
     /// Visual Studio Package Manager and Package Manager Console.
     /// </summary>
     [DefaultAcceptAtomFilter]
+    [OwinPathEncodingFilter]
     public class PackagesODataController : ODataController
     {
         private static readonly ODataQuerySettings SearchQuerySettings = new ODataQuerySettings

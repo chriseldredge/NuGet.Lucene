@@ -173,6 +173,7 @@
     <Compile Include="Controllers\PackagesODataControllerGetUpdatesTests.cs" />
     <Compile Include="Controllers\PackagesODataControllerTestBase.cs" />
     <Compile Include="Controllers\PackagesODataControllerSearchTests.cs" />
+    <Compile Include="Filters\OwinPathEncodingFilterTests.cs" />
     <Compile Include="Formatters\MalformedMultipartFixingStreamTests.cs" />
     <Compile Include="Formatters\MultipartFormDataMediaFormatterTests.cs" />
     <Compile Include="Formatters\PackageFormDataMediaFormatterTests.cs" />
