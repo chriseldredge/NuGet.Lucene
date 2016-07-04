@@ -7,6 +7,7 @@
 
     <PropertyGroup Label="Settings">
         <SolutionFile>NuGet.Lucene.sln</SolutionFile>
+        <NuGetClientDownloadUrl>https://dist.nuget.org/win-x86-commandline/latest/nuget.exe</NuGetClientDownloadUrl>
     </PropertyGroup>
 
     <ItemGroup>
