@@ -41,7 +41,9 @@ namespace NuGet.Lucene
             return zip.Cast<ZipEntry>()
                 .Where(f => f.Name.EndsWith(".nuspec"))
                 .Select(f => f.DateTime)
-                .FirstOrDefault();
+                .DefaultIfEmpty(default(DateTime).ToUniversalTime())
+                .First();
+
         }
 
         public void ExtractContents(IFileSystem fileSystem, string extractPath)
