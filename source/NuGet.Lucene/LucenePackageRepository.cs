@@ -208,7 +208,7 @@ namespace NuGet.Lucene
 
         protected virtual System.Net.Http.HttpClient CreateHttpClient()
         {
-            return new System.Net.Http.HttpClient();
+            return new System.Net.Http.HttpClient(new System.Net.Http.HttpClientHandler() { UseDefaultCredentials = true });
         }
 
         protected virtual Stream OpenFileWriteStream(string path)
