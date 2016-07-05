@@ -19,6 +19,8 @@ namespace NuGet.Lucene
     /// </summary>
     public class NuGetQueryParser : FieldMappingQueryParser<LucenePackage>
     {
+        private const string DefaultSearchFieldName = "SearchId";
+
         private static readonly IDictionary<string, string> AliasMap =
             new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
@@ -27,9 +29,8 @@ namespace NuGet.Lucene
             };
 
         public NuGetQueryParser(Version matchVersion, IDocumentMapper<LucenePackage> documentMapper)
-            : base(matchVersion, documentMapper)
+            : base(matchVersion, DefaultSearchFieldName, documentMapper)
         {
-            DefaultSearchProperty = "SearchId";
         }
 
         public NuGetQueryParser(FieldMappingQueryParser<LucenePackage> parser)
@@ -51,8 +52,8 @@ namespace NuGet.Lucene
             }
 
             field = DocumentMapper.IndexedProperties.FirstOrDefault(
-                p => String.Equals(p, field, StringComparison.OrdinalIgnoreCase))
-                    ?? DefaultSearchProperty;
+                p => string.Equals(p, field, StringComparison.OrdinalIgnoreCase))
+                    ?? DefaultSearchFieldName;
 
             return base.GetMapping(field);
         }
