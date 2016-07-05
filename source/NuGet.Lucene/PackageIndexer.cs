@@ -14,23 +14,16 @@ using Lucene.Net.Linq.Abstractions;
 using Lucene.Net.Search;
 using NuGet.Lucene.Util;
 
-#if NET_4_5
-using TaskEx=System.Threading.Tasks.Task;
-#endif
-
 namespace NuGet.Lucene
 {
     public class PackageIndexer : IPackageIndexer, IDisposable
     {
         public static ILog Log = LogManager.GetLogger<PackageIndexer>();
 
-#if NET_4_5
         private static readonly TimeSpan InfiniteTimeSpan = Timeout.InfiniteTimeSpan;
-#else
-        private static readonly TimeSpan InfiniteTimeSpan = TimeSpan.FromMilliseconds(-1);
-#endif
 
         private enum UpdateType { Add, Remove, RemoveByPath, Increment }
+
         private class Update
         {
             private readonly LucenePackage package;
@@ -219,7 +212,7 @@ namespace NuGet.Lucene
                     tasks.Enqueue(SynchronizePackage(p, cancellationToken));
                 });
 
-            var task = TaskEx.WhenAll(tasks.ToArray());
+            var task = Task.WhenAll(tasks.ToArray());
 
             try
             {
@@ -227,7 +220,7 @@ namespace NuGet.Lucene
             }
             finally
             {
-                if (task.IsFaulted && task.Exception.InnerExceptions.Count > 1)
+                if (task.IsFaulted && task.Exception?.InnerExceptions.Count > 1)
                 {
                     throw new AggregateException(task.Exception.InnerExceptions);
                 }

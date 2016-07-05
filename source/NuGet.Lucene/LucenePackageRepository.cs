@@ -15,9 +15,6 @@ using NuGet.Lucene.IO;
 using Lucene.Net.QueryParsers;
 using NuGet.Lucene.Util;
 using LuceneDirectory = Lucene.Net.Store.Directory;
-#if NET_4_5
-using TaskEx=System.Threading.Tasks.Task;
-#endif
 
 namespace NuGet.Lucene
 {
@@ -178,7 +175,7 @@ namespace NuGet.Lucene
                 base.AddPackage(package);
             }
 
-            return TaskEx.FromResult(Convert(package));
+            return Task.FromResult(Convert(package));
         }
 
         private async Task<IFastZipPackage> DownloadDataServicePackage(DataServicePackage dataPackage, CancellationToken cancellationToken)
@@ -241,7 +238,7 @@ namespace NuGet.Lucene
 
         public override void AddPackage(IPackage package)
         {
-            var task = TaskEx.Run(async () => await AddPackageAsync(package, CancellationToken.None));
+            var task = Task.Run(async () => await AddPackageAsync(package, CancellationToken.None));
             task.Wait();
         }
 
@@ -271,7 +268,7 @@ namespace NuGet.Lucene
 
         public override void RemovePackage(IPackage package)
         {
-            var task = TaskEx.Run(async () => await RemovePackageAsync(package, CancellationToken.None));
+            var task = Task.Run(async () => await RemovePackageAsync(package, CancellationToken.None));
             task.Wait();
         }
 

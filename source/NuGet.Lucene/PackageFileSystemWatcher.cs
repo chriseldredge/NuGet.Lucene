@@ -7,10 +7,6 @@ using System.Threading.Tasks;
 using Common.Logging;
 using NuGet.Lucene.Util;
 
-#if NET_4_5
-using TaskEx=System.Threading.Tasks.Task;
-#endif
-
 namespace NuGet.Lucene
 {
     public class PackageFileSystemWatcher : IDisposable
@@ -101,7 +97,7 @@ namespace NuGet.Lucene
             if (fullPath.EndsWith(Constants.PackageExtension))
             {
                 var addToIndex = AddToIndex(fullPath).ContinueWith(LogOnFault);
-                await TaskEx.WhenAll(addToIndex, task);
+                await Task.WhenAll(addToIndex, task);
                 return;
             }
 

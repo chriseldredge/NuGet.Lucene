@@ -29,17 +29,15 @@ namespace NuGet.Lucene.IO
             return stream.EndRead(asyncResult);
         }
 
-#if NET_4_5
         public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
             return stream.ReadAsync(buffer, offset, count, cancellationToken);
         }
-        
+
         public override Task CopyToAsync(Stream destination, int bufferSize, CancellationToken cancellationToken)
         {
             return stream.CopyToAsync(destination, bufferSize, cancellationToken);
         }
-#endif
 
         public override int ReadByte()
         {

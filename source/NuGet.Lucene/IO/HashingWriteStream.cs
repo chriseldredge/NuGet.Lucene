@@ -60,7 +60,6 @@ namespace NuGet.Lucene.IO
             disposed = true;
         }
 
-#if NET_4_5
         public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
             await stream.WriteAsync(buffer, offset, count, cancellationToken);
@@ -71,7 +70,6 @@ namespace NuGet.Lucene.IO
         {
             return stream.FlushAsync(cancellationToken);
         }
-#endif
 
         public override IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
         {
