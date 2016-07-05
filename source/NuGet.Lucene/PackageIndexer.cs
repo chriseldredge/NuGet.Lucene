@@ -357,6 +357,7 @@ namespace NuGet.Lucene
                 {
                     currentPackages.Remove(packageToReplace);
                     package.OriginUrl = packageToReplace.OriginUrl;
+                    package.IsMirrored = packageToReplace.IsMirrored;
                     session.Add(KeyConstraint.Unique, package);
                 }
 
