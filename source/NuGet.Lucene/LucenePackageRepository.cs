@@ -113,6 +113,8 @@ namespace NuGet.Lucene
         {
             var lucenePackage = await DownloadOrMoveOrAddPackageToFileSystemAsync(package, cancellationToken);
 
+            lucenePackage.Published = FileSystem.GetLastModified(lucenePackage.Path);
+
             Log.Info(m => m("Indexing package {0} {1}", package.Id, package.Version));
 
             await Indexer.AddPackageAsync(lucenePackage, cancellationToken);
