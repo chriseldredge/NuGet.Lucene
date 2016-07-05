@@ -1,7 +1,4 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using System.Web.Http.Filters;
-using Microsoft.Owin;
+﻿using System.Web.Http.Filters;
 
 namespace NuGet.Lucene.Web.Filters
 {

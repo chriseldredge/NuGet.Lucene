@@ -181,6 +181,7 @@ namespace NuGet.Lucene.Web
                 : IncludeErrorDetailPolicy.Default;
 
             config.MessageHandlers.Add(new CrossOriginMessageHandler(Settings.EnableCrossDomainRequests));
+            config.Filters.Add(new CacheControlFilter());
             config.Filters.Add(new ExceptionLoggingFilter());
 
             var documentation = new HtmlDocumentation();
