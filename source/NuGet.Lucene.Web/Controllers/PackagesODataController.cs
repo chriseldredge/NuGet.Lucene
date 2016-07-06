@@ -11,6 +11,7 @@ using System.Web.Http.OData;
 using System.Web.Http.OData.Query;
 using NuGet.Lucene.Web.Filters;
 using NuGet.Lucene.Web.Models;
+using NuGet.Lucene.Web.OData;
 using NuGet.Lucene.Web.Util;
 
 namespace NuGet.Lucene.Web.Controllers
@@ -79,6 +80,7 @@ namespace NuGet.Lucene.Web.Controllers
 
         [HttpPost]
         [HttpGet]
+        [EnableSelectExpand]
         public IEnumerable<ODataPackage> Search(
             [FromODataUri] string searchTerm,
             [FromODataUri] string targetFramework,
@@ -125,7 +127,8 @@ namespace NuGet.Lucene.Web.Controllers
 
             var odataQuery = from package in searchQuery select package.ToODataPackage();
 
-            return (IEnumerable<ODataPackage>)options.ApplyTo(odataQuery, settings);
+            options = new NoSelectODataQueryOptions<ODataPackage>(options.Context, Request);
+            return (IQueryable<ODataPackage>)options.ApplyTo(odataQuery, settings);
         }
 
         private ODataQueryOptions<ODataPackage> SimplifyOrderingClause(ODataQueryOptions<ODataPackage> options)
