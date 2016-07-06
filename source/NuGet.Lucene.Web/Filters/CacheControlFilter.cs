@@ -10,12 +10,18 @@ namespace NuGet.Lucene.Web.Filters
     {
         public override Task OnActionExecutedAsync(HttpActionExecutedContext context, CancellationToken cancellationToken)
         {
-            context.Response.Headers.CacheControl = new CacheControlHeaderValue
+            var response = context.Response;
+
+            if (response != null && response.Headers.CacheControl == null)
             {
-                MustRevalidate = true,
-                Private = true,
-                MaxAge = TimeSpan.Zero
-            };
+                response.Headers.CacheControl = new CacheControlHeaderValue
+                {
+                    MustRevalidate = true,
+                    Private = true,
+                    MaxAge = TimeSpan.Zero
+                };
+            }
+
             return base.OnActionExecutedAsync(context, cancellationToken);
         }
     }
